@@ -1,0 +1,143 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #1a1a2e;
+  font-family: 'Arial', sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior: none;
+  /* Better touch scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* Prevent text selection on mobile */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  /* Prevent zooming on double-tap */
+  touch-action: manipulation;
+}
+
+/* Ad Container Styling - Discreet but compliant */
+.ad-container {
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s ease;
+}
+
+/* Top Banner Ad */
+.ad-top {
+  width: 100%;
+  min-height: 50px;
+  max-height: 90px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Bottom Banner Ad */
+.ad-bottom {
+  width: 100%;
+  min-height: 50px;
+  max-height: 90px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Game Wrapper - Contains sidebar ads and game */
+#game-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Sidebar Ads (Desktop only) */
+.ad-sidebar {
+  width: 160px;
+  min-width: 160px;
+  display: none; /* Hidden by default, shown on larger screens */
+}
+
+.ad-left {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ad-right {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Show sidebar ads on desktop */
+@media (min-width: 1200px) {
+  .ad-sidebar {
+    display: flex;
+  }
+}
+
+/* Game Container */
+#game-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  padding: 10px; /* Add padding on all sides */
+}
+
+canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  /* Prevent canvas from being dragged on mobile */
+  touch-action: none;
+  /* Crisp pixel rendering */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  #game-container {
+    padding: 8px; /* Slightly less padding on mobile */
+  }
+
+  /* Ensure game takes up available space nicely */
+  body {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  /* Top and bottom ad containers get less height on mobile */
+  .ad-top,
+  .ad-bottom {
+    min-height: 50px;
+    max-height: 60px;
+  }
+}
+
+/* AdSense responsive units */
+.adsbygoogle {
+  display: block;
+}
+
+/* Mobile optimization - hide sidebar ads */
+@media (max-width: 1199px) {
+  .ad-sidebar {
+    display: none !important;
+  }
+}
+
+/* Small mobile screens - reduce banner height */
+@media (max-width: 768px) {
+  .ad-top,
+  .ad-bottom {
+    min-height: 50px;
+    max-height: 60px;
+  }
+}
