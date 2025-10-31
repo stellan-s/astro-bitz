@@ -3,7 +3,7 @@
  */
 
 export class HighScoreManager {
-  private static readonly STORAGE_KEY = 'kingshot_highscore';
+  private static readonly STORAGE_KEY = 'astroblitz_highscore';
 
   /**
    * Get the current high score
