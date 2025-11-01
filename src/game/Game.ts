@@ -45,6 +45,7 @@ export class Game {
 
   // Mobile instructions
   private mobileInstructionsShown: boolean = false;
+  private autoFireEnabled: boolean = false;
 
   constructor(app: Application) {
     this.app = app;
@@ -139,6 +140,11 @@ export class Game {
 
     // Setup input
     this.setupInput();
+
+    // Enable auto-fire for mobile devices
+    if (this.isMobileDevice()) {
+      this.autoFireEnabled = true;
+    }
   }
 
   private setupInput(): void {
@@ -232,16 +238,6 @@ export class Game {
     canvas.addEventListener('touchend', (e) => {
       e.preventDefault();
       touchMoving = false;
-
-      // Tap to shoot
-      if (!this.isGameOver) {
-        const currentTime = Date.now();
-        const currentFireRate = this.rapidFireActive ? 100 : this.fireRate;
-        if (currentTime - this.lastShotTime >= currentFireRate) {
-          this.shoot();
-          this.lastShotTime = currentTime;
-        }
-      }
     });
 
     // Update player position based on keys (keyboard only)
@@ -273,7 +269,9 @@ export class Game {
   }
 
   private spawnEnemy(): void {
-    const x = Math.random() * this.app.screen.width;
+    // Keep enemies away from edges - tank enemy is 60px wide, so 40px padding is safe
+    const edgePadding = 40;
+    const x = edgePadding + Math.random() * (this.app.screen.width - edgePadding * 2);
 
     // Random enemy type with weighted probabilities
     const rand = Math.random();
@@ -292,7 +290,9 @@ export class Game {
   }
 
   private spawnPowerUp(): void {
-    const x = Math.random() * this.app.screen.width;
+    // Keep power-ups away from edges too
+    const edgePadding = 40;
+    const x = edgePadding + Math.random() * (this.app.screen.width - edgePadding * 2);
 
     // Random power-up type
     const types: PowerUpType[] = ['rapidfire', 'shield', 'bomb'];
@@ -370,7 +370,7 @@ export class Game {
     switch (type) {
       case 'rapidfire':
         this.rapidFireActive = true;
-        this.rapidFireTimer = 5000; // 5 seconds
+        this.rapidFireTimer = 10000; // 10 seconds - longer for more fun!
         break;
       case 'shield':
         this.shieldActive = true;
@@ -410,7 +410,7 @@ export class Game {
         const dx = bullet.sprite.x - enemy.sprite.x;
         const dy = bullet.sprite.y - enemy.sprite.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const minDistance = 25; // Combined radius
+        const minDistance = 35; // Combined radius - larger for easier hitting
 
         if (distance < minDistance) {
           // Collision detected - remove bullet
@@ -535,8 +535,8 @@ export class Game {
       <div style="max-width: 400px;">
         <h2 style="font-size: 32px; margin-bottom: 30px; text-shadow: 0 0 10px #00ffff;">📱 TOUCH CONTROLS</h2>
         <div style="font-size: 18px; line-height: 1.8; margin-bottom: 20px;">
-          <p style="margin-bottom: 15px;">👆 <strong>DRAG</strong> to move your ship</p>
-          <p style="margin-bottom: 15px;">👆 <strong>TAP</strong> to shoot</p>
+          <p style="margin-bottom: 15px;">👆 <strong>TOUCH & DRAG</strong> to steer your ship</p>
+          <p style="margin-bottom: 15px;">🔫 <strong>AUTO-FIRE</strong> enabled - focus on steering!</p>
           <p style="margin-bottom: 15px;">🎵 Music starts automatically</p>
         </div>
         <div style="font-size: 16px; color: #ffaa00; margin-top: 30px; animation: pulse 2s infinite;">
@@ -585,7 +585,13 @@ export class Game {
     }
     gameOverMessage += `Final Score: ${this.score}\n`;
     gameOverMessage += `Wave Reached: ${this.currentWave}\n\n`;
-    gameOverMessage += 'Press R to Restart';
+
+    // Different restart instructions for mobile vs desktop
+    if (this.isMobileDevice()) {
+      gameOverMessage += 'Tap to Restart';
+    } else {
+      gameOverMessage += 'Press R to Restart';
+    }
 
     const gameOverText = new Text({
       text: gameOverMessage,
@@ -608,11 +614,21 @@ export class Game {
     gameOverText.y = this.app.screen.height / 2;
     this.app.stage.addChild(gameOverText);
 
+    // Keyboard restart
     window.addEventListener('keydown', (e) => {
       if (e.key === 'r' || e.key === 'R') {
         window.location.reload();
       }
     });
+
+    // Touch restart for mobile
+    if (this.isMobileDevice()) {
+      const canvas = this.app.canvas as HTMLCanvasElement;
+      const touchRestartHandler = () => {
+        window.location.reload();
+      };
+      canvas.addEventListener('touchstart', touchRestartHandler, { once: true });
+    }
   }
 
   public start(): void {
@@ -650,6 +666,15 @@ export class Game {
         this.rapidFireTimer -= deltaTime;
         if (this.rapidFireTimer <= 0) {
           this.rapidFireActive = false;
+        }
+      }
+
+      // Auto-fire for mobile devices
+      if (this.autoFireEnabled && !this.isGameOver) {
+        const currentFireRate = this.rapidFireActive ? 100 : this.fireRate;
+        if (currentTime - this.lastShotTime >= currentFireRate) {
+          this.shoot();
+          this.lastShotTime = currentTime;
         }
       }
 
