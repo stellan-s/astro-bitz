@@ -15,6 +15,7 @@ export class Enemy {
   private direction: number = 1; // 1 or -1 for diagonal movement
   private screenWidth: number = 800; // Default, will be set properly
   private enemyWidth: number = 40; // Will be set from config
+  private exhaustFlames: Graphics[] = []; // Animated exhaust flames for high-heat enemies
 
   constructor(x: number, y: number, type: EnemyType = 'basic', speedMultiplier: number = 1.0, screenWidth: number = 800) {
     this.sprite = new Container();
@@ -59,6 +60,30 @@ export class Enemy {
       case 'dasher':
         this.drawDasher();
         break;
+    }
+
+    // Add jet exhaust flames for high-heat enemies (heat > 0.5)
+    if (config.heatEmission > 0.5) {
+      this.createExhaustFlames();
+    }
+  }
+
+  private createExhaustFlames(): void {
+    // Create animated exhaust flames that flicker
+    const flameCount = 3; // Number of flame particles
+
+    for (let i = 0; i < flameCount; i++) {
+      const flame = new Graphics();
+      flame.circle(0, 0, 3 + Math.random() * 2);
+      flame.fill(i === 0 ? 0xffaa00 : (i === 1 ? 0xff6600 : 0xff0000)); // Orange to red gradient
+      flame.alpha = 0.7 + Math.random() * 0.3;
+
+      // Position flames at bottom of enemy (exhaust position)
+      flame.x = (Math.random() - 0.5) * 10; // Spread horizontally
+      flame.y = this.enemyWidth / 2 + 5 + i * 8; // Below enemy, staggered
+
+      this.exhaustFlames.push(flame);
+      this.sprite.addChild(flame);
     }
   }
 
@@ -245,6 +270,26 @@ export class Enemy {
 
     // Clamp all enemies to screen bounds (safety check for all movement types)
     this.sprite.x = Math.max(minX, Math.min(maxX, this.sprite.x));
+
+    // Animate exhaust flames
+    this.updateExhaustFlames();
+  }
+
+  private updateExhaustFlames(): void {
+    // Make flames flicker and pulse
+    for (let i = 0; i < this.exhaustFlames.length; i++) {
+      const flame = this.exhaustFlames[i];
+
+      // Flicker alpha
+      flame.alpha = 0.5 + Math.random() * 0.5;
+
+      // Slight position variation for flame movement effect
+      flame.x = (Math.random() - 0.5) * 12;
+
+      // Scale variation to simulate flickering
+      const scale = 0.8 + Math.random() * 0.4;
+      flame.scale.set(scale);
+    }
   }
 
   public takeDamage(): boolean {

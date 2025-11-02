@@ -99,13 +99,17 @@ export class Missile {
     for (const enemy of enemies) {
       if (!enemy.sprite || enemy.health <= 0) continue;
 
-      const dx = enemy.sprite.x - this.sprite.x;
-      const dy = enemy.sprite.y - this.sprite.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
       // Get enemy heat emission
       const config = getEnemyConfig(enemy.type);
       const heatSignature = config.heatEmission;
+
+      // Only target enemies with significant heat emission (> 0.5)
+      // This makes missiles ignore low-heat enemies like basic drones
+      if (heatSignature <= 0.5) continue;
+
+      const dx = enemy.sprite.x - this.sprite.x;
+      const dy = enemy.sprite.y - this.sprite.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
       // Score based on heat signature and distance (prefer closer, hotter targets)
       // Higher heat and closer distance = higher score
