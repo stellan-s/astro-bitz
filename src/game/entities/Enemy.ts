@@ -70,6 +70,7 @@ export class Enemy {
 
   private createExhaustFlames(): void {
     // Create animated exhaust flames that flicker
+    const config = getEnemyConfig(this.type);
     const flameCount = 3; // Number of flame particles
 
     for (let i = 0; i < flameCount; i++) {
@@ -80,7 +81,7 @@ export class Enemy {
 
       // Position flames at bottom of enemy (exhaust position)
       flame.x = (Math.random() - 0.5) * 10; // Spread horizontally
-      flame.y = this.enemyWidth / 2 + 5 + i * 8; // Below enemy, staggered
+      flame.y = config.size.height / 2 + 5 + i * 8; // Below enemy, staggered vertically
 
       this.exhaustFlames.push(flame);
       this.sprite.addChild(flame);

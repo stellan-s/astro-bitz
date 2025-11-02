@@ -250,7 +250,8 @@ export class Game {
 
       if (e.touches.length > 0) {
         const touch = e.touches[0];
-        lastTouchY = touch.clientY;
+        const rect = canvas.getBoundingClientRect();
+        lastTouchY = touch.clientY - rect.top; // Get Y relative to canvas
       }
 
       // Resume audio on first touch
@@ -270,7 +271,7 @@ export class Game {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
         const x = touch.clientX - rect.left;
-        const y = touch.clientY;
+        const y = touch.clientY - rect.top; // Get Y relative to canvas
         const scaleX = this.app.screen.width / rect.width;
         this.player.sprite.x = x * scaleX;
 
@@ -283,15 +284,20 @@ export class Game {
         }
 
         // Detect swipe up gesture for missile firing
-        const swipeDistance = lastTouchY - y; // Positive means upward swipe
-        const swipeThreshold = 50; // pixels to swipe up to fire missile
+        // Only check swipe if we have a valid previous Y position
+        if (lastTouchY > 0) {
+          const swipeDistance = lastTouchY - y; // Positive means upward swipe
+          const swipeThreshold = 40; // pixels to swipe up to fire missile (reduced for easier triggering)
 
-        if (swipeDistance > swipeThreshold) {
-          const currentTime = Date.now();
-          if (currentTime - this.lastMissileTime >= this.missileFireRate) {
-            this.fireMissile();
-            this.lastMissileTime = currentTime;
-            // Reset touch Y to prevent multiple fires from same swipe
+          if (swipeDistance > swipeThreshold) {
+            const currentTime = Date.now();
+            if (currentTime - this.lastMissileTime >= this.missileFireRate) {
+              this.fireMissile();
+              this.lastMissileTime = currentTime;
+              // Reset touch Y to prevent multiple fires from same swipe
+              lastTouchY = y;
+            }
+          } else {
             lastTouchY = y;
           }
         } else {
