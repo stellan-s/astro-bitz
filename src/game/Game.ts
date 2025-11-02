@@ -174,55 +174,10 @@ export class Game {
     // Setup input
     this.setupInput();
 
-    // Enable auto-fire and missile button for mobile devices
+    // Enable auto-fire for mobile devices
     if (this.isMobileDevice()) {
       this.autoFireEnabled = true;
-      this.createMobileMissileButton();
     }
-  }
-
-  private createMobileMissileButton(): void {
-    const button = document.createElement('div');
-    button.style.position = 'fixed';
-    button.style.bottom = '20px';
-    button.style.right = '20px';
-    button.style.width = '80px';
-    button.style.height = '80px';
-    button.style.backgroundColor = 'rgba(255, 69, 0, 0.7)';
-    button.style.borderRadius = '50%';
-    button.style.border = '3px solid #ff6347';
-    button.style.display = 'flex';
-    button.style.alignItems = 'center';
-    button.style.justifyContent = 'center';
-    button.style.fontFamily = 'Orbitron, sans-serif';
-    button.style.fontSize = '14px';
-    button.style.fontWeight = 'bold';
-    button.style.color = '#ffffff';
-    button.style.cursor = 'pointer';
-    button.style.zIndex = '10000';
-    button.style.boxShadow = '0 0 10px rgba(255, 69, 0, 0.5)';
-    button.style.userSelect = 'none';
-    button.textContent = 'FIRE';
-
-    // Touch handler for missile button
-    button.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!this.isGameOver) {
-        const currentTime = Date.now();
-        if (currentTime - this.lastMissileTime >= this.missileFireRate) {
-          this.fireMissile();
-          this.lastMissileTime = currentTime;
-          // Visual feedback
-          button.style.transform = 'scale(0.9)';
-          setTimeout(() => {
-            button.style.transform = 'scale(1)';
-          }, 100);
-        }
-      }
-    });
-
-    document.body.appendChild(button);
   }
 
   private setupInput(): void {
@@ -369,7 +324,7 @@ export class Game {
     const missile = new Missile(this.player.sprite.x, this.player.sprite.y - 30);
     this.missiles.push(missile);
     this.gameContainer.addChild(missile.sprite);
-    this.audio.playShoot(); // Use shoot sound for now
+    this.audio.playMissileLaunch();
   }
 
   private spawnEnemy(): void {
@@ -475,6 +430,44 @@ export class Game {
         } else {
           this.gameOver();
           return;
+        }
+      }
+    }
+
+    // Auto-fire missiles at dangerous enemies that get too close
+    this.checkAutoFireMissiles();
+  }
+
+  private checkAutoFireMissiles(): void {
+    // Only auto-fire if we have missiles
+    if (this.missileAmmo <= 0) return;
+
+    // Check cooldown
+    const currentTime = Date.now();
+    if (currentTime - this.lastMissileTime < this.missileFireRate) return;
+
+    // Find dangerous enemies that are close to the player
+    const dangerThreshold = 250; // Distance in pixels to consider "too close"
+    const playerY = this.player.sprite.y;
+    const playerX = this.player.sprite.x;
+
+    for (const enemy of this.enemies) {
+      // Only target high-threat enemies (tank, spinner, fast, dasher)
+      const isDangerous = enemy.type === 'tank' ||
+                          enemy.type === 'spinner' ||
+                          enemy.type === 'fast' ||
+                          enemy.type === 'dasher';
+
+      if (isDangerous) {
+        const dx = enemy.sprite.x - playerX;
+        const dy = enemy.sprite.y - playerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // If dangerous enemy is close and approaching, auto-fire
+        if (distance < dangerThreshold && enemy.sprite.y > playerY - 300) {
+          this.fireMissile();
+          this.lastMissileTime = currentTime;
+          return; // Only fire one missile per check
         }
       }
     }
@@ -755,11 +748,12 @@ export class Game {
 
     container.innerHTML = `
       <div style="max-width: 400px;">
-        <h2 style="font-size: 32px; margin-bottom: 30px; text-shadow: 0 0 10px #00ffff;">📱 TOUCH CONTROLS</h2>
+        <h2 style="font-size: 32px; margin-bottom: 30px; text-shadow: 0 0 10px #00ffff;">TOUCH CONTROLS</h2>
         <div style="font-size: 18px; line-height: 1.8; margin-bottom: 20px;">
-          <p style="margin-bottom: 15px;">👆 <strong>TOUCH & DRAG</strong> to steer your ship</p>
-          <p style="margin-bottom: 15px;">🔫 <strong>AUTO-FIRE</strong> enabled - focus on steering!</p>
-          <p style="margin-bottom: 15px;">🎵 Music starts automatically</p>
+          <p style="margin-bottom: 15px;"><strong>TOUCH & DRAG</strong> to steer your ship</p>
+          <p style="margin-bottom: 15px;"><strong>AUTO-FIRE</strong> enabled - focus on steering!</p>
+          <p style="margin-bottom: 15px;"><strong>MISSILES</strong> fire automatically at close threats</p>
+          <p style="margin-bottom: 15px;">Music starts automatically</p>
         </div>
         <div style="font-size: 16px; color: #ffaa00; margin-top: 30px; animation: pulse 2s infinite;">
           TAP ANYWHERE TO START

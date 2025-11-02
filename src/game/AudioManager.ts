@@ -27,6 +27,69 @@ export class AudioManager {
     oscillator.stop(this.audioContext.currentTime + 0.1);
   }
 
+  // Missile launch sound - powerful whoosh with ignition
+  public playMissileLaunch(): void {
+    const now = this.audioContext.currentTime;
+
+    // Ignition sound - quick rising tone
+    const ignition = this.audioContext.createOscillator();
+    const ignitionGain = this.audioContext.createGain();
+
+    ignition.connect(ignitionGain);
+    ignitionGain.connect(this.audioContext.destination);
+
+    ignition.type = 'sawtooth';
+    ignition.frequency.setValueAtTime(100, now);
+    ignition.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+
+    ignitionGain.gain.setValueAtTime(this.masterVolume * 0.5, now);
+    ignitionGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+    ignition.start(now);
+    ignition.stop(now + 0.15);
+
+    // Rocket whoosh - sustained mid-tone with modulation
+    const whoosh = this.audioContext.createOscillator();
+    const whooshGain = this.audioContext.createGain();
+    const whooshFilter = this.audioContext.createBiquadFilter();
+
+    whoosh.connect(whooshFilter);
+    whooshFilter.connect(whooshGain);
+    whooshGain.connect(this.audioContext.destination);
+
+    whooshFilter.type = 'bandpass';
+    whooshFilter.frequency.setValueAtTime(400, now + 0.1);
+    whooshFilter.Q.setValueAtTime(2, now + 0.1);
+
+    whoosh.type = 'triangle';
+    whoosh.frequency.setValueAtTime(300, now + 0.1);
+    whoosh.frequency.linearRampToValueAtTime(500, now + 0.4);
+
+    whooshGain.gain.setValueAtTime(0, now + 0.1);
+    whooshGain.gain.linearRampToValueAtTime(this.masterVolume * 0.4, now + 0.15);
+    whooshGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+    whoosh.start(now + 0.1);
+    whoosh.stop(now + 0.5);
+
+    // High-frequency sizzle for rocket exhaust
+    const sizzle = this.audioContext.createOscillator();
+    const sizzleGain = this.audioContext.createGain();
+
+    sizzle.connect(sizzleGain);
+    sizzleGain.connect(this.audioContext.destination);
+
+    sizzle.type = 'square';
+    sizzle.frequency.setValueAtTime(2000, now + 0.05);
+    sizzle.frequency.exponentialRampToValueAtTime(1500, now + 0.4);
+
+    sizzleGain.gain.setValueAtTime(this.masterVolume * 0.15, now + 0.05);
+    sizzleGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+    sizzle.start(now + 0.05);
+    sizzle.stop(now + 0.4);
+  }
+
   // Hit sound - explosion
   public playHit(): void {
     const oscillator = this.audioContext.createOscillator();
