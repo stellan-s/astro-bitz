@@ -52,6 +52,7 @@ export class Game {
   private waveTransitionTimer: number = 0;
   private waveTransitionDuration: number = 2000; // Shorter transition (2 seconds)
   private waveTransitionText: Text | null = null;
+  private isTransitioningToBoss: boolean = false; // Track if current transition is for boss wave
   private isBossWave: boolean = false;
   private bossSpawned: boolean = false;
 
@@ -854,6 +855,7 @@ export class Game {
 
     // Check if this is a boss wave (every 3rd wave: 3, 6, 9, etc.)
     this.isBossWave = this.currentWave % 3 === 0;
+    this.isTransitioningToBoss = this.isBossWave; // Store boss wave status for transition
     this.bossSpawned = false;
 
     // If we just completed a boss wave, stop boss music
@@ -944,7 +946,7 @@ export class Game {
     this.waveTransitionTimer += deltaTime;
 
     // Boss waves get a bit more time to show the warning (3 seconds vs 2)
-    const duration = this.isBossWave ? 3000 : this.waveTransitionDuration;
+    const duration = this.isTransitioningToBoss ? 3000 : this.waveTransitionDuration;
 
     // Fade out the text in the last 500ms
     if (this.waveTransitionText && this.waveTransitionTimer >= duration - 500) {
@@ -955,6 +957,7 @@ export class Game {
     if (this.waveTransitionTimer >= duration) {
       // End transition
       this.isWaveTransition = false;
+      this.isTransitioningToBoss = false; // Reset transition flag
       if (this.waveTransitionText) {
         this.app.stage.removeChild(this.waveTransitionText);
         this.waveTransitionText.destroy();
