@@ -2,6 +2,7 @@ import { Application, Container, Text } from 'pixi.js';
 import { Player } from './entities/Player';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
+import { Missile } from './entities/Missile';
 import { PowerUp, type PowerUpType } from './entities/PowerUp';
 import { ParticleSystem } from './entities/Particle';
 import { AudioManager } from './AudioManager';
@@ -14,6 +15,7 @@ export class Game {
   private player: Player;
   private enemies: Enemy[] = [];
   private bullets: Bullet[] = [];
+  private missiles: Missile[] = [];
   private powerUps: PowerUp[] = [];
   private particleSystem: ParticleSystem;
   private score: number = 0;
@@ -34,6 +36,12 @@ export class Game {
   private shieldActive: boolean = false;
   private fireRate: number = 300; // milliseconds between shots
   private lastShotTime: number = 0;
+
+  // Missile system
+  private missileAmmo: number = 3; // Start with 3 missiles
+  private missileText: Text | null = null;
+  private lastMissileTime: number = 0;
+  private missileFireRate: number = 500; // milliseconds between missile shots
 
   // Wave system
   private currentWave: number = 1;
@@ -143,13 +151,75 @@ export class Game {
     this.musicText.y = 80;
     this.app.stage.addChild(this.musicText);
 
+    // Create missile counter text
+    this.missileText = new Text({
+      text: `🚀 Missiles: ${this.missileAmmo}`,
+      style: {
+        fontFamily: 'Orbitron',
+        fontSize: 20,
+        fontWeight: '700',
+        fill: 0xff4500,
+        stroke: { color: 0x000000, width: 3 },
+        dropShadow: {
+          color: 0xff6347,
+          blur: 4,
+          distance: 2,
+        },
+      },
+    });
+    this.missileText.x = this.app.screen.width - 180;
+    this.missileText.y = 45;
+    this.app.stage.addChild(this.missileText);
+
     // Setup input
     this.setupInput();
 
-    // Enable auto-fire for mobile devices
+    // Enable auto-fire and missile button for mobile devices
     if (this.isMobileDevice()) {
       this.autoFireEnabled = true;
+      this.createMobileMissileButton();
     }
+  }
+
+  private createMobileMissileButton(): void {
+    const button = document.createElement('div');
+    button.style.position = 'fixed';
+    button.style.bottom = '20px';
+    button.style.right = '20px';
+    button.style.width = '80px';
+    button.style.height = '80px';
+    button.style.backgroundColor = 'rgba(255, 69, 0, 0.7)';
+    button.style.borderRadius = '50%';
+    button.style.border = '3px solid #ff6347';
+    button.style.display = 'flex';
+    button.style.alignItems = 'center';
+    button.style.justifyContent = 'center';
+    button.style.fontSize = '40px';
+    button.style.cursor = 'pointer';
+    button.style.zIndex = '10000';
+    button.style.boxShadow = '0 0 10px rgba(255, 69, 0, 0.5)';
+    button.style.userSelect = 'none';
+    button.textContent = '🚀';
+
+    // Touch handler for missile button
+    button.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!this.isGameOver) {
+        const currentTime = Date.now();
+        if (currentTime - this.lastMissileTime >= this.missileFireRate) {
+          this.fireMissile();
+          this.lastMissileTime = currentTime;
+          // Visual feedback
+          button.style.transform = 'scale(0.9)';
+          setTimeout(() => {
+            button.style.transform = 'scale(1)';
+          }, 100);
+        }
+      }
+    });
+
+    document.body.appendChild(button);
   }
 
   private setupInput(): void {
@@ -188,6 +258,15 @@ export class Game {
         if (currentTime - this.lastShotTime >= currentFireRate) {
           this.shoot();
           this.lastShotTime = currentTime;
+        }
+      }
+
+      // Fire missile on X key
+      if ((e.key === 'x' || e.key === 'X') && !this.isGameOver) {
+        const currentTime = Date.now();
+        if (currentTime - this.lastMissileTime >= this.missileFireRate) {
+          this.fireMissile();
+          this.lastMissileTime = currentTime;
         }
       }
     });
@@ -273,6 +352,23 @@ export class Game {
     this.audio.playShoot();
   }
 
+  private fireMissile(): void {
+    if (this.missileAmmo <= 0) {
+      // No ammo - play empty sound or feedback
+      return;
+    }
+
+    this.missileAmmo--;
+    if (this.missileText) {
+      this.missileText.text = `🚀 Missiles: ${this.missileAmmo}`;
+    }
+
+    const missile = new Missile(this.player.sprite.x, this.player.sprite.y - 30);
+    this.missiles.push(missile);
+    this.gameContainer.addChild(missile.sprite);
+    this.audio.playShoot(); // Use shoot sound for now
+  }
+
   private spawnEnemy(): void {
     // Select random enemy type based on current wave (harder enemies more common in later waves)
     const type = selectRandomEnemyType(this.currentWave);
@@ -295,7 +391,7 @@ export class Game {
         edgePadding += 15; // Fast enemy zigzags ±15px
         break;
       case 'diagonal':
-        edgePadding += 50; // Dasher moves diagonally, needs more room
+        edgePadding += 80; // Dasher moves diagonally, needs much more room
         break;
       case 'straight':
         edgePadding += 10; // Just a small buffer
@@ -321,7 +417,7 @@ export class Game {
     const x = edgePadding + Math.random() * (this.app.screen.width - edgePadding * 2);
 
     // Random power-up type
-    const types: PowerUpType[] = ['rapidfire', 'shield', 'bomb'];
+    const types: PowerUpType[] = ['rapidfire', 'shield', 'bomb', 'missiles'];
     const type = types[Math.floor(Math.random() * types.length)];
 
     const powerUp = new PowerUp(x, -50, type);
@@ -343,7 +439,23 @@ export class Game {
     }
   }
 
-  private updateEnemies(deltaTime: number): void {
+  private updateMissiles(deltaTime: number): void {
+    for (let i = this.missiles.length - 1; i >= 0; i--) {
+      const missile = this.missiles[i];
+      missile.update(deltaTime, this.enemies);
+
+      // Remove missiles that are off screen or inactive
+      if (missile.sprite.x < -50 || missile.sprite.x > this.app.screen.width + 50 ||
+          missile.sprite.y < -50 || missile.sprite.y > this.app.screen.height + 50 ||
+          !missile.isActive) {
+        this.gameContainer.removeChild(missile.sprite);
+        this.missiles.splice(i, 1);
+        missile.destroy();
+      }
+    }
+  }
+
+  private updateEnemies(deltaTime: number): void{
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
       enemy.update(deltaTime);
@@ -433,6 +545,13 @@ export class Game {
         this.checkWaveComplete();
         this.audio.playHit();
         break;
+      case 'missiles':
+        particleColor = 0xff4500; // Orange-red
+        this.missileAmmo += 3; // Add 3 missiles
+        if (this.missileText) {
+          this.missileText.text = `🚀 Missiles: ${this.missileAmmo}`;
+        }
+        break;
     }
 
     // Create sparkle particle effect at powerup collection location
@@ -469,6 +588,53 @@ export class Game {
 
             // Create explosion particles
             this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, 12);
+
+            this.gameContainer.removeChild(enemy.sprite);
+            this.enemies.splice(j, 1);
+            enemy.destroy();
+
+            // Use configured points
+            this.score += config.points;
+            this.scoreText.text = `Score: ${this.score}`;
+
+            // Track wave progress
+            this.enemiesKilledThisWave++;
+            this.checkWaveComplete();
+          }
+
+          this.audio.playHit();
+          break;
+        }
+      }
+    }
+
+    // Check missile collisions
+    for (let i = this.missiles.length - 1; i >= 0; i--) {
+      const missile = this.missiles[i];
+
+      for (let j = this.enemies.length - 1; j >= 0; j--) {
+        const enemy = this.enemies[j];
+
+        // Missile collision detection
+        const dx = missile.sprite.x - enemy.sprite.x;
+        const dy = missile.sprite.y - enemy.sprite.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const minDistance = 40; // Larger collision radius for missiles
+
+        if (distance < minDistance) {
+          // Collision detected - remove missile
+          this.gameContainer.removeChild(missile.sprite);
+          this.missiles.splice(i, 1);
+          missile.destroy();
+
+          // Missiles do 2 damage (or kill instantly for weak enemies)
+          const isDead = enemy.takeDamage() || enemy.takeDamage();
+          if (isDead) {
+            // Get enemy config for color and points
+            const config = getEnemyConfig(enemy.type);
+
+            // Create larger explosion for missile hits
+            this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, 20);
 
             this.gameContainer.removeChild(enemy.sprite);
             this.enemies.splice(j, 1);
@@ -733,6 +899,7 @@ export class Game {
 
       // Update game objects
       this.updateBullets(deltaTime);
+      this.updateMissiles(deltaTime);
       this.updateEnemies(deltaTime);
       this.updatePowerUps(deltaTime);
       this.particleSystem.update(deltaTime);

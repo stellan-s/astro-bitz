@@ -16,6 +16,7 @@ export interface EnemyTypeConfig {
   };
   spawnWeight: number; // Relative probability of spawning (0-1)
   movePattern: MovePattern;
+  heatEmission: number; // Heat signature for missile targeting (0-1, higher = more attractive)
 }
 
 export interface EnemyConfig {
@@ -36,6 +37,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
     },
     spawnWeight: 0.35, // 35% chance
     movePattern: 'straight',
+    heatEmission: 0.3, // Low heat
   },
   fast: {
     speed: 3.5,
@@ -50,6 +52,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
     },
     spawnWeight: 0.15, // 15% chance
     movePattern: 'zigzag',
+    heatEmission: 0.8, // High heat - fast movement generates more heat
   },
   tank: {
     speed: 0.8,
@@ -64,6 +67,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
     },
     spawnWeight: 0.15, // 15% chance
     movePattern: 'straight',
+    heatEmission: 1.0, // Maximum heat - large and heavily armored
   },
   weaver: {
     speed: 2.0,
@@ -78,6 +82,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
     },
     spawnWeight: 0.15, // 15% chance
     movePattern: 'sine',
+    heatEmission: 0.6, // Medium-high heat
   },
   spinner: {
     speed: 1.8,
@@ -93,6 +98,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
     },
     spawnWeight: 0.1, // 10% chance
     movePattern: 'circular',
+    heatEmission: 0.9, // Very high heat - spinning generates heat
   },
   dasher: {
     speed: 2.5,
@@ -107,6 +113,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
     },
     spawnWeight: 0.1, // 10% chance
     movePattern: 'diagonal',
+    heatEmission: 0.7, // High heat - fast diagonal movement
   },
 };
 
