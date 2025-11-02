@@ -794,6 +794,46 @@ export class Game {
     }
   }
 
+  private createGameOverAd(): void {
+    // Create a styled ad container that appears on game over
+    const adContainer = document.createElement('div');
+    adContainer.id = 'game-over-ad';
+    adContainer.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 728px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(0, 255, 255, 0.3);
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+      text-align: center;
+      z-index: 1000;
+    `;
+
+    // Create AdSense ad unit
+    const adIns = document.createElement('ins');
+    adIns.className = 'adsbygoogle';
+    adIns.style.display = 'block';
+    adIns.setAttribute('data-ad-client', 'ca-pub-XXXXXXXXXXXXXXXX');
+    adIns.setAttribute('data-ad-slot', '6677889900');
+    adIns.setAttribute('data-ad-format', 'horizontal');
+    adIns.setAttribute('data-full-width-responsive', 'true');
+
+    adContainer.appendChild(adIns);
+    document.body.appendChild(adContainer);
+
+    // Push ad to AdSense
+    try {
+      ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+    } catch (e) {
+      console.log('AdSense error:', e);
+    }
+  }
+
   private gameOver(): void {
     this.isGameOver = true;
     this.audio.playGameOver();
@@ -803,7 +843,7 @@ export class Game {
 
     let gameOverMessage = 'GAME OVER\n';
     if (isNewHighScore) {
-      gameOverMessage += '🏆 NEW HIGH SCORE! 🏆\n';
+      gameOverMessage += 'NEW HIGH SCORE!\n';
     }
     gameOverMessage += `Final Score: ${this.score}\n`;
     gameOverMessage += `Wave Reached: ${this.currentWave}\n\n`;
@@ -835,6 +875,9 @@ export class Game {
     gameOverText.x = this.app.screen.width / 2;
     gameOverText.y = this.app.screen.height / 2;
     this.app.stage.addChild(gameOverText);
+
+    // Create game-over ad container
+    this.createGameOverAd();
 
     // Keyboard restart
     window.addEventListener('keydown', (e) => {

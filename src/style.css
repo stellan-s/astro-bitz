@@ -26,13 +26,14 @@ body {
   touch-action: manipulation;
 }
 
-/* Ad Container Styling - Discreet but compliant */
+/* Ad Container Styling - Styled to match Astro Blitz aesthetic */
 .ad-container {
-  background-color: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: opacity 0.3s ease;
+  transition: all 0.3s ease;
+  padding: 8px;
 }
 
 /* Top Banner Ad */
@@ -40,7 +41,8 @@ body {
   width: 100%;
   min-height: 50px;
   max-height: 90px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
 }
 
 /* Bottom Banner Ad */
@@ -48,7 +50,8 @@ body {
   width: 100%;
   min-height: 50px;
   max-height: 90px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
 }
 
 /* Game Wrapper - Contains sidebar ads and game */
@@ -64,14 +67,19 @@ body {
   width: 160px;
   min-width: 160px;
   display: none; /* Hidden by default, shown on larger screens */
+  border: 2px solid rgba(0, 255, 255, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
 }
 
 .ad-left {
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 2px solid rgba(0, 255, 255, 0.3);
+  margin-right: 10px;
 }
 
 .ad-right {
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 2px solid rgba(0, 255, 255, 0.3);
+  margin-left: 10px;
 }
 
 /* Show sidebar ads on desktop */

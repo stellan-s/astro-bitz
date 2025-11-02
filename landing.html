@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Astro Blitz - An intense space shooter game with heat-seeking missiles, 6 enemy types, and increasing difficulty. Can you survive the waves?" />
+    <title>Astro Blitz - Space Shooter Game</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <!-- Google AdSense - Replace with your publisher ID -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+            crossorigin="anonymous"></script>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Orbitron', sans-serif;
+        background: linear-gradient(180deg, #0a0a1f 0%, #1a1a3f 100%);
+        color: #ffffff;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* Top Ad Banner */
+      .ad-top-banner {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 10px;
+        text-align: center;
+        border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+      }
+
+      /* Main Container */
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        display: grid;
+        grid-template-columns: 300px 1fr 300px;
+        gap: 30px;
+      }
+
+      /* Sidebar Ads */
+      .sidebar-ad {
+        position: sticky;
+        top: 20px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        border: 2px solid rgba(0, 255, 255, 0.3);
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        height: fit-content;
+      }
+
+      /* Main Content */
+      .main-content {
+        text-align: center;
+      }
+
+      .logo {
+        font-size: 72px;
+        font-weight: 900;
+        background: linear-gradient(45deg, #00ffff, #ff00ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        margin-bottom: 20px;
+        animation: glow 2s ease-in-out infinite alternate;
+      }
+
+      @keyframes glow {
+        from { filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5)); }
+        to { filter: drop-shadow(0 0 30px rgba(255, 0, 255, 0.8)); }
+      }
+
+      .tagline {
+        font-size: 24px;
+        color: #00ffff;
+        margin-bottom: 40px;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+      }
+
+      .play-button {
+        display: inline-block;
+        padding: 20px 60px;
+        font-size: 28px;
+        font-weight: 900;
+        color: #ffffff;
+        background: linear-gradient(45deg, #ff4500, #ff6347);
+        border: 3px solid #ff6347;
+        border-radius: 10px;
+        text-decoration: none;
+        box-shadow: 0 0 30px rgba(255, 69, 0, 0.5);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-bottom: 60px;
+      }
+
+      .play-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 50px rgba(255, 69, 0, 0.8);
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 30px;
+        margin-bottom: 60px;
+      }
+
+      .feature-card {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 30px;
+        border: 2px solid rgba(0, 255, 255, 0.3);
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .feature-card:hover {
+        border-color: rgba(255, 0, 255, 0.5);
+        box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
+        transform: translateY(-5px);
+      }
+
+      .feature-card h3 {
+        color: #ff4500;
+        font-size: 24px;
+        margin-bottom: 15px;
+      }
+
+      .feature-card p {
+        color: #aaaaaa;
+        line-height: 1.6;
+      }
+
+      .controls {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 30px;
+        border: 2px solid rgba(255, 255, 0, 0.3);
+        border-radius: 10px;
+        margin-bottom: 40px;
+      }
+
+      .controls h2 {
+        color: #ffff00;
+        margin-bottom: 20px;
+      }
+
+      .control-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        text-align: left;
+      }
+
+      .control-item {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 5px;
+      }
+
+      .control-key {
+        color: #00ffff;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+
+      /* In-content Ad */
+      .ad-content {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        border: 2px solid rgba(0, 255, 255, 0.2);
+        border-radius: 10px;
+        margin: 40px 0;
+        text-align: center;
+      }
+
+      /* Bottom Ad Banner */
+      .ad-bottom-banner {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        text-align: center;
+        border-top: 2px solid rgba(0, 255, 255, 0.3);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        margin-top: 60px;
+      }
+
+      /* Mobile Responsive */
+      @media (max-width: 1024px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar-ad {
+          display: none;
+        }
+
+        .logo {
+          font-size: 48px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Banner Ad -->
+    <div class="ad-top-banner">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="1111111111"
+           data-ad-format="horizontal"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <div class="container">
+      <!-- Left Sidebar Ad -->
+      <div class="sidebar-ad">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-slot="2222222222"
+             data-ad-format="vertical"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <h1 class="logo">ASTRO BLITZ</h1>
+        <p class="tagline">Survive the cosmic onslaught</p>
+
+        <a href="/index.html" class="play-button">PLAY NOW</a>
+
+        <div class="features">
+          <div class="feature-card">
+            <h3>6 Enemy Types</h3>
+            <p>From basic drones to heavily armored tanks, each with unique movement patterns and heat signatures.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Heat-Seeking Missiles</h3>
+            <p>Limited missiles that lock onto high-heat targets. Use them strategically!</p>
+          </div>
+          <div class="feature-card">
+            <h3>Power-Ups</h3>
+            <p>Collect rapid-fire, shields, bombs, and missile refills to turn the tide of battle.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Escalating Difficulty</h3>
+            <p>Flappy Bird-style difficulty scaling. Each wave gets faster and more intense!</p>
+          </div>
+          <div class="feature-card">
+            <h3>Wave System</h3>
+            <p>Clear waves to progress. Can you reach wave 10?</p>
+          </div>
+          <div class="feature-card">
+            <h3>Mobile Optimized</h3>
+            <p>Touch controls with auto-fire. Play anywhere, anytime!</p>
+          </div>
+        </div>
+
+        <!-- In-Content Ad -->
+        <div class="ad-content">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+               data-ad-slot="3333333333"
+               data-ad-format="rectangle"></ins>
+          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        </div>
+
+        <div class="controls">
+          <h2>Controls</h2>
+          <div class="control-list">
+            <div class="control-item">
+              <span class="control-key">← →</span> or <span class="control-key">A D</span>
+              <div>Move Ship</div>
+            </div>
+            <div class="control-item">
+              <span class="control-key">SPACE</span>
+              <div>Fire Bullets</div>
+            </div>
+            <div class="control-item">
+              <span class="control-key">X</span>
+              <div>Fire Missile</div>
+            </div>
+            <div class="control-item">
+              <span class="control-key">M</span>
+              <div>Toggle Music</div>
+            </div>
+            <div class="control-item">
+              <span class="control-key">TOUCH</span>
+              <div>Drag to Move (Mobile)</div>
+            </div>
+            <div class="control-item">
+              <span class="control-key">FIRE Button</span>
+              <div>Launch Missile (Mobile)</div>
+            </div>
+          </div>
+        </div>
+
+        <a href="/index.html" class="play-button">START PLAYING</a>
+      </div>
+
+      <!-- Right Sidebar Ad -->
+      <div class="sidebar-ad">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-slot="4444444444"
+             data-ad-format="vertical"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+
+    <!-- Bottom Banner Ad -->
+    <div class="ad-bottom-banner">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="5555555555"
+           data-ad-format="horizontal"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+  </body>
+</html>
