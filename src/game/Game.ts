@@ -753,7 +753,11 @@ export class Game {
         const dx = bullet.sprite.x - enemy.sprite.x;
         const dy = bullet.sprite.y - enemy.sprite.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const minDistance = 35; // Combined radius - larger for easier hitting
+
+        // Use enemy size for better collision detection (especially for bosses)
+        const config = getEnemyConfig(enemy.type);
+        const enemyRadius = Math.max(config.size.width, config.size.height) / 2;
+        const minDistance = enemyRadius + 10; // Enemy radius + small buffer
 
         if (distance < minDistance) {
           // Collision detected - remove bullet
@@ -800,7 +804,11 @@ export class Game {
         const dx = missile.sprite.x - enemy.sprite.x;
         const dy = missile.sprite.y - enemy.sprite.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const minDistance = 40; // Larger collision radius for missiles
+
+        // Use enemy size for better collision detection (especially for bosses)
+        const config = getEnemyConfig(enemy.type);
+        const enemyRadius = Math.max(config.size.width, config.size.height) / 2;
+        const minDistance = enemyRadius + 15; // Enemy radius + larger buffer for missiles
 
         if (distance < minDistance) {
           // Collision detected - remove missile
