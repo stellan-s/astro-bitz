@@ -60,6 +60,10 @@ export class Game {
   private mobileInstructionsShown: boolean = false;
   private autoFireEnabled: boolean = false;
 
+  // Game state
+  private gameState: 'start' | 'playing' | 'gameover' = 'start';
+  private startScreenContainer: HTMLDivElement | null = null;
+
   constructor(app: Application) {
     this.app = app;
     this.gameContainer = new Container();
@@ -178,6 +182,81 @@ export class Game {
     if (this.isMobileDevice()) {
       this.autoFireEnabled = true;
     }
+
+    // Show start screen instead of starting immediately
+    this.showStartScreen();
+  }
+
+  private showStartScreen(): void {
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      font-family: 'Orbitron', sans-serif;
+      color: #00ffff;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    `;
+
+    container.innerHTML = `
+      <div style="max-width: 600px;">
+        <h1 style="font-size: 64px; margin-bottom: 20px;
+                   background: linear-gradient(45deg, #00ffff, #ff00ff);
+                   -webkit-background-clip: text;
+                   -webkit-text-fill-color: transparent;
+                   background-clip: text;
+                   text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);">
+          ASTRO BLITZ
+        </h1>
+        <p style="font-size: 24px; color: #ffaa00; margin-bottom: 40px;">
+          Survive the cosmic onslaught
+        </p>
+        <div style="font-size: 18px; color: #ffffff; margin-bottom: 40px; line-height: 1.8;">
+          <p style="margin-bottom: 15px;">⬅️ ➡️ or A/D - Move</p>
+          <p style="margin-bottom: 15px;">SPACE - Fire Bullets</p>
+          <p style="margin-bottom: 15px;">X - Launch Missile</p>
+          <p style="margin-bottom: 15px; color: #00ffff;">📱 Touch: Drag to steer, swipe up for missiles</p>
+        </div>
+        <div style="font-size: 28px; color: #ff4500; font-weight: bold;
+                    animation: pulse 2s infinite; cursor: pointer;">
+          ${this.isMobileDevice() ? 'TAP TO START' : 'CLICK TO START'}
+        </div>
+      </div>
+      <style>
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.05); }
+        }
+      </style>
+    `;
+
+    const startGame = () => {
+      if (this.startScreenContainer) {
+        document.body.removeChild(this.startScreenContainer);
+        this.startScreenContainer = null;
+      }
+      this.gameState = 'playing';
+      this.audio.resume();
+      if (this.musicEnabled) {
+        this.audio.startBackgroundMusic();
+      }
+    };
+
+    container.addEventListener('click', startGame);
+    container.addEventListener('touchstart', startGame);
+
+    this.startScreenContainer = container;
+    document.body.appendChild(container);
   }
 
   private setupInput(): void {
@@ -826,72 +905,102 @@ export class Game {
   }
 
   private gameOver(): void {
-    this.isGameOver = true;
+    this.gameState = 'gameover';
     this.audio.playGameOver();
 
     // Check for new high score
     const isNewHighScore = HighScoreManager.saveHighScore(this.score);
 
-    let gameOverMessage = 'GAME OVER\n';
-    if (isNewHighScore) {
-      gameOverMessage += 'NEW HIGH SCORE!\n';
-    }
-    gameOverMessage += `Final Score: ${this.score}\n`;
-    gameOverMessage += `Wave Reached: ${this.currentWave}\n\n`;
+    // Create HTML overlay for game over screen
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    `;
 
-    // Different restart instructions for mobile vs desktop
-    if (this.isMobileDevice()) {
-      gameOverMessage += 'Tap to Restart';
-    } else {
-      gameOverMessage += 'Press R to Restart';
-    }
+    const titleColor = isNewHighScore ? '#ffd700' : '#ff0000';
+    const glowColor = isNewHighScore ? 'rgba(255, 215, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
 
-    const gameOverText = new Text({
-      text: gameOverMessage,
-      style: {
-        fontFamily: 'Orbitron',
-        fontSize: isNewHighScore ? 42 : 38,
-        fontWeight: '900',
-        fill: isNewHighScore ? 0xffd700 : 0xff0000,
-        align: 'center',
-        stroke: { color: 0x000000, width: 6 },
-        dropShadow: {
-          color: isNewHighScore ? 0xffaa00 : 0xff0000,
-          blur: 12,
-          distance: 4,
-        },
-      },
-    });
-    gameOverText.anchor.set(0.5);
-    gameOverText.x = this.app.screen.width / 2;
-    gameOverText.y = this.app.screen.height / 2;
-    this.app.stage.addChild(gameOverText);
+    container.innerHTML = `
+      <div style="max-width: 600px;">
+        <h1 style="font-size: 56px; margin-bottom: 20px; color: ${titleColor};
+                   text-shadow: 0 0 20px ${glowColor}, 0 0 40px ${glowColor};
+                   font-weight: 900;">
+          GAME OVER
+        </h1>
+        ${isNewHighScore ? `
+          <p style="font-size: 32px; color: #ffd700; margin-bottom: 30px;
+                    text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+                    animation: glow 1.5s infinite alternate;">
+            NEW HIGH SCORE!
+          </p>
+        ` : ''}
+        <div style="font-size: 28px; color: #00ffff; margin-bottom: 15px;">
+          Final Score: <span style="color: #ffffff; font-weight: bold;">${this.score}</span>
+        </div>
+        <div style="font-size: 24px; color: #ffaa00; margin-bottom: 40px;">
+          Wave Reached: <span style="color: #ffffff; font-weight: bold;">${this.currentWave}</span>
+        </div>
+        <div style="font-size: 20px; color: #888888; margin-bottom: 30px;">
+          High Score: ${this.highScore}
+        </div>
+        <div style="font-size: 28px; color: #ff4500; font-weight: bold;
+                    animation: pulse 2s infinite; cursor: pointer; margin-bottom: 30px;">
+          ${this.isMobileDevice() ? 'TAP TO RESTART' : 'PRESS R OR CLICK TO RESTART'}
+        </div>
+      </div>
+      <style>
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.05); }
+        }
+        @keyframes glow {
+          0%, 100% { text-shadow: 0 0 15px rgba(255, 215, 0, 0.7); }
+          50% { text-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 0 50px rgba(255, 215, 0, 0.5); }
+        }
+      </style>
+    `;
 
-    // Create game-over ad container
-    this.createGameOverAd();
+    const restartGame = () => {
+      window.location.reload();
+    };
+
+    container.addEventListener('click', restartGame);
+    container.addEventListener('touchstart', restartGame);
 
     // Keyboard restart
-    window.addEventListener('keydown', (e) => {
+    const keyHandler = (e: KeyboardEvent) => {
       if (e.key === 'r' || e.key === 'R') {
-        window.location.reload();
+        restartGame();
       }
-    });
+    };
+    window.addEventListener('keydown', keyHandler);
 
-    // Touch restart for mobile
-    if (this.isMobileDevice()) {
-      const canvas = this.app.canvas as HTMLCanvasElement;
-      const touchRestartHandler = () => {
-        window.location.reload();
-      };
-      canvas.addEventListener('touchstart', touchRestartHandler, { once: true });
-    }
+    document.body.appendChild(container);
+
+    // Create game-over ad container below the game over message
+    setTimeout(() => this.createGameOverAd(), 100);
   }
 
   public start(): void {
     let lastTime = Date.now();
 
     this.app.ticker.add(() => {
-      if (this.isGameOver) return;
+      // Only run game logic when in playing state
+      if (this.gameState !== 'playing') return;
 
       const currentTime = Date.now();
       const deltaTime = currentTime - lastTime;
