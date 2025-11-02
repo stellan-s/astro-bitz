@@ -309,7 +309,7 @@ export class Enemy {
     this.sprite.addChild(graphics);
   }
 
-  public update(deltaTime: number, currentTime?: number, playerX?: number, playerY?: number): void {
+  public update(_deltaTime: number, currentTime?: number, playerX?: number, playerY?: number): void {
     // Move enemy downward, but respect maxY for bosses
     if (this.maxY === undefined || this.sprite.y < this.maxY) {
       this.sprite.y += this.speed;
