@@ -363,7 +363,7 @@ export class AudioManager {
     this.bossMusic = true;
 
     // Shepard tone: multiple octaves of the same pitch class cycling
-    // Creates illusion of infinitely rising pitch
+    // Creates illusion of infinitely rising pitch (subtle background tension)
     const baseFreq = 55; // A1
     const numOctaves = 6;
 
@@ -380,8 +380,9 @@ export class AudioManager {
 
       // Bell curve envelope: fade in and out to create seamless loop
       // Lowest and highest octaves are quieter
+      // Reduced volume from 0.15 to 0.06 to make it more subtle
       const bellCurve = Math.exp(-Math.pow((i - numOctaves / 2), 2) / (numOctaves / 2));
-      gain.gain.setValueAtTime(this.masterVolume * 0.15 * bellCurve, this.audioContext.currentTime);
+      gain.gain.setValueAtTime(this.masterVolume * 0.06 * bellCurve, this.audioContext.currentTime);
 
       osc.start(this.audioContext.currentTime);
 
@@ -391,6 +392,9 @@ export class AudioManager {
 
     // Animate the Shepard tone
     this.animateShepardTone();
+
+    // Add dramatic bass and rhythm to accompany the Shepard tone
+    this.playBossRhythm();
   }
 
   private animateShepardTone(): void {
@@ -425,14 +429,14 @@ export class AudioManager {
       const distance = Math.abs(cyclePos - peakPos);
       const bellCurve = Math.exp(-Math.pow(distance / bellWidth, 2));
 
-      gain.gain.setValueAtTime(this.masterVolume * 0.15 * bellCurve, now);
+      gain.gain.setValueAtTime(this.masterVolume * 0.06 * bellCurve, now);
 
       // Fade out at the end, fade in at the beginning
       const nextBellCurve = i === 0 ?
         Math.exp(-Math.pow((1 - peakPos) / bellWidth, 2)) : // Will wrap to highest
         Math.exp(-Math.pow(((i - 1) / numOctaves - peakPos) / bellWidth, 2));
 
-      gain.gain.linearRampToValueAtTime(this.masterVolume * 0.15 * nextBellCurve, now + riseDuration);
+      gain.gain.linearRampToValueAtTime(this.masterVolume * 0.06 * nextBellCurve, now + riseDuration);
     }
 
     // Loop the animation
@@ -445,6 +449,79 @@ export class AudioManager {
         this.animateShepardTone();
       }
     }, riseDuration * 1000);
+  }
+
+  private playBossRhythm(): void {
+    if (!this.bossMusic) return;
+
+    const now = this.audioContext.currentTime;
+    const beatDuration = 0.5; // 120 BPM
+
+    // Deep bass kick on beats 1 and 3
+    for (let beat = 0; beat < 8; beat += 2) {
+      const time = now + beat * beatDuration;
+      const bass = this.audioContext.createOscillator();
+      const bassGain = this.audioContext.createGain();
+
+      bass.connect(bassGain);
+      bassGain.connect(this.audioContext.destination);
+
+      bass.type = 'sine';
+      bass.frequency.setValueAtTime(55, time); // Deep A1
+      bass.frequency.exponentialRampToValueAtTime(40, time + 0.1);
+
+      bassGain.gain.setValueAtTime(this.masterVolume * 0.25, time);
+      bassGain.gain.exponentialRampToValueAtTime(0.001, time + 0.2);
+
+      bass.start(time);
+      bass.stop(time + 0.2);
+    }
+
+    // Hi-hat on every beat
+    for (let beat = 0; beat < 8; beat++) {
+      const time = now + beat * beatDuration;
+      const hihat = this.audioContext.createOscillator();
+      const hihatGain = this.audioContext.createGain();
+
+      hihat.connect(hihatGain);
+      hihatGain.connect(this.audioContext.destination);
+
+      hihat.type = 'square';
+      hihat.frequency.setValueAtTime(8000, time);
+
+      hihatGain.gain.setValueAtTime(this.masterVolume * 0.03, time);
+      hihatGain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+
+      hihat.start(time);
+      hihat.stop(time + 0.05);
+    }
+
+    // Ominous low melody
+    const melodyNotes = [110, 116.54, 130.81, 123.47]; // A2, A#2, C3, B2
+    for (let i = 0; i < melodyNotes.length; i++) {
+      const time = now + i * beatDuration * 2;
+      const melody = this.audioContext.createOscillator();
+      const melodyGain = this.audioContext.createGain();
+
+      melody.connect(melodyGain);
+      melodyGain.connect(this.audioContext.destination);
+
+      melody.type = 'sawtooth';
+      melody.frequency.setValueAtTime(melodyNotes[i], time);
+
+      melodyGain.gain.setValueAtTime(this.masterVolume * 0.08, time);
+      melodyGain.gain.setTargetAtTime(0.001, time + 0.3, 0.3);
+
+      melody.start(time);
+      melody.stop(time + 0.9);
+    }
+
+    // Loop the rhythm every 4 seconds (8 beats)
+    setTimeout(() => {
+      if (this.bossMusic) {
+        this.playBossRhythm();
+      }
+    }, 4000);
   }
 
   public stopBossMusic(): void {

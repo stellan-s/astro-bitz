@@ -775,6 +775,14 @@ export class Game {
       // Boss wave - just 1 boss enemy
       this.enemiesPerWave = 1;
 
+      // Clear all remaining enemies from previous wave
+      for (let i = this.enemies.length - 1; i >= 0; i--) {
+        const enemy = this.enemies[i];
+        this.gameContainer.removeChild(enemy.sprite);
+        enemy.destroy();
+      }
+      this.enemies = [];
+
       // Switch to boss music
       if (this.musicEnabled) {
         this.audio.stopBackgroundMusic();
@@ -837,7 +845,16 @@ export class Game {
 
     this.waveTransitionTimer += deltaTime;
 
-    if (this.waveTransitionTimer >= this.waveTransitionDuration) {
+    // Boss waves get a bit more time to show the warning (3 seconds vs 2)
+    const duration = this.isBossWave ? 3000 : this.waveTransitionDuration;
+
+    // Fade out the text in the last 500ms
+    if (this.waveTransitionText && this.waveTransitionTimer >= duration - 500) {
+      const fadeProgress = (this.waveTransitionTimer - (duration - 500)) / 500;
+      this.waveTransitionText.alpha = Math.max(0, 1 - fadeProgress);
+    }
+
+    if (this.waveTransitionTimer >= duration) {
       // End transition
       this.isWaveTransition = false;
       if (this.waveTransitionText) {

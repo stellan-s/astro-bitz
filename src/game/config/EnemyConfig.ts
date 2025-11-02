@@ -116,10 +116,10 @@ export const ENEMY_CONFIG: EnemyConfig = {
     heatEmission: 0.7, // High heat - fast diagonal movement
   },
   boss: {
-    speed: 1.0,
+    speed: 1.5, // Increased from 1.0 - faster movement
     speedVariation: 0.0, // No variation for bosses
-    health: 50, // Much higher health
-    points: 500, // Massive points reward
+    health: 100, // Increased from 50 - much tankier
+    points: 1000, // Increased from 500 - bigger reward for harder fight
     color: 0xff0000,
     secondaryColor: 0xff6600,
     tertiaryColor: 0xffaa00,
