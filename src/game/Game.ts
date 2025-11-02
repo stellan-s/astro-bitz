@@ -408,8 +408,8 @@ export class Game {
     // Calculate safe spawn position
     const x = edgePadding + Math.random() * (this.app.screen.width - edgePadding * 2);
 
-    // Create enemy with current difficulty multiplier
-    const enemy = new Enemy(x, -50, type, this.difficultyMultiplier);
+    // Create enemy with current difficulty multiplier and screen width for boundaries
+    const enemy = new Enemy(x, -50, type, this.difficultyMultiplier, this.app.screen.width);
     this.enemies.push(enemy);
     this.gameContainer.addChild(enemy.sprite);
   }

@@ -13,13 +13,15 @@ export class Enemy {
   private initialX: number;
   private rotationSpeed: number = 0.05;
   private direction: number = 1; // 1 or -1 for diagonal movement
+  private screenWidth: number = 800; // Default, will be set properly
 
-  constructor(x: number, y: number, type: EnemyType = 'basic', speedMultiplier: number = 1.0) {
+  constructor(x: number, y: number, type: EnemyType = 'basic', speedMultiplier: number = 1.0, screenWidth: number = 800) {
     this.sprite = new Container();
     this.sprite.x = x;
     this.sprite.y = y;
     this.initialX = x;
     this.type = type;
+    this.screenWidth = screenWidth;
 
     // Get configuration for this enemy type
     const config = getEnemyConfig(type);
@@ -225,6 +227,13 @@ export class Enemy {
         this.sprite.x += this.direction * this.speed * 0.8;
         // Slight wave to make it more interesting
         this.sprite.x += Math.sin(this.movePattern * 2) * 1;
+
+        // Bounce off edges to stay on screen
+        if (this.sprite.x < 30 || this.sprite.x > this.screenWidth - 30) {
+          this.direction *= -1; // Reverse direction
+          // Clamp to bounds
+          this.sprite.x = Math.max(30, Math.min(this.screenWidth - 30, this.sprite.x));
+        }
         break;
     }
   }
