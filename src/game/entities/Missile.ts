@@ -100,6 +100,7 @@ export class Missile {
   private findBestTarget(enemies: Enemy[]): Enemy | null {
     if (enemies.length === 0) return null;
 
+    const MINIMUM_HEAT_THRESHOLD = 0.5; // Missiles only lock onto enemies with heat >= 0.5
     let bestTarget: Enemy | null = null;
     let bestScore = -1;
 
@@ -110,13 +111,17 @@ export class Missile {
       const config = getEnemyConfig(enemy.type);
       const heatSignature = config.heatEmission;
 
+      // Skip enemies with insufficient heat signature (stealth enemies)
+      if (heatSignature < MINIMUM_HEAT_THRESHOLD) {
+        continue; // Missile cannot detect this enemy - too cold!
+      }
+
       const dx = enemy.sprite.x - this.sprite.x;
       const dy = enemy.sprite.y - this.sprite.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       // Score based on heat signature and distance (prefer closer, hotter targets)
-      // Heat is exponentially weighted - 0.3 heat gets very low score, 1.0 heat gets max score
-      // This makes missiles strongly prefer hotter targets
+      // Heat is exponentially weighted - higher heat = much stronger lock
       const heatWeight = Math.pow(heatSignature, 2); // Square it for exponential preference
       const score = heatWeight * 1000 / (distance + 1);
 
