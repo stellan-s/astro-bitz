@@ -62,8 +62,9 @@ export class Enemy {
         break;
     }
 
-    // Add jet exhaust flames for high-heat enemies (heat > 0.5)
-    if (config.heatEmission > 0.5) {
+    // Add jet exhaust flames based on heat emission (0-1 scale)
+    // Even low heat enemies get small flames
+    if (config.heatEmission > 0) {
       this.createExhaustFlames();
     }
   }
@@ -71,17 +72,29 @@ export class Enemy {
   private createExhaustFlames(): void {
     // Create animated exhaust flames that flicker
     const config = getEnemyConfig(this.type);
-    const flameCount = 3; // Number of flame particles
+    const heat = config.heatEmission; // 0-1 scale
+
+    // More particles for hotter enemies
+    const flameCount = Math.max(2, Math.floor(heat * 5)); // 2-5 particles based on heat
 
     for (let i = 0; i < flameCount; i++) {
       const flame = new Graphics();
-      flame.circle(0, 0, 3 + Math.random() * 2);
-      flame.fill(i === 0 ? 0xffaa00 : (i === 1 ? 0xff6600 : 0xff0000)); // Orange to red gradient
-      flame.alpha = 0.7 + Math.random() * 0.3;
 
-      // Position flames at bottom of enemy (exhaust position)
-      flame.x = (Math.random() - 0.5) * 10; // Spread horizontally
-      flame.y = config.size.height / 2 + 5 + i * 8; // Below enemy, staggered vertically
+      // Flame size scales with heat (0-1 range becomes 2-6 pixel radius)
+      const baseSize = 2 + heat * 4;
+      flame.circle(0, 0, baseSize + Math.random() * (heat * 2));
+
+      // Color intensity based on heat: low heat = dim orange, high heat = bright red
+      const colors = [0xffaa00, 0xff6600, 0xff0000]; // Orange to red
+      const colorIndex = Math.min(Math.floor(i / 2), colors.length - 1);
+      flame.fill(colors[colorIndex]);
+
+      // Hotter enemies have more opaque flames
+      flame.alpha = 0.5 + heat * 0.4 + Math.random() * 0.2;
+
+      // Position flames BEHIND enemy (negative Y = above enemy, pointing up/back)
+      flame.x = (Math.random() - 0.5) * (8 + heat * 4); // Spread scales with heat
+      flame.y = -config.size.height / 2 - 5 - i * (6 + heat * 4); // Behind enemy, staggered upward
 
       this.exhaustFlames.push(flame);
       this.sprite.addChild(flame);
@@ -277,18 +290,28 @@ export class Enemy {
   }
 
   private updateExhaustFlames(): void {
+    if (this.exhaustFlames.length === 0) return;
+
+    // Get heat emission to scale animation intensity
+    const config = getEnemyConfig(this.type);
+    const heat = config.heatEmission;
+
     // Make flames flicker and pulse
     for (let i = 0; i < this.exhaustFlames.length; i++) {
       const flame = this.exhaustFlames[i];
 
-      // Flicker alpha
-      flame.alpha = 0.5 + Math.random() * 0.5;
+      // Flicker alpha - more intense flicker for hotter enemies
+      const baseAlpha = 0.5 + heat * 0.3;
+      flame.alpha = baseAlpha + Math.random() * (0.3 + heat * 0.2);
 
       // Slight position variation for flame movement effect
-      flame.x = (Math.random() - 0.5) * 12;
+      // Hotter enemies have more turbulent flames
+      const spread = 8 + heat * 6;
+      flame.x = (Math.random() - 0.5) * spread;
 
-      // Scale variation to simulate flickering
-      const scale = 0.8 + Math.random() * 0.4;
+      // Scale variation to simulate flickering - bigger variation for hotter engines
+      const scaleVariation = 0.3 + heat * 0.3;
+      const scale = (1 - scaleVariation / 2) + Math.random() * scaleVariation;
       flame.scale.set(scale);
     }
   }

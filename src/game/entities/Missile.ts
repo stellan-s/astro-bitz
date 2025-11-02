@@ -5,7 +5,6 @@ import { getEnemyConfig } from '../config/EnemyConfig';
 export class Missile {
   public sprite: Container;
   private speed: number = 6;
-  private turnSpeed: number = 0.08; // How quickly missile can turn
   private target: Enemy | null = null;
   private velocity: { x: number; y: number } = { x: 0, y: -1 }; // Start moving up
   public isActive: boolean = true;
@@ -62,9 +61,17 @@ export class Missile {
         const desiredVelX = dx / distance;
         const desiredVelY = dy / distance;
 
-        // Gradually turn towards target
-        this.velocity.x += (desiredVelX - this.velocity.x) * this.turnSpeed;
-        this.velocity.y += (desiredVelY - this.velocity.y) * this.turnSpeed;
+        // Get target's heat emission to scale tracking quality
+        const config = getEnemyConfig(this.target.type);
+        const heat = config.heatEmission;
+
+        // Turn speed scales with heat: 0.0 heat = 0.02 turn, 1.0 heat = 0.15 turn
+        // Higher heat = tighter tracking, easier to hit
+        const heatScaledTurnSpeed = 0.02 + (heat * 0.13);
+
+        // Gradually turn towards target - better tracking for hotter enemies
+        this.velocity.x += (desiredVelX - this.velocity.x) * heatScaledTurnSpeed;
+        this.velocity.y += (desiredVelY - this.velocity.y) * heatScaledTurnSpeed;
 
         // Normalize velocity
         const velMag = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
@@ -103,17 +110,15 @@ export class Missile {
       const config = getEnemyConfig(enemy.type);
       const heatSignature = config.heatEmission;
 
-      // Only target enemies with significant heat emission (> 0.5)
-      // This makes missiles ignore low-heat enemies like basic drones
-      if (heatSignature <= 0.5) continue;
-
       const dx = enemy.sprite.x - this.sprite.x;
       const dy = enemy.sprite.y - this.sprite.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       // Score based on heat signature and distance (prefer closer, hotter targets)
-      // Higher heat and closer distance = higher score
-      const score = heatSignature * 1000 / (distance + 1);
+      // Heat is exponentially weighted - 0.3 heat gets very low score, 1.0 heat gets max score
+      // This makes missiles strongly prefer hotter targets
+      const heatWeight = Math.pow(heatSignature, 2); // Square it for exponential preference
+      const score = heatWeight * 1000 / (distance + 1);
 
       if (score > bestScore) {
         bestScore = score;
