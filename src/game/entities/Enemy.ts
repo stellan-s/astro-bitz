@@ -14,6 +14,7 @@ export class Enemy {
   private rotationSpeed: number = 0.05;
   private direction: number = 1; // 1 or -1 for diagonal movement
   private screenWidth: number = 800; // Default, will be set properly
+  private enemyWidth: number = 40; // Will be set from config
 
   constructor(x: number, y: number, type: EnemyType = 'basic', speedMultiplier: number = 1.0, screenWidth: number = 800) {
     this.sprite = new Container();
@@ -25,6 +26,9 @@ export class Enemy {
 
     // Get configuration for this enemy type
     const config = getEnemyConfig(type);
+
+    // Store enemy width for boundary checking
+    this.enemyWidth = config.size.width;
 
     // Set properties from configuration with difficulty multiplier
     const baseSpeed = config.speed + (Math.random() * config.speedVariation * 2 - config.speedVariation);
@@ -200,6 +204,10 @@ export class Enemy {
     // Update movement pattern counter
     this.movePattern += 0.1;
 
+    // Calculate safe boundaries (half enemy width plus small buffer)
+    const minX = this.enemyWidth / 2 + 10;
+    const maxX = this.screenWidth - this.enemyWidth / 2 - 10;
+
     // Apply movement pattern
     switch (this.movePatternType) {
       case 'straight':
@@ -229,13 +237,14 @@ export class Enemy {
         this.sprite.x += Math.sin(this.movePattern * 2) * 1;
 
         // Bounce off edges to stay on screen
-        if (this.sprite.x < 30 || this.sprite.x > this.screenWidth - 30) {
+        if (this.sprite.x < minX || this.sprite.x > maxX) {
           this.direction *= -1; // Reverse direction
-          // Clamp to bounds
-          this.sprite.x = Math.max(30, Math.min(this.screenWidth - 30, this.sprite.x));
         }
         break;
     }
+
+    // Clamp all enemies to screen bounds (safety check for all movement types)
+    this.sprite.x = Math.max(minX, Math.min(maxX, this.sprite.x));
   }
 
   public takeDamage(): boolean {
