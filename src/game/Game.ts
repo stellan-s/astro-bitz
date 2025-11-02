@@ -235,6 +235,7 @@ export class Game {
 
     // Touch controls for mobile
     const canvas = this.app.canvas as HTMLCanvasElement;
+    let lastTouchY = 0;
 
     // Show mobile instructions on first load
     if (this.isMobileDevice() && !this.mobileInstructionsShown) {
@@ -246,6 +247,11 @@ export class Game {
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
       touchMoving = true;
+
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        lastTouchY = touch.clientY;
+      }
 
       // Resume audio on first touch
       this.audio.resume();
@@ -264,6 +270,7 @@ export class Game {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
         const x = touch.clientX - rect.left;
+        const y = touch.clientY;
         const scaleX = this.app.screen.width / rect.width;
         this.player.sprite.x = x * scaleX;
 
@@ -274,12 +281,29 @@ export class Game {
         if (this.player.sprite.x > this.app.screen.width - this.player.sprite.width / 2) {
           this.player.sprite.x = this.app.screen.width - this.player.sprite.width / 2;
         }
+
+        // Detect swipe up gesture for missile firing
+        const swipeDistance = lastTouchY - y; // Positive means upward swipe
+        const swipeThreshold = 50; // pixels to swipe up to fire missile
+
+        if (swipeDistance > swipeThreshold) {
+          const currentTime = Date.now();
+          if (currentTime - this.lastMissileTime >= this.missileFireRate) {
+            this.fireMissile();
+            this.lastMissileTime = currentTime;
+            // Reset touch Y to prevent multiple fires from same swipe
+            lastTouchY = y;
+          }
+        } else {
+          lastTouchY = y;
+        }
       }
     });
 
     canvas.addEventListener('touchend', (e) => {
       e.preventDefault();
       touchMoving = false;
+      lastTouchY = 0;
     });
 
     // Update player position based on keys (keyboard only)
@@ -430,44 +454,6 @@ export class Game {
         } else {
           this.gameOver();
           return;
-        }
-      }
-    }
-
-    // Auto-fire missiles at dangerous enemies that get too close
-    this.checkAutoFireMissiles();
-  }
-
-  private checkAutoFireMissiles(): void {
-    // Only auto-fire if we have missiles
-    if (this.missileAmmo <= 0) return;
-
-    // Check cooldown
-    const currentTime = Date.now();
-    if (currentTime - this.lastMissileTime < this.missileFireRate) return;
-
-    // Find dangerous enemies that are close to the player
-    const dangerThreshold = 250; // Distance in pixels to consider "too close"
-    const playerY = this.player.sprite.y;
-    const playerX = this.player.sprite.x;
-
-    for (const enemy of this.enemies) {
-      // Only target high-threat enemies (tank, spinner, fast, dasher)
-      const isDangerous = enemy.type === 'tank' ||
-                          enemy.type === 'spinner' ||
-                          enemy.type === 'fast' ||
-                          enemy.type === 'dasher';
-
-      if (isDangerous) {
-        const dx = enemy.sprite.x - playerX;
-        const dy = enemy.sprite.y - playerY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        // If dangerous enemy is close and approaching, auto-fire
-        if (distance < dangerThreshold && enemy.sprite.y > playerY - 300) {
-          this.fireMissile();
-          this.lastMissileTime = currentTime;
-          return; // Only fire one missile per check
         }
       }
     }
@@ -750,9 +736,9 @@ export class Game {
       <div style="max-width: 400px;">
         <h2 style="font-size: 32px; margin-bottom: 30px; text-shadow: 0 0 10px #00ffff;">TOUCH CONTROLS</h2>
         <div style="font-size: 18px; line-height: 1.8; margin-bottom: 20px;">
-          <p style="margin-bottom: 15px;"><strong>TOUCH & DRAG</strong> to steer your ship</p>
-          <p style="margin-bottom: 15px;"><strong>AUTO-FIRE</strong> enabled - focus on steering!</p>
-          <p style="margin-bottom: 15px;"><strong>MISSILES</strong> fire automatically at close threats</p>
+          <p style="margin-bottom: 15px;"><strong>DRAG LEFT/RIGHT</strong> to steer your ship</p>
+          <p style="margin-bottom: 15px;"><strong>SWIPE UP</strong> while steering to fire missile</p>
+          <p style="margin-bottom: 15px;"><strong>AUTO-FIRE</strong> enabled for bullets</p>
           <p style="margin-bottom: 15px;">Music starts automatically</p>
         </div>
         <div style="font-size: 16px; color: #ffaa00; margin-top: 30px; animation: pulse 2s infinite;">
