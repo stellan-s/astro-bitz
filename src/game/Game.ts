@@ -696,6 +696,9 @@ export class Game {
     // Play powerup collection sound
     this.audio.playPowerUp();
 
+    // Award points for collecting powerup
+    this.score += 5;
+
     // Get color based on powerup type for particles
     let particleColor: number;
     let particleCount: number = 30;
@@ -822,8 +825,8 @@ export class Game {
           this.missiles.splice(i, 1);
           missile.destroy();
 
-          // Missiles do 2 damage (or kill instantly for weak enemies)
-          const isDead = enemy.takeDamage() || enemy.takeDamage();
+          // Missiles do 3 damage (or kill instantly for weak enemies)
+          const isDead = enemy.takeDamage() || enemy.takeDamage() || enemy.takeDamage();
           if (isDead) {
             // Get enemy config for color and points
             const config = getEnemyConfig(enemy.type);

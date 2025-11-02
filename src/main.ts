@@ -14,7 +14,7 @@ async function init() {
 
   // Use most of the available height for a larger play area
   const canvasWidth = 800;
-  const canvasHeight = Math.max(700, Math.min(availableHeight, 1000)); // Min 700, max 1000
+  const canvasHeight = Math.max(700, Math.min(availableHeight, 1400)); // Min 700, max 1400
 
   await app.init({
     width: canvasWidth,
