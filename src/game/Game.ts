@@ -23,7 +23,6 @@ export class Game {
   private scoreText: Text;
   private highScoreText: Text;
   private waveText: Text;
-  private isGameOver: boolean = false;
   private spawnTimer: number = 0;
   private spawnInterval: number = 1500; // Start at 1.5 seconds
   private powerUpTimer: number = 0;
@@ -289,7 +288,7 @@ export class Game {
       }
 
       // Shoot on spacebar (with fire rate limiting)
-      if (e.key === ' ' && !this.isGameOver) {
+      if (e.key === ' ' && this.gameState === 'playing') {
         const currentTime = Date.now();
         const currentFireRate = this.rapidFireActive ? 100 : this.fireRate;
         if (currentTime - this.lastShotTime >= currentFireRate) {
@@ -299,7 +298,7 @@ export class Game {
       }
 
       // Fire missile on X key
-      if ((e.key === 'x' || e.key === 'X') && !this.isGameOver) {
+      if ((e.key === 'x' || e.key === 'X') && this.gameState === 'playing') {
         const currentTime = Date.now();
         if (currentTime - this.lastMissileTime >= this.missileFireRate) {
           this.fireMissile();
@@ -346,7 +345,7 @@ export class Game {
 
     canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
-      if (!this.isGameOver && touchMoving && e.touches.length > 0) {
+      if (this.gameState === 'playing' && touchMoving && e.touches.length > 0) {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
         const x = touch.clientX - rect.left;
@@ -398,7 +397,7 @@ export class Game {
 
     // Update player position based on keys (keyboard only)
     this.app.ticker.add(() => {
-      if (!this.isGameOver && !touchMoving) {
+      if (this.gameState === 'playing' && !touchMoving) {
         if (keys['ArrowLeft'] || keys['a']) {
           this.player.moveLeft();
         }
@@ -1035,7 +1034,7 @@ export class Game {
       }
 
       // Auto-fire for mobile devices
-      if (this.autoFireEnabled && !this.isGameOver) {
+      if (this.autoFireEnabled && this.gameState === 'playing') {
         const currentFireRate = this.rapidFireActive ? 100 : this.fireRate;
         if (currentTime - this.lastShotTime >= currentFireRate) {
           this.shoot();
