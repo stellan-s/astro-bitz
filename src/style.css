@@ -42,7 +42,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 4px;
+  padding: 2px; /* Reduced from 4px to maximize game area */
   overflow: hidden;
   flex-shrink: 0; /* Prevent ads from shrinking */
 }
@@ -50,7 +50,7 @@ body {
 /* Top Banner Ad */
 .ad-top {
   width: 100%;
-  height: 60px; /* Fixed height instead of min/max */
+  height: 50px; /* Reduced from 60px to give more game space */
   border-bottom: 2px solid rgba(0, 255, 255, 0.3);
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
 }
@@ -58,7 +58,7 @@ body {
 /* Bottom Banner Ad */
 .ad-bottom {
   width: 100%;
-  height: 60px; /* Fixed height instead of min/max */
+  height: 50px; /* Reduced from 60px to give more game space */
   border-top: 2px solid rgba(0, 255, 255, 0.3);
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
 }
@@ -105,7 +105,7 @@ body {
   align-items: center;
   flex: 1;
   position: relative;
-  padding: 10px; /* Add padding on all sides */
+  padding: 5px; /* Reduced from 10px to maximize game area */
 }
 
 canvas {
@@ -122,13 +122,13 @@ canvas {
 /* Mobile-specific improvements */
 @media (max-width: 768px) {
   #game-container {
-    padding: 4px; /* Minimal padding on mobile to maximize game area */
+    padding: 2px; /* Minimal padding on mobile to maximize game area */
   }
 
   /* Smaller ad height on mobile to give more room for game */
   .ad-top,
   .ad-bottom {
-    height: 50px;
+    height: 40px; /* Reduced from 50px for more game space on mobile */
   }
 }
 
