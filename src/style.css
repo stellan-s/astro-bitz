@@ -145,3 +145,38 @@ canvas {
     display: none !important;
   }
 }
+
+/* Fake ad placeholders for development/preview */
+.fake-ad {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+  border: 1px dashed rgba(0, 255, 255, 0.3);
+  border-radius: 4px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  color: rgba(0, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 100%;
+  height: 100%;
+}
+
+.fake-ad-horizontal {
+  min-height: 50px;
+}
+
+.fake-ad-vertical {
+  min-height: 300px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* Make fake ads more subtle on mobile */
+@media (max-width: 768px) {
+  .fake-ad-horizontal {
+    min-height: 40px;
+    font-size: 10px;
+  }
+}
