@@ -366,7 +366,7 @@ export class Game {
         // Detect swipe up gesture for missile firing
         if (lastTouchY > 0) {
           const swipeDistance = lastTouchY - y; // Positive means upward swipe
-          const swipeThreshold = 30; // pixels to swipe up to fire missile
+          const swipeThreshold = 50; // Increased from 30 to 50 pixels - harder to trigger accidentally
 
           // Fire missile if swiped up past threshold
           if (swipeDistance > swipeThreshold) {
