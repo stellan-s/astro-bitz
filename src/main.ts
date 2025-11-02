@@ -8,7 +8,7 @@ const app = new Application();
 async function init() {
   await app.init({
     width: 800,
-    height: 600,
+    height: 700, // Increased from 600 to 700 for more vertical play space
     backgroundColor: 0x1a1a2e,
     antialias: true,
   });
