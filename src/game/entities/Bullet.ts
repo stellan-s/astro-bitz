@@ -24,8 +24,8 @@ export class Bullet {
     this.sprite.y -= this.speed;
     this.travelDistance += this.speed;
 
-    // Enable collision after bullet travels 40 pixels (gets clear of player area)
-    if (this.travelDistance > 40) {
+    // Enable collision after bullet travels just 10 pixels (minimal clearance from player)
+    if (this.travelDistance > 10) {
       this.canCollide = true;
     }
   }
