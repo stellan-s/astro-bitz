@@ -1,11 +1,12 @@
 import { Application, Container, Text } from 'pixi.js';
 import { Player } from './entities/Player';
-import { Enemy, type EnemyType } from './entities/Enemy';
+import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { PowerUp, type PowerUpType } from './entities/PowerUp';
 import { ParticleSystem } from './entities/Particle';
 import { AudioManager } from './AudioManager';
 import { HighScoreManager } from './HighScoreManager';
+import { selectRandomEnemyType, getEnemyConfig } from './config/EnemyConfig';
 
 export class Game {
   private app: Application;
@@ -22,9 +23,9 @@ export class Game {
   private waveText: Text;
   private isGameOver: boolean = false;
   private spawnTimer: number = 0;
-  private spawnInterval: number = 2000; // 2 seconds
+  private spawnInterval: number = 1500; // Start at 1.5 seconds
   private powerUpTimer: number = 0;
-  private powerUpInterval: number = 10000; // 10 seconds
+  private powerUpInterval: number = 8000; // Power-ups more frequent (8 seconds)
   private audio: AudioManager;
   private musicEnabled: boolean = true;
   private musicText: Text;
@@ -37,11 +38,15 @@ export class Game {
   // Wave system
   private currentWave: number = 1;
   private enemiesKilledThisWave: number = 0;
-  private enemiesPerWave: number = 10;
+  private enemiesPerWave: number = 15; // Start with more enemies
   private isWaveTransition: boolean = false;
   private waveTransitionTimer: number = 0;
-  private waveTransitionDuration: number = 3000; // 3 seconds between waves
+  private waveTransitionDuration: number = 2000; // Shorter transition (2 seconds)
   private waveTransitionText: Text | null = null;
+
+  // Difficulty scaling
+  private minSpawnInterval: number = 300; // Much more aggressive minimum
+  private difficultyMultiplier: number = 1.0; // Increases enemy speed over time
 
   // Mobile instructions
   private mobileInstructionsShown: boolean = false;
@@ -273,18 +278,11 @@ export class Game {
     const edgePadding = 40;
     const x = edgePadding + Math.random() * (this.app.screen.width - edgePadding * 2);
 
-    // Random enemy type with weighted probabilities
-    const rand = Math.random();
-    let type: EnemyType;
-    if (rand < 0.7) {
-      type = 'basic'; // 70% chance
-    } else if (rand < 0.8) {
-      type = 'fast'; // 10% chance - rare but scary!
-    } else {
-      type = 'tank'; // 20% chance
-    }
+    // Select random enemy type based on current wave (harder enemies more common in later waves)
+    const type = selectRandomEnemyType(this.currentWave);
 
-    const enemy = new Enemy(x, -50, type);
+    // Create enemy with current difficulty multiplier
+    const enemy = new Enemy(x, -50, type, this.difficultyMultiplier);
     this.enemies.push(enemy);
     this.gameContainer.addChild(enemy.sprite);
   }
@@ -350,7 +348,8 @@ export class Game {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 40) {
-        this.collectPowerUp(powerUp.type);
+        // Create particle effect at powerup location
+        this.collectPowerUp(powerUp.type, powerUp.sprite.x, powerUp.sprite.y);
         this.gameContainer.removeChild(powerUp.sprite);
         this.powerUps.splice(i, 1);
         powerUp.destroy();
@@ -366,26 +365,39 @@ export class Game {
     }
   }
 
-  private collectPowerUp(type: PowerUpType): void {
+  private collectPowerUp(type: PowerUpType, x: number, y: number): void {
+    // Play powerup collection sound
+    this.audio.playPowerUp();
+
+    // Get color based on powerup type for particles
+    let particleColor: number;
+    let particleCount: number = 30;
+
     switch (type) {
       case 'rapidfire':
+        particleColor = 0xffa500; // Orange
         this.rapidFireActive = true;
         this.rapidFireTimer = 10000; // 10 seconds - longer for more fun!
         break;
       case 'shield':
+        particleColor = 0x4169e1; // Blue
         this.shieldActive = true;
         this.player.showShield(); // Show shield visual
         break;
       case 'bomb':
+        particleColor = 0xff0000; // Red
+        particleCount = 40; // More particles for bomb
         // Clear all enemies on screen with explosion particles
         let enemiesCleared = 0;
         for (let i = this.enemies.length - 1; i >= 0; i--) {
           const enemy = this.enemies[i];
-          this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, 0xff4444, 20);
+          const config = getEnemyConfig(enemy.type);
+          this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, 20);
           this.gameContainer.removeChild(enemy.sprite);
           this.enemies.splice(i, 1);
           enemy.destroy();
-          this.score += 5;
+          // Award half points for bomb kills
+          this.score += Math.floor(config.points / 2);
           enemiesCleared++;
         }
         // Track wave progress for bomb kills
@@ -394,6 +406,9 @@ export class Game {
         this.audio.playHit();
         break;
     }
+
+    // Create sparkle particle effect at powerup collection location
+    this.particleSystem.createExplosion(x, y, particleColor, particleCount);
   }
 
   private checkCollisions(): void {
@@ -421,16 +436,18 @@ export class Game {
           // Damage enemy
           const isDead = enemy.takeDamage();
           if (isDead) {
+            // Get enemy config for color and points
+            const config = getEnemyConfig(enemy.type);
+
             // Create explosion particles
-            const color = enemy.type === 'basic' ? 0xff4444 : enemy.type === 'fast' ? 0x00ffff : 0x8b008b;
-            this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, color, 12);
+            this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, 12);
 
             this.gameContainer.removeChild(enemy.sprite);
             this.enemies.splice(j, 1);
             enemy.destroy();
 
-            const points = enemy.type === 'tank' ? 30 : enemy.type === 'fast' ? 15 : 10;
-            this.score += points;
+            // Use configured points
+            this.score += config.points;
             this.scoreText.text = `Score: ${this.score}`;
 
             // Track wave progress
@@ -457,15 +474,23 @@ export class Game {
     this.currentWave++;
     this.enemiesKilledThisWave = 0;
 
-    // Increase difficulty
-    this.enemiesPerWave += 5; // More enemies each wave
-    if (this.spawnInterval > 800) {
-      this.spawnInterval -= 100; // Faster spawning (but not too fast)
-    }
+    // Aggressive difficulty scaling - Flappy Bird style
+    // More enemies each wave (exponential growth)
+    this.enemiesPerWave += Math.floor(3 + this.currentWave * 1.5);
+
+    // Decrease spawn interval aggressively (more enemies on screen)
+    const reductionAmount = Math.max(80, 150 - this.currentWave * 10);
+    this.spawnInterval = Math.max(this.minSpawnInterval, this.spawnInterval - reductionAmount);
+
+    // Increase enemy speed multiplier (enemies get faster)
+    this.difficultyMultiplier += 0.08; // 8% speed increase per wave
+
+    // Reduce power-up frequency as game gets harder
+    this.powerUpInterval = Math.min(15000, this.powerUpInterval + 500);
 
     // Show wave complete text
     this.waveTransitionText = new Text({
-      text: `WAVE ${this.currentWave - 1} COMPLETE!\n\nWave ${this.currentWave} Starting...`,
+      text: `WAVE ${this.currentWave - 1} COMPLETE!\n\nWave ${this.currentWave} Starting...\nDifficulty: ${Math.round(this.difficultyMultiplier * 100)}%`,
       style: {
         fontFamily: 'Orbitron',
         fontSize: 40,

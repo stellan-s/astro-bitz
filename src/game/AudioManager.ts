@@ -83,6 +83,52 @@ export class AudioManager {
     oscillator.stop(this.audioContext.currentTime + 0.5);
   }
 
+  // Powerup sound - ascending chime with harmonics
+  public playPowerUp(): void {
+    const now = this.audioContext.currentTime;
+
+    // Create multiple oscillators for a richer sound
+    const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 - major chord
+
+    frequencies.forEach((baseFreq, index) => {
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+
+      oscillator.type = 'sine';
+      const startTime = now + index * 0.05; // Slight delay for arpeggio effect
+
+      oscillator.frequency.setValueAtTime(baseFreq, startTime);
+      oscillator.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, startTime + 0.2);
+
+      const volume = this.masterVolume * 0.3 * (1 - index * 0.2); // Decreasing volume
+      gainNode.gain.setValueAtTime(volume, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.3);
+    });
+
+    // Add a sparkle effect with higher frequency
+    const sparkle = this.audioContext.createOscillator();
+    const sparkleGain = this.audioContext.createGain();
+
+    sparkle.connect(sparkleGain);
+    sparkleGain.connect(this.audioContext.destination);
+
+    sparkle.type = 'triangle';
+    sparkle.frequency.setValueAtTime(1500, now + 0.1);
+    sparkle.frequency.exponentialRampToValueAtTime(3000, now + 0.25);
+
+    sparkleGain.gain.setValueAtTime(this.masterVolume * 0.15, now + 0.1);
+    sparkleGain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+    sparkle.start(now + 0.1);
+    sparkle.stop(now + 0.25);
+  }
+
   // Background music with melody and bass
   public startBackgroundMusic(): void {
     if (this.musicPlaying) return;
