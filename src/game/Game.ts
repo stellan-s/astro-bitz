@@ -274,12 +274,40 @@ export class Game {
   }
 
   private spawnEnemy(): void {
-    // Keep enemies away from edges - tank enemy is 60px wide, so 40px padding is safe
-    const edgePadding = 40;
-    const x = edgePadding + Math.random() * (this.app.screen.width - edgePadding * 2);
-
     // Select random enemy type based on current wave (harder enemies more common in later waves)
     const type = selectRandomEnemyType(this.currentWave);
+
+    // Get enemy configuration to determine safe spawn area
+    const config = getEnemyConfig(type);
+
+    // Calculate edge padding based on enemy size and movement pattern
+    let edgePadding = config.size.width / 2; // Base padding is half the enemy width
+
+    // Add extra padding based on movement pattern
+    switch (config.movePattern) {
+      case 'sine':
+        edgePadding += 60; // Weaver moves ±60px
+        break;
+      case 'circular':
+        edgePadding += 30; // Spinner moves ±30px
+        break;
+      case 'zigzag':
+        edgePadding += 15; // Fast enemy zigzags ±15px
+        break;
+      case 'diagonal':
+        edgePadding += 50; // Dasher moves diagonally, needs more room
+        break;
+      case 'straight':
+        edgePadding += 10; // Just a small buffer
+        break;
+    }
+
+    // Ensure padding doesn't exceed screen bounds
+    const maxPadding = this.app.screen.width / 3;
+    edgePadding = Math.min(edgePadding, maxPadding);
+
+    // Calculate safe spawn position
+    const x = edgePadding + Math.random() * (this.app.screen.width - edgePadding * 2);
 
     // Create enemy with current difficulty multiplier
     const enemy = new Enemy(x, -50, type, this.difficultyMultiplier);

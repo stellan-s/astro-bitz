@@ -205,8 +205,8 @@ export class Enemy {
         break;
 
       case 'zigzag':
-        // Fast zigzag pattern
-        this.sprite.x += Math.sin(this.movePattern) * 2;
+        // Fast zigzag pattern - use absolute positioning to prevent drift
+        this.sprite.x = this.initialX + Math.sin(this.movePattern) * 15;
         break;
 
       case 'sine':
