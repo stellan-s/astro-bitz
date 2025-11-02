@@ -5,6 +5,13 @@
   -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -14,10 +21,13 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
+  max-height: 100vh;
+  max-height: 100dvh;
+  position: fixed;
+  width: 100%;
   /* Prevent pull-to-refresh on mobile */
   overscroll-behavior: none;
-  /* Better touch scrolling */
-  -webkit-overflow-scrolling: touch;
   /* Prevent text selection on mobile */
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -32,15 +42,15 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: all 0.3s ease;
-  padding: 8px;
+  padding: 4px;
+  overflow: hidden;
+  flex-shrink: 0; /* Prevent ads from shrinking */
 }
 
 /* Top Banner Ad */
 .ad-top {
   width: 100%;
-  min-height: 50px;
-  max-height: 90px;
+  height: 60px; /* Fixed height instead of min/max */
   border-bottom: 2px solid rgba(0, 255, 255, 0.3);
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
 }
@@ -48,8 +58,7 @@ body {
 /* Bottom Banner Ad */
 .ad-bottom {
   width: 100%;
-  min-height: 50px;
-  max-height: 90px;
+  height: 60px; /* Fixed height instead of min/max */
   border-top: 2px solid rgba(0, 255, 255, 0.3);
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
 }
@@ -113,39 +122,26 @@ canvas {
 /* Mobile-specific improvements */
 @media (max-width: 768px) {
   #game-container {
-    padding: 8px; /* Slightly less padding on mobile */
+    padding: 4px; /* Minimal padding on mobile to maximize game area */
   }
 
-  /* Ensure game takes up available space nicely */
-  body {
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  }
-
-  /* Top and bottom ad containers get less height on mobile */
+  /* Smaller ad height on mobile to give more room for game */
   .ad-top,
   .ad-bottom {
-    min-height: 50px;
-    max-height: 60px;
+    height: 50px;
   }
 }
 
 /* AdSense responsive units */
 .adsbygoogle {
   display: block;
+  max-height: 100%; /* Prevent ads from overflowing container */
+  overflow: hidden;
 }
 
 /* Mobile optimization - hide sidebar ads */
 @media (max-width: 1199px) {
   .ad-sidebar {
     display: none !important;
-  }
-}
-
-/* Small mobile screens - reduce banner height */
-@media (max-width: 768px) {
-  .ad-top,
-  .ad-bottom {
-    min-height: 50px;
-    max-height: 60px;
   }
 }
