@@ -847,6 +847,17 @@ export class Game {
 
   private checkWaveComplete(): void {
     if (this.enemiesKilledThisWave >= this.enemiesPerWave) {
+      // If we're already in a transition (e.g., boss wave intro),
+      // clean it up before starting the next wave
+      if (this.isWaveTransition) {
+        this.isWaveTransition = false;
+        this.isTransitioningToBoss = false;
+        if (this.waveTransitionText) {
+          this.app.stage.removeChild(this.waveTransitionText);
+          this.waveTransitionText.destroy();
+          this.waveTransitionText = null;
+        }
+      }
       this.startWaveTransition();
     }
   }
