@@ -254,57 +254,149 @@ export class Enemy {
 
   private drawBoss(): void {
     const graphics = new Graphics();
-    const config = getEnemyConfig('boss');
+    const config = getEnemyConfig(this.type);
 
-    // Large intimidating boss design
-    // Main body - hexagonal shape
     const w = config.size.width / 2;
     const h = config.size.height / 2;
 
-    graphics.moveTo(0, -h);
-    graphics.lineTo(w * 0.6, -h * 0.5);
-    graphics.lineTo(w * 0.6, h * 0.5);
-    graphics.lineTo(0, h);
-    graphics.lineTo(-w * 0.6, h * 0.5);
-    graphics.lineTo(-w * 0.6, -h * 0.5);
-    graphics.lineTo(0, -h);
-    graphics.fill(config.color);
+    switch (this.type) {
+      case 'boss':
+        // Standard Boss - Hexagonal battleship
+        graphics.moveTo(0, -h);
+        graphics.lineTo(w * 0.6, -h * 0.5);
+        graphics.lineTo(w * 0.6, h * 0.5);
+        graphics.lineTo(0, h);
+        graphics.lineTo(-w * 0.6, h * 0.5);
+        graphics.lineTo(-w * 0.6, -h * 0.5);
+        graphics.lineTo(0, -h);
+        graphics.fill(config.color);
 
-    // Inner core - pulsing center
-    graphics.circle(0, 0, 15);
-    graphics.fill(0xffff00);
+        // Inner core
+        graphics.circle(0, 0, 15);
+        graphics.fill(0xffff00);
 
-    // Armor plates - left side
-    graphics.rect(-w * 0.5, -h * 0.3, w * 0.2, h * 0.2);
-    graphics.fill(config.secondaryColor || 0xff6600);
+        // Armor plates
+        graphics.rect(-w * 0.5, -h * 0.3, w * 0.2, h * 0.2);
+        graphics.fill(config.secondaryColor || 0xff6600);
+        graphics.rect(-w * 0.5, h * 0.1, w * 0.2, h * 0.2);
+        graphics.fill(config.secondaryColor || 0xff6600);
+        graphics.rect(w * 0.3, -h * 0.3, w * 0.2, h * 0.2);
+        graphics.fill(config.secondaryColor || 0xff6600);
+        graphics.rect(w * 0.3, h * 0.1, w * 0.2, h * 0.2);
+        graphics.fill(config.secondaryColor || 0xff6600);
 
-    graphics.rect(-w * 0.5, h * 0.1, w * 0.2, h * 0.2);
-    graphics.fill(config.secondaryColor || 0xff6600);
+        // Wings
+        graphics.moveTo(-w * 0.6, -h * 0.4);
+        graphics.lineTo(-w, -h * 0.6);
+        graphics.lineTo(-w * 0.8, -h * 0.2);
+        graphics.fill(config.tertiaryColor || 0xffaa00);
+        graphics.moveTo(w * 0.6, -h * 0.4);
+        graphics.lineTo(w, -h * 0.6);
+        graphics.lineTo(w * 0.8, -h * 0.2);
+        graphics.fill(config.tertiaryColor || 0xffaa00);
 
-    // Armor plates - right side
-    graphics.rect(w * 0.3, -h * 0.3, w * 0.2, h * 0.2);
-    graphics.fill(config.secondaryColor || 0xff6600);
+        // Weapon ports
+        graphics.circle(-w * 0.3, -h * 0.2, 5);
+        graphics.fill(0xff0000);
+        graphics.circle(w * 0.3, -h * 0.2, 5);
+        graphics.fill(0xff0000);
+        break;
 
-    graphics.rect(w * 0.3, h * 0.1, w * 0.2, h * 0.2);
-    graphics.fill(config.secondaryColor || 0xff6600);
+      case 'bossSniper':
+        // Sniper Boss - Diamond sniper craft
+        graphics.moveTo(0, -h);
+        graphics.lineTo(w * 0.5, 0);
+        graphics.lineTo(0, h);
+        graphics.lineTo(-w * 0.5, 0);
+        graphics.lineTo(0, -h);
+        graphics.fill(config.color);
 
-    // Wing/fins - make it look menacing
-    graphics.moveTo(-w * 0.6, -h * 0.4);
-    graphics.lineTo(-w, -h * 0.6);
-    graphics.lineTo(-w * 0.8, -h * 0.2);
-    graphics.fill(config.tertiaryColor || 0xffaa00);
+        // Targeting scope
+        graphics.circle(0, 0, 20);
+        graphics.fill(config.secondaryColor || 0x8a2be2);
+        graphics.circle(0, 0, 12);
+        graphics.fill(config.color);
+        graphics.circle(0, 0, 5);
+        graphics.fill(0xffff00);
 
-    graphics.moveTo(w * 0.6, -h * 0.4);
-    graphics.lineTo(w, -h * 0.6);
-    graphics.lineTo(w * 0.8, -h * 0.2);
-    graphics.fill(config.tertiaryColor || 0xffaa00);
+        // Crosshair
+        graphics.rect(-15, -1, 30, 2);
+        graphics.fill(0xff00ff);
+        graphics.rect(-1, -15, 2, 30);
+        graphics.fill(0xff00ff);
 
-    // Eyes/weapon ports - glowing red
-    graphics.circle(-w * 0.3, -h * 0.2, 5);
-    graphics.fill(0xff0000);
+        // Sniper barrels
+        graphics.rect(-w * 0.3, -h * 0.8, 8, h * 0.4);
+        graphics.fill(config.tertiaryColor || 0xff00ff);
+        graphics.rect(w * 0.3 - 8, -h * 0.8, 8, h * 0.4);
+        graphics.fill(config.tertiaryColor || 0xff00ff);
+        break;
 
-    graphics.circle(w * 0.3, -h * 0.2, 5);
-    graphics.fill(0xff0000);
+      case 'bossTank':
+        // Tank Boss - Heavy fortress
+        graphics.rect(-w, -h * 0.8, w * 2, h * 1.6);
+        graphics.fill(config.color);
+
+        // Heavy armor layers
+        graphics.rect(-w * 0.9, -h * 0.6, w * 1.8, h * 0.3);
+        graphics.fill(config.secondaryColor || 0x483d8b);
+        graphics.rect(-w * 0.9, -h * 0.1, w * 1.8, h * 0.3);
+        graphics.fill(config.secondaryColor || 0x483d8b);
+        graphics.rect(-w * 0.9, h * 0.4, w * 1.8, h * 0.3);
+        graphics.fill(config.secondaryColor || 0x483d8b);
+
+        // Gun turrets
+        graphics.circle(-w * 0.6, -h * 0.3, 12);
+        graphics.fill(config.tertiaryColor || 0x696969);
+        graphics.circle(w * 0.6, -h * 0.3, 12);
+        graphics.fill(config.tertiaryColor || 0x696969);
+        graphics.circle(-w * 0.6, h * 0.3, 12);
+        graphics.fill(config.tertiaryColor || 0x696969);
+        graphics.circle(w * 0.6, h * 0.3, 12);
+        graphics.fill(config.tertiaryColor || 0x696969);
+        graphics.circle(0, 0, 15);
+        graphics.fill(config.tertiaryColor || 0x696969);
+
+        // Main cannon barrel
+        graphics.rect(-6, -h - 15, 12, 20);
+        graphics.fill(0x808080);
+        break;
+
+      case 'bossSwarm':
+        // Swarm Boss - Organic/alien design
+        graphics.circle(0, 0, h * 0.9);
+        graphics.fill(config.color);
+
+        // Multiple eyes
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI * 2) / 6;
+          const eyeX = Math.cos(angle) * w * 0.4;
+          const eyeY = Math.sin(angle) * h * 0.4;
+          graphics.circle(eyeX, eyeY, 8);
+          graphics.fill(config.secondaryColor || 0x00ffff);
+          graphics.circle(eyeX, eyeY, 4);
+          graphics.fill(0xffffff);
+        }
+
+        // Tentacles/appendages
+        for (let i = 0; i < 8; i++) {
+          const angle = (i * Math.PI * 2) / 8 + Math.PI / 8;
+          const x1 = Math.cos(angle) * w * 0.6;
+          const y1 = Math.sin(angle) * h * 0.6;
+          const x2 = Math.cos(angle) * w * 1.2;
+          const y2 = Math.sin(angle) * h * 1.2;
+          graphics.moveTo(x1, y1);
+          graphics.lineTo(x2, y2);
+          graphics.lineTo(x2 + Math.cos(angle + Math.PI / 4) * 10, y2 + Math.sin(angle + Math.PI / 4) * 10);
+          graphics.lineTo(x1, y1);
+          graphics.fill(config.tertiaryColor || 0x1e90ff);
+        }
+
+        // Central core
+        graphics.circle(0, 0, h * 0.3);
+        graphics.fill(0xffff00);
+        break;
+    }
 
     this.sprite.addChild(graphics);
   }

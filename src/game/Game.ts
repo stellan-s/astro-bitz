@@ -9,10 +9,12 @@ import { AudioManager } from './AudioManager';
 import { HighScoreManager } from './HighScoreManager';
 import { selectRandomEnemyType, getEnemyConfig, selectRandomBossType } from './config/EnemyConfig';
 import { EnemyBullet } from './entities/EnemyBullet';
+import { Background } from './entities/Background';
 
 export class Game {
   private app: Application;
   private gameContainer: Container;
+  private background: Background;
   private player: Player;
   private enemies: Enemy[] = [];
   private bullets: Bullet[] = [];
@@ -73,6 +75,10 @@ export class Game {
     this.gameContainer = new Container();
     this.app.stage.addChild(this.gameContainer);
     this.audio = new AudioManager();
+
+    // Create starry background
+    this.background = new Background(this.gameContainer, this.app.screen.width, this.app.screen.height);
+
     this.particleSystem = new ParticleSystem(this.gameContainer);
 
     // Create player
@@ -1233,6 +1239,7 @@ export class Game {
       }
 
       // Update game objects
+      this.background.update(deltaTime);
       this.updateBullets(deltaTime);
       this.updateMissiles(deltaTime);
       this.updateEnemies(deltaTime);
