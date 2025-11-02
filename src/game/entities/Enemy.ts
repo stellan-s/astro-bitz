@@ -1,7 +1,7 @@
 import { Graphics, Container } from 'pixi.js';
 import { getEnemyConfig, type MovePattern } from '../config/EnemyConfig';
 
-export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'boss';
+export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'boss' | 'bossSniper' | 'bossTank' | 'bossSwarm';
 
 export class Enemy {
   public sprite: Container;
@@ -16,6 +16,12 @@ export class Enemy {
   private screenWidth: number = 800; // Default, will be set properly
   private enemyWidth: number = 40; // Will be set from config
   private exhaustFlames: Graphics[] = []; // Animated exhaust flames for high-heat enemies
+
+  // Boss-specific properties
+  public isBoss: boolean = false;
+  private maxY: number | undefined; // Maximum Y position for bosses
+  private lastShootTime: number = 0;
+  public onShoot?: (x: number, y: number, pattern: string, playerX?: number, playerY?: number) => void;
 
   constructor(x: number, y: number, type: EnemyType = 'basic', speedMultiplier: number = 1.0, screenWidth: number = 800) {
     this.sprite = new Container();
@@ -36,6 +42,10 @@ export class Enemy {
     this.speed = baseSpeed * speedMultiplier; // Apply difficulty multiplier
     this.health = config.health;
     this.movePatternType = config.movePattern;
+
+    // Boss-specific settings
+    this.isBoss = config.isBoss || false;
+    this.maxY = config.maxY;
 
     // Random direction for diagonal enemies
     this.direction = Math.random() > 0.5 ? 1 : -1;
@@ -61,6 +71,9 @@ export class Enemy {
         this.drawDasher();
         break;
       case 'boss':
+      case 'bossSniper':
+      case 'bossTank':
+      case 'bossSwarm':
         this.drawBoss();
         break;
     }
@@ -296,12 +309,27 @@ export class Enemy {
     this.sprite.addChild(graphics);
   }
 
-  public update(_deltaTime: number): void {
-    // Move enemy downward
-    this.sprite.y += this.speed;
+  public update(deltaTime: number, currentTime?: number, playerX?: number, playerY?: number): void {
+    // Move enemy downward, but respect maxY for bosses
+    if (this.maxY === undefined || this.sprite.y < this.maxY) {
+      this.sprite.y += this.speed;
+    } else {
+      // Boss has reached its max Y position, stop downward movement
+      // Constrain to maxY
+      this.sprite.y = Math.min(this.sprite.y, this.maxY);
+    }
 
     // Update movement pattern counter
     this.movePattern += 0.1;
+
+    // Boss shooting logic
+    if (this.isBoss && currentTime !== undefined && this.onShoot) {
+      const config = getEnemyConfig(this.type);
+      if (config.shootInterval && currentTime - this.lastShootTime >= config.shootInterval) {
+        this.onShoot(this.sprite.x, this.sprite.y, config.shootPattern || 'single', playerX, playerY);
+        this.lastShootTime = currentTime;
+      }
+    }
 
     // Calculate safe boundaries (half enemy width plus small buffer)
     const minX = this.enemyWidth / 2 + 10;

@@ -17,6 +17,10 @@ export interface EnemyTypeConfig {
   spawnWeight: number; // Relative probability of spawning (0-1)
   movePattern: MovePattern;
   heatEmission: number; // Heat signature for missile targeting (0-1, higher = more attractive)
+  isBoss?: boolean; // Whether this is a boss enemy
+  shootInterval?: number; // How often boss shoots (ms), undefined = doesn't shoot
+  shootPattern?: 'single' | 'triple' | 'spread' | 'aimed'; // Shooting pattern for bosses
+  maxY?: number; // Maximum Y position (for bosses that shouldn't go below a certain point)
 }
 
 export interface EnemyConfig {
@@ -130,6 +134,70 @@ export const ENEMY_CONFIG: EnemyConfig = {
     spawnWeight: 0, // Never spawned randomly, only on boss waves
     movePattern: 'sine', // Smooth side-to-side movement
     heatEmission: 1.0, // Maximum heat signature
+    isBoss: true,
+    shootInterval: 1500, // Shoots every 1.5 seconds
+    shootPattern: 'triple', // Fires 3 bullets in a spread
+    maxY: 250, // Stays in upper third of screen
+  },
+  bossSniper: {
+    speed: 1.0, // Slower, more methodical
+    speedVariation: 0.0,
+    health: 80, // Less health than standard boss
+    points: 1200, // Higher points for harder to dodge attacks
+    color: 0x9400d3, // Purple
+    secondaryColor: 0x8a2be2,
+    tertiaryColor: 0xff00ff,
+    size: {
+      width: 100,
+      height: 90,
+    },
+    spawnWeight: 0,
+    movePattern: 'circular', // Orbits around while shooting
+    heatEmission: 1.0,
+    isBoss: true,
+    shootInterval: 2000, // Shoots every 2 seconds
+    shootPattern: 'aimed', // Precise aimed shots at player
+    maxY: 200, // Stays higher up
+  },
+  bossTank: {
+    speed: 0.8, // Very slow
+    speedVariation: 0.0,
+    health: 150, // Much tankier
+    points: 1500, // Highest points for longest fight
+    color: 0x4b0082, // Indigo/dark purple
+    secondaryColor: 0x483d8b,
+    tertiaryColor: 0x696969,
+    size: {
+      width: 140, // Largest boss
+      height: 120,
+    },
+    spawnWeight: 0,
+    movePattern: 'straight', // Just moves down slowly
+    heatEmission: 1.0,
+    isBoss: true,
+    shootInterval: 1000, // Shoots frequently
+    shootPattern: 'spread', // Wide spread of bullets
+    maxY: 300, // Can come down a bit lower due to being slow
+  },
+  bossSwarm: {
+    speed: 2.0, // Fast and aggressive
+    speedVariation: 0.0,
+    health: 60, // Lower health, relies on speed
+    points: 1100,
+    color: 0x00ced1, // Cyan
+    secondaryColor: 0x00ffff,
+    tertiaryColor: 0x1e90ff,
+    size: {
+      width: 90,
+      height: 80,
+    },
+    spawnWeight: 0,
+    movePattern: 'zigzag', // Erratic movement
+    heatEmission: 1.0,
+    isBoss: true,
+    shootInterval: 800, // Shoots very frequently
+    shootPattern: 'single', // Single shots but rapid fire
+    maxY: 280,
   },
 };
 
@@ -185,4 +253,17 @@ export function selectRandomEnemyType(wave: number = 1): EnemyType {
 // Helper function to get enemy configuration
 export function getEnemyConfig(type: EnemyType): EnemyTypeConfig {
   return ENEMY_CONFIG[type];
+}
+
+// Helper function to select a random boss type
+export function selectRandomBossType(wave: number = 1): EnemyType {
+  const bossTypes: EnemyType[] = ['boss', 'bossSniper', 'bossTank', 'bossSwarm'];
+
+  // For first boss wave, always use standard boss
+  if (wave <= 3) {
+    return 'boss';
+  }
+
+  // For subsequent waves, randomly select from all boss types
+  return bossTypes[Math.floor(Math.random() * bossTypes.length)];
 }

@@ -7,7 +7,8 @@ import { PowerUp, type PowerUpType } from './entities/PowerUp';
 import { ParticleSystem } from './entities/Particle';
 import { AudioManager } from './AudioManager';
 import { HighScoreManager } from './HighScoreManager';
-import { selectRandomEnemyType, getEnemyConfig } from './config/EnemyConfig';
+import { selectRandomEnemyType, getEnemyConfig, selectRandomBossType } from './config/EnemyConfig';
+import { EnemyBullet } from './entities/EnemyBullet';
 
 export class Game {
   private app: Application;
@@ -16,6 +17,7 @@ export class Game {
   private enemies: Enemy[] = [];
   private bullets: Bullet[] = [];
   private missiles: Missile[] = [];
+  private enemyBullets: EnemyBullet[] = [];
   private powerUps: PowerUp[] = [];
   private particleSystem: ParticleSystem;
   private score: number = 0;
@@ -442,6 +444,94 @@ export class Game {
     this.audio.playMissileLaunch();
   }
 
+  private spawnEnemyBullets(x: number, y: number, pattern: string, playerX?: number, playerY?: number): void {
+    switch (pattern) {
+      case 'single':
+        // Single bullet aimed at player
+        const singleBullet = new EnemyBullet(x, y);
+        this.enemyBullets.push(singleBullet);
+        this.gameContainer.addChild(singleBullet.sprite);
+        break;
+
+      case 'triple':
+        // Three bullets in a spread
+        for (let i = -1; i <= 1; i++) {
+          const angle = i * 0.3; // ±0.3 radians spread
+          const bullet = new EnemyBullet(x, y, angle);
+          this.enemyBullets.push(bullet);
+          this.gameContainer.addChild(bullet.sprite);
+        }
+        break;
+
+      case 'spread':
+        // Five bullets in a wide spread
+        for (let i = -2; i <= 2; i++) {
+          const angle = i * 0.4; // ±0.8 radians spread
+          const bullet = new EnemyBullet(x, y, angle);
+          this.enemyBullets.push(bullet);
+          this.gameContainer.addChild(bullet.sprite);
+        }
+        break;
+
+      case 'aimed':
+        // Precisely aimed at player position
+        if (playerX !== undefined && playerY !== undefined) {
+          const dx = playerX - x;
+          const dy = playerY - y;
+          const angle = Math.atan2(dx, dy);
+          const bullet = new EnemyBullet(x, y, angle);
+          this.enemyBullets.push(bullet);
+          this.gameContainer.addChild(bullet.sprite);
+        }
+        break;
+    }
+  }
+
+  private updateEnemyBullets(deltaTime: number): void {
+    for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+      const bullet = this.enemyBullets[i];
+      bullet.update(deltaTime);
+
+      // Remove bullets that are off screen
+      if (bullet.sprite.y > this.app.screen.height + 10 ||
+          bullet.sprite.y < -10 ||
+          bullet.sprite.x < -10 ||
+          bullet.sprite.x > this.app.screen.width + 10) {
+        this.gameContainer.removeChild(bullet.sprite);
+        this.enemyBullets.splice(i, 1);
+        bullet.destroy();
+      }
+    }
+  }
+
+  private checkEnemyBulletCollisions(): void {
+    for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+      const bullet = this.enemyBullets[i];
+
+      // Check collision with player
+      const dx = bullet.sprite.x - this.player.sprite.x;
+      const dy = bullet.sprite.y - this.player.sprite.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < 25) {
+        // Player hit!
+        this.gameContainer.removeChild(bullet.sprite);
+        this.enemyBullets.splice(i, 1);
+        bullet.destroy();
+
+        if (this.shieldActive) {
+          // Shield absorbs hit
+          this.shieldActive = false;
+          this.player.hideShield();
+        } else {
+          // Game over
+          this.gameOver();
+          return;
+        }
+      }
+    }
+  }
+
   private spawnEnemy(): void {
     // On boss waves, spawn boss at the start and nothing else
     if (this.isBossWave) {
@@ -545,9 +635,10 @@ export class Game {
   }
 
   private updateEnemies(deltaTime: number): void{
+    const currentTime = Date.now();
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
-      enemy.update(deltaTime);
+      enemy.update(deltaTime, currentTime, this.player.sprite.x, this.player.sprite.y);
 
       // Check if enemy reached bottom
       if (enemy.sprite.y > this.app.screen.height) {
@@ -791,7 +882,14 @@ export class Game {
 
       // Spawn boss immediately during transition so it appears right away
       const x = this.app.screen.width / 2;
-      const boss = new Enemy(x, -100, 'boss', this.difficultyMultiplier, this.app.screen.width);
+      const bossType = selectRandomBossType(this.currentWave);
+      const boss = new Enemy(x, -100, bossType, this.difficultyMultiplier, this.app.screen.width);
+
+      // Set up boss shooting callback
+      boss.onShoot = (bx: number, by: number, pattern: string, playerX?: number, playerY?: number) => {
+        this.spawnEnemyBullets(bx, by, pattern, playerX, playerY);
+      };
+
       this.enemies.push(boss);
       this.gameContainer.addChild(boss.sprite);
       this.bossSpawned = true;
@@ -1116,10 +1214,12 @@ export class Game {
       this.updateBullets(deltaTime);
       this.updateMissiles(deltaTime);
       this.updateEnemies(deltaTime);
+      this.updateEnemyBullets(deltaTime);
       this.updatePowerUps(deltaTime);
       this.particleSystem.update(deltaTime);
       this.player.updateShield(deltaTime); // Animate shield if active
       this.checkCollisions();
+      this.checkEnemyBulletCollisions();
     });
   }
 }
