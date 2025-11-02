@@ -6,6 +6,7 @@ export class AudioManager {
   private bossMusic: boolean = false;
   private shepardOscillators: OscillatorNode[] = [];
   private shepardGains: GainNode[] = [];
+  private shepardTimeoutId: number | null = null;
 
   constructor() {
     this.audioContext = new AudioContext();
@@ -435,7 +436,7 @@ export class AudioManager {
     }
 
     // Loop the animation
-    setTimeout(() => {
+    this.shepardTimeoutId = window.setTimeout(() => {
       if (this.bossMusic) {
         // Restart the lowest oscillator at the bottom when it reaches the top
         const lowestOsc = this.shepardOscillators[0];
@@ -448,6 +449,12 @@ export class AudioManager {
 
   public stopBossMusic(): void {
     this.bossMusic = false;
+
+    // Clear any pending animation timeout
+    if (this.shepardTimeoutId !== null) {
+      clearTimeout(this.shepardTimeoutId);
+      this.shepardTimeoutId = null;
+    }
 
     // Stop all Shepard tone oscillators
     for (const osc of this.shepardOscillators) {

@@ -6,9 +6,19 @@ import { AdManager } from './game/AdManager';
 const app = new Application();
 
 async function init() {
+  // Calculate canvas size to maximize available viewport space
+  // Account for ad space and padding
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  const adSpace = isMobile ? 90 : 110; // Mobile has smaller ads
+  const availableHeight = window.innerHeight - adSpace;
+
+  // Use most of the available height for a larger play area
+  const canvasWidth = 800;
+  const canvasHeight = Math.max(700, Math.min(availableHeight, 1000)); // Min 700, max 1000
+
   await app.init({
-    width: 800,
-    height: 900, // Increased from 700 to 900 for much more vertical play space
+    width: canvasWidth,
+    height: canvasHeight,
     backgroundColor: 0x1a1a2e,
     antialias: true,
   });

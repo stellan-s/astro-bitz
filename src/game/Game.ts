@@ -754,12 +754,22 @@ export class Game {
   private startWaveTransition(): void {
     this.isWaveTransition = true;
     this.waveTransitionTimer = 0;
+
+    // Store previous wave's boss status before incrementing
+    const wasBossWave = this.isBossWave;
+
     this.currentWave++;
     this.enemiesKilledThisWave = 0;
 
-    // Check if this is a boss wave (every 5th wave: 5, 10, 15, etc.)
-    this.isBossWave = this.currentWave % 5 === 0;
+    // Check if this is a boss wave (every 3rd wave: 3, 6, 9, etc.)
+    this.isBossWave = this.currentWave % 3 === 0;
     this.bossSpawned = false;
+
+    // If we just completed a boss wave, stop boss music
+    if (wasBossWave && !this.isBossWave && this.musicEnabled) {
+      this.audio.stopBossMusic();
+      this.audio.startBackgroundMusic();
+    }
 
     if (this.isBossWave) {
       // Boss wave - just 1 boss enemy
@@ -770,6 +780,13 @@ export class Game {
         this.audio.stopBackgroundMusic();
         this.audio.startBossMusic();
       }
+
+      // Spawn boss immediately during transition so it appears right away
+      const x = this.app.screen.width / 2;
+      const boss = new Enemy(x, -100, 'boss', this.difficultyMultiplier, this.app.screen.width);
+      this.enemies.push(boss);
+      this.gameContainer.addChild(boss.sprite);
+      this.bossSpawned = true;
     } else {
       // Normal wave - aggressive difficulty scaling
       this.enemiesPerWave += Math.floor(3 + this.currentWave * 1.5);
@@ -827,12 +844,6 @@ export class Game {
         this.app.stage.removeChild(this.waveTransitionText);
         this.waveTransitionText.destroy();
         this.waveTransitionText = null;
-      }
-
-      // If transitioning away from a boss wave, restore normal music
-      if (!this.isBossWave && this.musicEnabled) {
-        this.audio.stopBossMusic();
-        this.audio.startBackgroundMusic();
       }
     }
   }
