@@ -50,6 +50,8 @@ export class Game {
   private waveTransitionTimer: number = 0;
   private waveTransitionDuration: number = 2000; // Shorter transition (2 seconds)
   private waveTransitionText: Text | null = null;
+  private isBossWave: boolean = false;
+  private bossSpawned: boolean = false;
 
   // Difficulty scaling
   private minSpawnInterval: number = 300; // Much more aggressive minimum
@@ -441,6 +443,22 @@ export class Game {
   }
 
   private spawnEnemy(): void {
+    // On boss waves, spawn boss at the start and nothing else
+    if (this.isBossWave) {
+      if (this.bossSpawned) {
+        return; // Boss already spawned, don't spawn anything else
+      }
+
+      // Spawn boss in the center of the screen
+      const x = this.app.screen.width / 2;
+      const boss = new Enemy(x, -100, 'boss', this.difficultyMultiplier, this.app.screen.width);
+      this.enemies.push(boss);
+      this.gameContainer.addChild(boss.sprite);
+      this.bossSpawned = true;
+      return;
+    }
+
+    // Normal enemy spawning for regular waves
     // Select random enemy type based on current wave (harder enemies more common in later waves)
     const type = selectRandomEnemyType(this.currentWave);
 
@@ -739,32 +757,50 @@ export class Game {
     this.currentWave++;
     this.enemiesKilledThisWave = 0;
 
-    // Aggressive difficulty scaling - Flappy Bird style
-    // More enemies each wave (exponential growth)
-    this.enemiesPerWave += Math.floor(3 + this.currentWave * 1.5);
+    // Check if this is a boss wave (every 5th wave: 5, 10, 15, etc.)
+    this.isBossWave = this.currentWave % 5 === 0;
+    this.bossSpawned = false;
 
-    // Decrease spawn interval aggressively (more enemies on screen)
-    const reductionAmount = Math.max(80, 150 - this.currentWave * 10);
-    this.spawnInterval = Math.max(this.minSpawnInterval, this.spawnInterval - reductionAmount);
+    if (this.isBossWave) {
+      // Boss wave - just 1 boss enemy
+      this.enemiesPerWave = 1;
 
-    // Increase enemy speed multiplier (enemies get faster)
-    this.difficultyMultiplier += 0.08; // 8% speed increase per wave
+      // Switch to boss music
+      if (this.musicEnabled) {
+        this.audio.stopBackgroundMusic();
+        this.audio.startBossMusic();
+      }
+    } else {
+      // Normal wave - aggressive difficulty scaling
+      this.enemiesPerWave += Math.floor(3 + this.currentWave * 1.5);
 
-    // Reduce power-up frequency as game gets harder
-    this.powerUpInterval = Math.min(15000, this.powerUpInterval + 500);
+      // Decrease spawn interval aggressively (more enemies on screen)
+      const reductionAmount = Math.max(80, 150 - this.currentWave * 10);
+      this.spawnInterval = Math.max(this.minSpawnInterval, this.spawnInterval - reductionAmount);
+
+      // Increase enemy speed multiplier (enemies get faster)
+      this.difficultyMultiplier += 0.08; // 8% speed increase per wave
+
+      // Reduce power-up frequency as game gets harder
+      this.powerUpInterval = Math.min(15000, this.powerUpInterval + 500);
+    }
 
     // Show wave complete text
+    const waveMessage = this.isBossWave
+      ? `WAVE ${this.currentWave - 1} COMPLETE!\n\n⚠️ BOSS WAVE ${this.currentWave} ⚠️\nPrepare for Battle!`
+      : `WAVE ${this.currentWave - 1} COMPLETE!\n\nWave ${this.currentWave} Starting...\nDifficulty: ${Math.round(this.difficultyMultiplier * 100)}%`;
+
     this.waveTransitionText = new Text({
-      text: `WAVE ${this.currentWave - 1} COMPLETE!\n\nWave ${this.currentWave} Starting...\nDifficulty: ${Math.round(this.difficultyMultiplier * 100)}%`,
+      text: waveMessage,
       style: {
         fontFamily: 'Orbitron',
         fontSize: 40,
         fontWeight: '900',
-        fill: 0x00ffff,
+        fill: this.isBossWave ? 0xff0000 : 0x00ffff,
         align: 'center',
         stroke: { color: 0x000000, width: 6 },
         dropShadow: {
-          color: 0x00ffff,
+          color: this.isBossWave ? 0xff0000 : 0x00ffff,
           blur: 10,
           distance: 4,
         },
@@ -776,7 +812,7 @@ export class Game {
     this.app.stage.addChild(this.waveTransitionText);
 
     // Update wave text
-    this.waveText.text = `Wave: ${this.currentWave}`;
+    this.waveText.text = this.isBossWave ? `BOSS WAVE: ${this.currentWave}` : `Wave: ${this.currentWave}`;
   }
 
   private updateWaveTransition(deltaTime: number): void {
@@ -791,6 +827,12 @@ export class Game {
         this.app.stage.removeChild(this.waveTransitionText);
         this.waveTransitionText.destroy();
         this.waveTransitionText = null;
+      }
+
+      // If transitioning away from a boss wave, restore normal music
+      if (!this.isBossWave && this.musicEnabled) {
+        this.audio.stopBossMusic();
+        this.audio.startBackgroundMusic();
       }
     }
   }

@@ -115,6 +115,22 @@ export const ENEMY_CONFIG: EnemyConfig = {
     movePattern: 'diagonal',
     heatEmission: 0.7, // High heat - fast diagonal movement
   },
+  boss: {
+    speed: 1.0,
+    speedVariation: 0.0, // No variation for bosses
+    health: 50, // Much higher health
+    points: 500, // Massive points reward
+    color: 0xff0000,
+    secondaryColor: 0xff6600,
+    tertiaryColor: 0xffaa00,
+    size: {
+      width: 120, // Much larger
+      height: 100,
+    },
+    spawnWeight: 0, // Never spawned randomly, only on boss waves
+    movePattern: 'sine', // Smooth side-to-side movement
+    heatEmission: 1.0, // Maximum heat signature
+  },
 };
 
 // Helper function to select a random enemy type based on spawn weights

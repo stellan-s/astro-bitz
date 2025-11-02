@@ -3,6 +3,9 @@ export class AudioManager {
   private masterVolume: number = 0.3;
   private musicPlaying: boolean = false;
   private musicIntervalId: number | null = null;
+  private bossMusic: boolean = false;
+  private shepardOscillators: OscillatorNode[] = [];
+  private shepardGains: GainNode[] = [];
 
   constructor() {
     this.audioContext = new AudioContext();
@@ -348,6 +351,115 @@ export class AudioManager {
       clearTimeout(this.musicIntervalId);
       this.musicIntervalId = null;
     }
+  }
+
+  // Start boss music with Shepard tone (infinitely rising tension)
+  public startBossMusic(): void {
+    if (this.bossMusic) return;
+
+    // Stop regular music first
+    this.stopBackgroundMusic();
+    this.bossMusic = true;
+
+    // Shepard tone: multiple octaves of the same pitch class cycling
+    // Creates illusion of infinitely rising pitch
+    const baseFreq = 55; // A1
+    const numOctaves = 6;
+
+    for (let i = 0; i < numOctaves; i++) {
+      const osc = this.audioContext.createOscillator();
+      const gain = this.audioContext.createGain();
+
+      osc.connect(gain);
+      gain.connect(this.audioContext.destination);
+
+      osc.type = 'sine';
+      const freq = baseFreq * Math.pow(2, i);
+      osc.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+
+      // Bell curve envelope: fade in and out to create seamless loop
+      // Lowest and highest octaves are quieter
+      const bellCurve = Math.exp(-Math.pow((i - numOctaves / 2), 2) / (numOctaves / 2));
+      gain.gain.setValueAtTime(this.masterVolume * 0.15 * bellCurve, this.audioContext.currentTime);
+
+      osc.start(this.audioContext.currentTime);
+
+      this.shepardOscillators.push(osc);
+      this.shepardGains.push(gain);
+    }
+
+    // Animate the Shepard tone
+    this.animateShepardTone();
+  }
+
+  private animateShepardTone(): void {
+    if (!this.bossMusic) return;
+
+    const now = this.audioContext.currentTime;
+    const riseDuration = 8; // 8 seconds to rise one octave
+    const baseFreq = 55;
+    const numOctaves = this.shepardOscillators.length;
+
+    for (let i = 0; i < numOctaves; i++) {
+      const osc = this.shepardOscillators[i];
+      const gain = this.shepardGains[i];
+
+      // Each oscillator rises by one octave
+      const startFreq = baseFreq * Math.pow(2, i);
+      const endFreq = startFreq * 2;
+
+      osc.frequency.cancelScheduledValues(now);
+      osc.frequency.setValueAtTime(startFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(endFreq, now + riseDuration);
+
+      // Fade envelope: fade out highest, fade in lowest (creates seamless loop)
+      gain.gain.cancelScheduledValues(now);
+
+      // Position in the cycle (0 to 1)
+      const cyclePos = i / numOctaves;
+
+      // Bell curve that moves through the octaves
+      const peakPos = 0.5; // Peak at middle
+      const bellWidth = 0.4;
+      const distance = Math.abs(cyclePos - peakPos);
+      const bellCurve = Math.exp(-Math.pow(distance / bellWidth, 2));
+
+      gain.gain.setValueAtTime(this.masterVolume * 0.15 * bellCurve, now);
+
+      // Fade out at the end, fade in at the beginning
+      const nextBellCurve = i === 0 ?
+        Math.exp(-Math.pow((1 - peakPos) / bellWidth, 2)) : // Will wrap to highest
+        Math.exp(-Math.pow(((i - 1) / numOctaves - peakPos) / bellWidth, 2));
+
+      gain.gain.linearRampToValueAtTime(this.masterVolume * 0.15 * nextBellCurve, now + riseDuration);
+    }
+
+    // Loop the animation
+    setTimeout(() => {
+      if (this.bossMusic) {
+        // Restart the lowest oscillator at the bottom when it reaches the top
+        const lowestOsc = this.shepardOscillators[0];
+        lowestOsc.frequency.setValueAtTime(baseFreq, this.audioContext.currentTime);
+
+        this.animateShepardTone();
+      }
+    }, riseDuration * 1000);
+  }
+
+  public stopBossMusic(): void {
+    this.bossMusic = false;
+
+    // Stop all Shepard tone oscillators
+    for (const osc of this.shepardOscillators) {
+      try {
+        osc.stop();
+      } catch (e) {
+        // Oscillator might already be stopped
+      }
+    }
+
+    this.shepardOscillators = [];
+    this.shepardGains = [];
   }
 
   // Resume audio context (needed for browser autoplay policies)

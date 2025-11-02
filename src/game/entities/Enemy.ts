@@ -1,7 +1,7 @@
 import { Graphics, Container } from 'pixi.js';
 import { getEnemyConfig, type MovePattern } from '../config/EnemyConfig';
 
-export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher';
+export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'boss';
 
 export class Enemy {
   public sprite: Container;
@@ -59,6 +59,9 @@ export class Enemy {
         break;
       case 'dasher':
         this.drawDasher();
+        break;
+      case 'boss':
+        this.drawBoss();
         break;
     }
 
@@ -232,6 +235,63 @@ export class Enemy {
 
     graphics.rect(-config.size.width / 4, 0, config.size.width * 0.5, 2);
     graphics.fill(config.secondaryColor || 0xffffff);
+
+    this.sprite.addChild(graphics);
+  }
+
+  private drawBoss(): void {
+    const graphics = new Graphics();
+    const config = getEnemyConfig('boss');
+
+    // Large intimidating boss design
+    // Main body - hexagonal shape
+    const w = config.size.width / 2;
+    const h = config.size.height / 2;
+
+    graphics.moveTo(0, -h);
+    graphics.lineTo(w * 0.6, -h * 0.5);
+    graphics.lineTo(w * 0.6, h * 0.5);
+    graphics.lineTo(0, h);
+    graphics.lineTo(-w * 0.6, h * 0.5);
+    graphics.lineTo(-w * 0.6, -h * 0.5);
+    graphics.lineTo(0, -h);
+    graphics.fill(config.color);
+
+    // Inner core - pulsing center
+    graphics.circle(0, 0, 15);
+    graphics.fill(0xffff00);
+
+    // Armor plates - left side
+    graphics.rect(-w * 0.5, -h * 0.3, w * 0.2, h * 0.2);
+    graphics.fill(config.secondaryColor || 0xff6600);
+
+    graphics.rect(-w * 0.5, h * 0.1, w * 0.2, h * 0.2);
+    graphics.fill(config.secondaryColor || 0xff6600);
+
+    // Armor plates - right side
+    graphics.rect(w * 0.3, -h * 0.3, w * 0.2, h * 0.2);
+    graphics.fill(config.secondaryColor || 0xff6600);
+
+    graphics.rect(w * 0.3, h * 0.1, w * 0.2, h * 0.2);
+    graphics.fill(config.secondaryColor || 0xff6600);
+
+    // Wing/fins - make it look menacing
+    graphics.moveTo(-w * 0.6, -h * 0.4);
+    graphics.lineTo(-w, -h * 0.6);
+    graphics.lineTo(-w * 0.8, -h * 0.2);
+    graphics.fill(config.tertiaryColor || 0xffaa00);
+
+    graphics.moveTo(w * 0.6, -h * 0.4);
+    graphics.lineTo(w, -h * 0.6);
+    graphics.lineTo(w * 0.8, -h * 0.2);
+    graphics.fill(config.tertiaryColor || 0xffaa00);
+
+    // Eyes/weapon ports - glowing red
+    graphics.circle(-w * 0.3, -h * 0.2, 5);
+    graphics.fill(0xff0000);
+
+    graphics.circle(w * 0.3, -h * 0.2, 5);
+    graphics.fill(0xff0000);
 
     this.sprite.addChild(graphics);
   }
