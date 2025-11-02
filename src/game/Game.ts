@@ -153,7 +153,7 @@ export class Game {
 
     // Create missile counter text
     this.missileText = new Text({
-      text: `🚀 Missiles: ${this.missileAmmo}`,
+      text: `Missiles: ${this.missileAmmo}`,
       style: {
         fontFamily: 'Orbitron',
         fontSize: 20,
@@ -167,7 +167,7 @@ export class Game {
         },
       },
     });
-    this.missileText.x = this.app.screen.width - 180;
+    this.missileText.x = this.app.screen.width - 160;
     this.missileText.y = 45;
     this.app.stage.addChild(this.missileText);
 
@@ -194,12 +194,15 @@ export class Game {
     button.style.display = 'flex';
     button.style.alignItems = 'center';
     button.style.justifyContent = 'center';
-    button.style.fontSize = '40px';
+    button.style.fontFamily = 'Orbitron, sans-serif';
+    button.style.fontSize = '14px';
+    button.style.fontWeight = 'bold';
+    button.style.color = '#ffffff';
     button.style.cursor = 'pointer';
     button.style.zIndex = '10000';
     button.style.boxShadow = '0 0 10px rgba(255, 69, 0, 0.5)';
     button.style.userSelect = 'none';
-    button.textContent = '🚀';
+    button.textContent = 'FIRE';
 
     // Touch handler for missile button
     button.addEventListener('touchstart', (e) => {
@@ -360,7 +363,7 @@ export class Game {
 
     this.missileAmmo--;
     if (this.missileText) {
-      this.missileText.text = `🚀 Missiles: ${this.missileAmmo}`;
+      this.missileText.text = `Missiles: ${this.missileAmmo}`;
     }
 
     const missile = new Missile(this.player.sprite.x, this.player.sprite.y - 30);
@@ -549,7 +552,7 @@ export class Game {
         particleColor = 0xff4500; // Orange-red
         this.missileAmmo += 3; // Add 3 missiles
         if (this.missileText) {
-          this.missileText.text = `🚀 Missiles: ${this.missileAmmo}`;
+          this.missileText.text = `Missiles: ${this.missileAmmo}`;
         }
         break;
     }
