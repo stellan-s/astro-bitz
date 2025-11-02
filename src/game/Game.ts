@@ -284,20 +284,25 @@ export class Game {
         }
 
         // Detect swipe up gesture for missile firing
-        // Only check swipe if we have a valid previous Y position
         if (lastTouchY > 0) {
           const swipeDistance = lastTouchY - y; // Positive means upward swipe
-          const swipeThreshold = 40; // pixels to swipe up to fire missile (reduced for easier triggering)
+          const swipeThreshold = 30; // pixels to swipe up to fire missile
 
+          // Fire missile if swiped up past threshold
           if (swipeDistance > swipeThreshold) {
             const currentTime = Date.now();
             if (currentTime - this.lastMissileTime >= this.missileFireRate) {
               this.fireMissile();
               this.lastMissileTime = currentTime;
-              // Reset touch Y to prevent multiple fires from same swipe
-              lastTouchY = y;
             }
-          } else {
+            // Always reset lastTouchY after detecting swipe to allow continuous swipes
+            lastTouchY = y;
+          } else if (swipeDistance < -10) {
+            // Reset if user swipes down (allows recovery from accidental movements)
+            lastTouchY = y;
+          }
+          // Only update lastTouchY for small movements to maintain swipe detection
+          else if (Math.abs(swipeDistance) < 5) {
             lastTouchY = y;
           }
         } else {
