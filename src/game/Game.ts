@@ -273,6 +273,21 @@ export class Game {
     const keys: { [key: string]: boolean } = {};
     let musicStarted = false;
     let touchMoving = false;
+    let mouseX: number | null = null;
+
+    // Mouse controls (desktop only - for X-axis movement)
+    const canvas = this.app.canvas as HTMLCanvasElement;
+    canvas.addEventListener('mousemove', (e) => {
+      if (this.gameState === 'playing') {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = this.app.screen.width / rect.width;
+        mouseX = (e.clientX - rect.left) * scaleX;
+      }
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      mouseX = null;
+    });
 
     // Keyboard controls
     window.addEventListener('keydown', (e) => {
@@ -323,7 +338,6 @@ export class Game {
     });
 
     // Touch controls for mobile
-    const canvas = this.app.canvas as HTMLCanvasElement;
     let lastTouchY = 0;
 
     // Show mobile instructions on first load
@@ -406,14 +420,23 @@ export class Game {
       lastTouchY = 0;
     });
 
-    // Update player position based on keys (keyboard only)
+    // Update player position based on mouse or keys
     this.app.ticker.add(() => {
       if (this.gameState === 'playing' && !touchMoving) {
-        if (keys['ArrowLeft'] || keys['a']) {
-          this.player.moveLeft();
-        }
-        if (keys['ArrowRight'] || keys['d']) {
-          this.player.moveRight();
+        // Mouse movement takes priority (desktop)
+        if (mouseX !== null) {
+          // Smoothly move towards mouse position
+          const targetX = mouseX;
+          const smoothing = 0.15; // How quickly to follow mouse (0-1)
+          this.player.sprite.x += (targetX - this.player.sprite.x) * smoothing;
+        } else {
+          // Keyboard movement (fallback)
+          if (keys['ArrowLeft'] || keys['a']) {
+            this.player.moveLeft();
+          }
+          if (keys['ArrowRight'] || keys['d']) {
+            this.player.moveRight();
+          }
         }
 
         // Keep player in bounds
