@@ -614,9 +614,20 @@ export class Enemy {
     const w = config.size.width / 2;
     const h = config.size.height / 2;
 
-    // Choose color based on cloak state
+    // Choose color based on cloak state - much more subtle when uncloaked
     const bodyColor = cloaked ? config.color : config.secondaryColor;
-    const alpha = cloaked ? 0.15 : 0.9; // Almost invisible when cloaked
+    const alpha = cloaked ? 0.15 : 0.35; // Barely visible even when uncloaked
+
+    // Subtle outer glow when uncloaked (blurred effect with multiple circles)
+    if (!cloaked) {
+      // Multiple layers of very faint glow circles for blur effect
+      graphics.circle(0, -10, w * 1.5);
+      graphics.fill({ color: config.secondaryColor, alpha: 0.03 });
+      graphics.circle(0, -10, w * 1.2);
+      graphics.fill({ color: config.secondaryColor, alpha: 0.05 });
+      graphics.circle(0, -10, w * 0.9);
+      graphics.fill({ color: config.secondaryColor, alpha: 0.08 });
+    }
 
     // Main body
     graphics.moveTo(0, -h);
@@ -639,20 +650,22 @@ export class Enemy {
     graphics.lineTo(w * 0.7, 0);
     graphics.fill({ color: bodyColor, alpha: alpha });
 
-    // Cockpit/core - glows when uncloaked
+    // Cockpit/core - very subtle glow when uncloaked
     if (cloaked) {
       graphics.circle(0, 0, 6);
       graphics.fill({ color: config.color, alpha: 0.2 });
     } else {
-      // Bright glow when uncloaked
-      graphics.circle(0, 0, 10);
-      graphics.fill({ color: config.tertiaryColor, alpha: 0.8 });
-      graphics.circle(0, 0, 6);
-      graphics.fill({ color: 0xffffff, alpha: 1 });
+      // Subtle blurred glow layers when uncloaked
+      graphics.circle(0, 0, 12);
+      graphics.fill({ color: config.tertiaryColor, alpha: 0.1 });
+      graphics.circle(0, 0, 8);
+      graphics.fill({ color: config.tertiaryColor, alpha: 0.15 });
+      graphics.circle(0, 0, 5);
+      graphics.fill({ color: config.secondaryColor, alpha: 0.4 });
     }
 
-    // Edge highlights
-    const edgeAlpha = cloaked ? 0.1 : 0.8;
+    // Edge highlights - very subtle
+    const edgeAlpha = cloaked ? 0.08 : 0.25;
     const edgeColor = cloaked ? config.color : config.tertiaryColor;
     graphics.moveTo(0, -h);
     graphics.lineTo(w * 0.7, 0);
