@@ -661,6 +661,14 @@ export class Game {
 
     // Create enemy with current difficulty multiplier and screen width for boundaries
     const enemy = new Enemy(x, -50, type, this.difficultyMultiplier, this.app.screen.width);
+
+    // Set up shooting callback for stealth enemies
+    if (type === 'stealth') {
+      enemy.onShoot = (bx: number, by: number, pattern: string, playerX?: number, playerY?: number) => {
+        this.spawnEnemyBullets(bx, by, pattern, playerX, playerY);
+      };
+    }
+
     this.enemies.push(enemy);
     this.gameContainer.addChild(enemy.sprite);
   }

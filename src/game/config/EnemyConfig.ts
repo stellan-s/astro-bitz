@@ -119,6 +119,24 @@ export const ENEMY_CONFIG: EnemyConfig = {
     movePattern: 'diagonal',
     heatEmission: 0.7, // High heat - fast diagonal movement
   },
+  stealth: {
+    speed: 1.2,
+    speedVariation: 0.2,
+    health: 2,
+    points: 50, // High points for rare, challenging enemy
+    color: 0x1a1a2e, // Almost background color when cloaked
+    secondaryColor: 0x00ffaa, // Glow color when uncloaked
+    tertiaryColor: 0x00ff88, // Bright glow
+    size: {
+      width: 45,
+      height: 35,
+    },
+    spawnWeight: 0.05, // 5% chance - rare!
+    movePattern: 'zigzag', // Erratic movement
+    heatEmission: 0.1, // Very low heat - stealth tech keeps signature low
+    shootInterval: 3000, // Shoots every 3 seconds
+    shootPattern: 'aimed', // Precise aimed shots
+  },
   boss: {
     speed: 1.5, // Increased from 1.0 - faster movement
     speedVariation: 0.0, // No variation for bosses

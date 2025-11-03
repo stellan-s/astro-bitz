@@ -1,7 +1,7 @@
 import { Graphics, Container } from 'pixi.js';
 import { getEnemyConfig, type MovePattern } from '../config/EnemyConfig';
 
-export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'boss' | 'bossSniper' | 'bossTank' | 'bossSwarm';
+export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'stealth' | 'boss' | 'bossSniper' | 'bossTank' | 'bossSwarm';
 
 export class Enemy {
   public sprite: Container;
@@ -22,6 +22,14 @@ export class Enemy {
   private maxY: number | undefined; // Maximum Y position for bosses
   private lastShootTime: number = 0;
   public onShoot?: (x: number, y: number, pattern: string, playerX?: number, playerY?: number) => void;
+
+  // Stealth-specific properties
+  private isCloaked: boolean = true; // Starts cloaked
+  private cloakDuration: number = 4000; // 4 seconds cloaked
+  private uncloakDuration: number = 1500; // 1.5 seconds uncloaked
+  private lastCloakChange: number = 0;
+  private hitRevealTime: number = 0; // Time when hit, reveals briefly
+  private hitRevealDuration: number = 300; // 0.3 seconds reveal on hit
 
   constructor(x: number, y: number, type: EnemyType = 'basic', speedMultiplier: number = 1.0, screenWidth: number = 800) {
     this.sprite = new Container();
@@ -69,6 +77,10 @@ export class Enemy {
         break;
       case 'dasher':
         this.drawDasher();
+        break;
+      case 'stealth':
+        this.drawStealth();
+        this.lastCloakChange = Date.now();
         break;
       case 'boss':
       case 'bossSniper':
@@ -252,6 +264,50 @@ export class Enemy {
     this.sprite.addChild(graphics);
   }
 
+  private drawStealth(): void {
+    const graphics = new Graphics();
+    const config = getEnemyConfig('stealth');
+
+    // Sleek diamond/rhombus shape - stealth fighter aesthetic
+    const w = config.size.width / 2;
+    const h = config.size.height / 2;
+
+    // Main body - angular stealth design
+    graphics.moveTo(0, -h);
+    graphics.lineTo(w * 0.7, 0);
+    graphics.lineTo(0, h);
+    graphics.lineTo(-w * 0.7, 0);
+    graphics.lineTo(0, -h);
+    graphics.fill(config.color); // Will change based on cloak state
+
+    // Wings - angular
+    graphics.moveTo(-w * 0.7, 0);
+    graphics.lineTo(-w * 1.2, h * 0.3);
+    graphics.lineTo(-w * 0.9, h * 0.5);
+    graphics.lineTo(-w * 0.7, 0);
+    graphics.fill(config.color);
+
+    graphics.moveTo(w * 0.7, 0);
+    graphics.lineTo(w * 1.2, h * 0.3);
+    graphics.lineTo(w * 0.9, h * 0.5);
+    graphics.lineTo(w * 0.7, 0);
+    graphics.fill(config.color);
+
+    // Cockpit/core - will glow when uncloaked
+    graphics.circle(0, 0, 6);
+    graphics.fill(config.secondaryColor);
+
+    // Edge highlights - barely visible when cloaked
+    graphics.moveTo(0, -h);
+    graphics.lineTo(w * 0.7, 0);
+    graphics.lineTo(0, h);
+    graphics.lineTo(-w * 0.7, 0);
+    graphics.lineTo(0, -h);
+    graphics.stroke({ color: config.tertiaryColor, width: 1, alpha: 0.3 });
+
+    this.sprite.addChild(graphics);
+  }
+
   private drawBoss(): void {
     const graphics = new Graphics();
     const config = getEnemyConfig(this.type);
@@ -414,12 +470,39 @@ export class Enemy {
     // Update movement pattern counter
     this.movePattern += 0.1;
 
-    // Boss shooting logic
-    if (this.isBoss && currentTime !== undefined && this.onShoot) {
+    // Shooting logic for bosses and stealth enemies
+    if (currentTime !== undefined && this.onShoot) {
       const config = getEnemyConfig(this.type);
       if (config.shootInterval && currentTime - this.lastShootTime >= config.shootInterval) {
-        this.onShoot(this.sprite.x, this.sprite.y, config.shootPattern || 'single', playerX, playerY);
-        this.lastShootTime = currentTime;
+        // Stealth enemies only shoot when uncloaked
+        if (this.type === 'stealth' && this.isCloaked && currentTime - this.hitRevealTime > this.hitRevealDuration) {
+          // Don't shoot while cloaked
+        } else {
+          this.onShoot(this.sprite.x, this.sprite.y, config.shootPattern || 'single', playerX, playerY);
+          this.lastShootTime = currentTime;
+        }
+      }
+    }
+
+    // Stealth cloaking cycle
+    if (this.type === 'stealth' && currentTime !== undefined) {
+      const timeSinceLastChange = currentTime - this.lastCloakChange;
+      const timeSinceHit = currentTime - this.hitRevealTime;
+
+      // If recently hit, force reveal briefly
+      if (timeSinceHit < this.hitRevealDuration) {
+        this.updateStealthVisuals(false); // Force visible
+      } else {
+        // Normal cloak/uncloak cycle
+        if (this.isCloaked && timeSinceLastChange >= this.cloakDuration) {
+          this.isCloaked = false;
+          this.lastCloakChange = currentTime;
+          this.updateStealthVisuals(false);
+        } else if (!this.isCloaked && timeSinceLastChange >= this.uncloakDuration) {
+          this.isCloaked = true;
+          this.lastCloakChange = currentTime;
+          this.updateStealthVisuals(true);
+        }
       }
     }
 
@@ -499,6 +582,12 @@ export class Enemy {
   public takeDamage(): boolean {
     this.health--;
 
+    // Stealth enemies reveal briefly when hit
+    if (this.type === 'stealth') {
+      this.hitRevealTime = Date.now();
+      this.updateStealthVisuals(false); // Reveal on hit
+    }
+
     // Flash effect when taking damage
     if (this.health > 0) {
       this.sprite.alpha = 0.5;
@@ -510,6 +599,67 @@ export class Enemy {
     }
 
     return this.health <= 0;
+  }
+
+  private updateStealthVisuals(cloaked: boolean): void {
+    if (this.type !== 'stealth') return;
+
+    const config = getEnemyConfig('stealth');
+    const graphics = this.sprite.children[0] as Graphics;
+
+    if (!graphics) return;
+
+    graphics.clear();
+
+    const w = config.size.width / 2;
+    const h = config.size.height / 2;
+
+    // Choose color based on cloak state
+    const bodyColor = cloaked ? config.color : config.secondaryColor;
+    const alpha = cloaked ? 0.15 : 0.9; // Almost invisible when cloaked
+
+    // Main body
+    graphics.moveTo(0, -h);
+    graphics.lineTo(w * 0.7, 0);
+    graphics.lineTo(0, h);
+    graphics.lineTo(-w * 0.7, 0);
+    graphics.lineTo(0, -h);
+    graphics.fill({ color: bodyColor, alpha: alpha });
+
+    // Wings
+    graphics.moveTo(-w * 0.7, 0);
+    graphics.lineTo(-w * 1.2, h * 0.3);
+    graphics.lineTo(-w * 0.9, h * 0.5);
+    graphics.lineTo(-w * 0.7, 0);
+    graphics.fill({ color: bodyColor, alpha: alpha });
+
+    graphics.moveTo(w * 0.7, 0);
+    graphics.lineTo(w * 1.2, h * 0.3);
+    graphics.lineTo(w * 0.9, h * 0.5);
+    graphics.lineTo(w * 0.7, 0);
+    graphics.fill({ color: bodyColor, alpha: alpha });
+
+    // Cockpit/core - glows when uncloaked
+    if (cloaked) {
+      graphics.circle(0, 0, 6);
+      graphics.fill({ color: config.color, alpha: 0.2 });
+    } else {
+      // Bright glow when uncloaked
+      graphics.circle(0, 0, 10);
+      graphics.fill({ color: config.tertiaryColor, alpha: 0.8 });
+      graphics.circle(0, 0, 6);
+      graphics.fill({ color: 0xffffff, alpha: 1 });
+    }
+
+    // Edge highlights
+    const edgeAlpha = cloaked ? 0.1 : 0.8;
+    const edgeColor = cloaked ? config.color : config.tertiaryColor;
+    graphics.moveTo(0, -h);
+    graphics.lineTo(w * 0.7, 0);
+    graphics.lineTo(0, h);
+    graphics.lineTo(-w * 0.7, 0);
+    graphics.lineTo(0, -h);
+    graphics.stroke({ color: edgeColor, width: cloaked ? 1 : 2, alpha: edgeAlpha });
   }
 
   public destroy(): void {
