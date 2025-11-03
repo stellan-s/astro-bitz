@@ -808,6 +808,8 @@ export class Game {
           this.score += Math.floor(config.points / 2);
           enemiesCleared++;
         }
+        // Update score display after bomb kills
+        this.scoreText.text = `Score: ${this.score}`;
         // Track wave progress for bomb kills
         this.enemiesKilledThisWave += enemiesCleared;
         this.checkWaveComplete();
