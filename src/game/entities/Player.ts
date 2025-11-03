@@ -38,11 +38,11 @@ export class Player {
   }
 
   public showShield(): void {
-    if (this.shieldGraphics) return; // Already showing
-
-    this.shieldGraphics = new Graphics();
-    this.sprite.addChild(this.shieldGraphics);
-    this.shieldAnimationTime = 0;
+    if (!this.shieldGraphics) {
+      this.shieldGraphics = new Graphics();
+      this.sprite.addChild(this.shieldGraphics);
+      this.shieldAnimationTime = 0;
+    }
   }
 
   public hideShield(): void {
@@ -53,7 +53,7 @@ export class Player {
     }
   }
 
-  public updateShield(deltaTime: number): void {
+  public updateShield(deltaTime: number, shieldCount: number = 1): void {
     if (!this.shieldGraphics) return;
 
     this.shieldAnimationTime += deltaTime * 0.003; // Slow animation
@@ -61,34 +61,41 @@ export class Player {
     // Clear and redraw the shield with animation
     this.shieldGraphics.clear();
 
-    // Hexagonal shield with pulsing effect
-    const radius = 45 + Math.sin(this.shieldAnimationTime) * 3;
-    const alpha = 0.6 + Math.sin(this.shieldAnimationTime * 2) * 0.2;
+    // Draw multiple layers based on shield count
+    const maxLayers = Math.min(shieldCount, 5); // Cap visual at 5 layers
 
-    // Outer glow
-    this.shieldGraphics.circle(0, -10, radius + 5);
-    this.shieldGraphics.fill({ color: 0x00ffff, alpha: alpha * 0.2 });
+    for (let layer = 0; layer < maxLayers; layer++) {
+      const layerOffset = layer * 8; // Space between layers
+      const radius = 45 + layerOffset + Math.sin(this.shieldAnimationTime + layer * 0.5) * 3;
+      const alpha = (0.6 + Math.sin(this.shieldAnimationTime * 2) * 0.2) * (1 - layer * 0.15);
 
-    // Main shield hexagon
-    const sides = 6;
-    this.shieldGraphics.moveTo(
-      Math.cos(this.shieldAnimationTime) * radius,
-      Math.sin(this.shieldAnimationTime) * radius - 10
-    );
+      // Outer glow for each layer
+      this.shieldGraphics.circle(0, -10, radius + 5);
+      this.shieldGraphics.fill({ color: 0x00ffff, alpha: alpha * 0.2 });
 
-    for (let i = 1; i <= sides; i++) {
-      const angle = (i * Math.PI * 2) / sides + this.shieldAnimationTime;
-      this.shieldGraphics.lineTo(
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius - 10
+      // Main shield hexagon for each layer
+      const sides = 6;
+      this.shieldGraphics.moveTo(
+        Math.cos(this.shieldAnimationTime + layer * 0.3) * radius,
+        Math.sin(this.shieldAnimationTime + layer * 0.3) * radius - 10
       );
+
+      for (let i = 1; i <= sides; i++) {
+        const angle = (i * Math.PI * 2) / sides + this.shieldAnimationTime + layer * 0.3;
+        this.shieldGraphics.lineTo(
+          Math.cos(angle) * radius,
+          Math.sin(angle) * radius - 10
+        );
+      }
+
+      this.shieldGraphics.stroke({ color: 0x00ffff, width: 2 + layer * 0.5, alpha: alpha });
+      this.shieldGraphics.fill({ color: 0x00ffff, alpha: alpha * 0.1 });
     }
 
-    this.shieldGraphics.stroke({ color: 0x00ffff, width: 3, alpha: alpha });
-    this.shieldGraphics.fill({ color: 0x00ffff, alpha: alpha * 0.15 });
-
-    // Inner energy ring
-    this.shieldGraphics.circle(0, -10, radius * 0.7);
+    // Inner energy ring (only on innermost shield)
+    const innerRadius = 45 + Math.sin(this.shieldAnimationTime) * 3;
+    const alpha = 0.6 + Math.sin(this.shieldAnimationTime * 2) * 0.2;
+    this.shieldGraphics.circle(0, -10, innerRadius * 0.7);
     this.shieldGraphics.stroke({ color: 0xffffff, width: 2, alpha: alpha * 0.6 });
   }
 }

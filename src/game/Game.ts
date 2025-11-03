@@ -564,6 +564,49 @@ export class Game {
     }
   }
 
+  private checkShieldCollisions(): void {
+    // Only check if player has shields active
+    if (this.shieldCount === 0) return;
+
+    const shieldRadius = 50; // Collision radius for shield
+
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const enemy = this.enemies[i];
+
+      // Don't damage bosses with shield collisions
+      if (enemy.isBoss) continue;
+
+      // Check collision with player's shield
+      const dx = enemy.sprite.x - this.player.sprite.x;
+      const dy = enemy.sprite.y - this.player.sprite.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < shieldRadius + 20) {
+        // Enemy collided with shield! Kill enemy and remove ALL shields
+        const config = getEnemyConfig(enemy.type);
+
+        // Create explosion
+        this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, 25);
+
+        // Remove enemy
+        this.gameContainer.removeChild(enemy.sprite);
+        this.enemies.splice(i, 1);
+        enemy.destroy();
+
+        // Award points for shield kill
+        this.score += config.points;
+        this.enemiesKilledThisWave++;
+
+        // Remove ALL shields on collision
+        this.shieldCount = 0;
+        this.player.hideShield();
+
+        this.audio.playHit();
+        this.checkWaveComplete();
+      }
+    }
+  }
+
   private spawnEnemy(): void {
     // On boss waves, spawn boss at the start and nothing else
     if (this.isBossWave) {
@@ -1276,8 +1319,9 @@ export class Game {
       this.updateEnemyBullets(deltaTime);
       this.updatePowerUps(deltaTime);
       this.particleSystem.update(deltaTime);
-      this.player.updateShield(deltaTime); // Animate shield if active
+      this.player.updateShield(deltaTime, this.shieldCount); // Animate shield with count
       this.checkCollisions();
+      this.checkShieldCollisions(); // Check for shield-enemy collisions
       this.checkEnemyBulletCollisions();
     });
   }
