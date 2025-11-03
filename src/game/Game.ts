@@ -36,7 +36,7 @@ export class Game {
   private musicText: Text;
   private rapidFireActive: boolean = false;
   private rapidFireTimer: number = 0;
-  private shieldActive: boolean = false;
+  private shieldCount: number = 0; // Number of shields (can stack)
   private fireRate: number = 300; // milliseconds between shots
   private lastShotTime: number = 0;
 
@@ -549,10 +549,12 @@ export class Game {
         this.enemyBullets.splice(i, 1);
         bullet.destroy();
 
-        if (this.shieldActive) {
+        if (this.shieldCount > 0) {
           // Shield absorbs hit
-          this.shieldActive = false;
-          this.player.hideShield();
+          this.shieldCount--;
+          if (this.shieldCount === 0) {
+            this.player.hideShield();
+          }
         } else {
           // Game over
           this.gameOver();
@@ -672,10 +674,12 @@ export class Game {
 
       // Check if enemy reached bottom
       if (enemy.sprite.y > this.app.screen.height) {
-        if (this.shieldActive) {
+        if (this.shieldCount > 0) {
           // Shield absorbs one hit
-          this.shieldActive = false;
-          this.player.hideShield(); // Hide shield visual when used
+          this.shieldCount--;
+          if (this.shieldCount === 0) {
+            this.player.hideShield(); // Hide shield visual when all used
+          }
           this.gameContainer.removeChild(enemy.sprite);
           this.enemies.splice(i, 1);
           enemy.destroy();
@@ -734,7 +738,7 @@ export class Game {
         break;
       case 'shield':
         particleColor = 0x4169e1; // Blue
-        this.shieldActive = true;
+        this.shieldCount++; // Stack shields
         this.player.showShield(); // Show shield visual
         break;
       case 'bomb':
