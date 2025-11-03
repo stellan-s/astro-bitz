@@ -6,6 +6,7 @@
 export interface AnalyticsConfig {
   endpoint: string;
   appName: string;
+  apiKey?: string;
   debug?: boolean;
   disabled?: boolean;
 }
@@ -75,11 +76,18 @@ export class Analytics {
     }
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add authorization header if API key is provided
+      if (this.config.apiKey) {
+        headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+      }
+
       const response = await fetch(this.config.endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(event)
       });
 

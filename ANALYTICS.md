@@ -7,10 +7,14 @@ This game uses a privacy-first anonymous analytics system to track gameplay even
 Analytics are configured via environment variables in `.env.local`:
 
 ```env
+VITE_SUPABASE_URL=https://jqpaorlkzjoubggzwpqx.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
 VITE_ANALYTICS_ENDPOINT=https://jqpaorlkzjoubggzwpqx.supabase.co/functions/v1/analytics
 VITE_APP_NAME=astro-blitz
 VITE_ANALYTICS_DEBUG=true
 ```
+
+**Important:** The `VITE_SUPABASE_ANON_KEY` is required for authentication with the Supabase Edge Function.
 
 Set `VITE_ANALYTICS_DEBUG=false` in production to disable debug logging.
 
