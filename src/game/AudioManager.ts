@@ -365,7 +365,7 @@ export class AudioManager {
     // Shepard tone: multiple octaves of the same pitch class cycling
     // Creates illusion of infinitely rising pitch (subtle background tension)
     const baseFreq = 55; // A1
-    const numOctaves = 6;
+    const numOctaves = 8; // More octaves for smoother overlap
 
     for (let i = 0; i < numOctaves; i++) {
       const osc = this.audioContext.createOscillator();
@@ -401,7 +401,7 @@ export class AudioManager {
     if (!this.bossMusic) return;
 
     const now = this.audioContext.currentTime;
-    const riseDuration = 8; // 8 seconds to rise one octave
+    const riseDuration = 10; // Slower rise for more overlap
     const baseFreq = 55;
     const numOctaves = this.shepardOscillators.length;
 
@@ -423,9 +423,9 @@ export class AudioManager {
       // Position in the cycle (0 to 1)
       const cyclePos = i / numOctaves;
 
-      // Bell curve that moves through the octaves
+      // Wider bell curve for more overlapping audible tones
       const peakPos = 0.5; // Peak at middle
-      const bellWidth = 0.4;
+      const bellWidth = 0.6; // Wider for more overlap
       const distance = Math.abs(cyclePos - peakPos);
       const bellCurve = Math.exp(-Math.pow(distance / bellWidth, 2));
 
