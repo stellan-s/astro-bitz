@@ -664,15 +664,17 @@ export class Enemy {
       graphics.fill({ color: config.secondaryColor, alpha: 0.4 });
     }
 
-    // Edge highlights - very subtle
-    const edgeAlpha = cloaked ? 0.08 : 0.25;
-    const edgeColor = cloaked ? config.color : config.tertiaryColor;
-    graphics.moveTo(0, -h);
-    graphics.lineTo(w * 0.7, 0);
-    graphics.lineTo(0, h);
-    graphics.lineTo(-w * 0.7, 0);
-    graphics.lineTo(0, -h);
-    graphics.stroke({ color: edgeColor, width: cloaked ? 1 : 2, alpha: edgeAlpha });
+    // Edge highlights - only when uncloaked
+    if (!cloaked) {
+      const edgeAlpha = 0.25;
+      const edgeColor = config.tertiaryColor;
+      graphics.moveTo(0, -h);
+      graphics.lineTo(w * 0.7, 0);
+      graphics.lineTo(0, h);
+      graphics.lineTo(-w * 0.7, 0);
+      graphics.lineTo(0, -h);
+      graphics.stroke({ color: edgeColor, width: 2, alpha: edgeAlpha });
+    }
   }
 
   public destroy(): void {
