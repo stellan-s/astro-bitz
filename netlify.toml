@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# The Supabase anon key is designed to be public and used in client-side code
+# It's protected by Row Level Security (RLS) policies on the server
+# See: https://supabase.com/docs/guides/api/api-keys
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_ANON_KEY"
