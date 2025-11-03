@@ -427,7 +427,7 @@ export class Game {
         if (mouseX !== null) {
           // Smoothly move towards mouse position
           const targetX = mouseX;
-          const smoothing = 0.15; // How quickly to follow mouse (0-1)
+          const smoothing = 0.3; // How quickly to follow mouse (0-1, higher = faster)
           this.player.sprite.x += (targetX - this.player.sprite.x) * smoothing;
         } else {
           // Keyboard movement (fallback)
