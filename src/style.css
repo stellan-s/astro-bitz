@@ -103,22 +103,32 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex: 1;
+  flex: 1 1 auto;
   position: relative;
   padding: 5px; /* Reduced from 10px to maximize game area */
   min-height: 0; /* Allow flex child to shrink below content size */
+  overflow: hidden;
 }
 
 canvas {
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* Maintain aspect ratio while filling space */
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: fill; /* Fill the space without maintaining aspect ratio on mobile */
   /* Prevent canvas from being dragged on mobile */
   touch-action: none;
   /* Crisp pixel rendering */
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+}
+
+/* Desktop: maintain aspect ratio */
+@media (min-width: 769px) {
+  canvas {
+    object-fit: contain;
+  }
 }
 
 /* Mobile-specific improvements */
