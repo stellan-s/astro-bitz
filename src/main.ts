@@ -2,6 +2,7 @@ import './style.css';
 import { Application } from 'pixi.js';
 import { Game } from './game/Game';
 import { AdManager } from './game/AdManager';
+import { AnalyticsManager } from './game/AnalyticsManager';
 
 const app = new Application();
 
@@ -46,6 +47,9 @@ async function init() {
   if (gameContainer) {
     gameContainer.appendChild(app.canvas as HTMLCanvasElement);
   }
+
+  // Initialize Analytics (instantiates singleton)
+  AnalyticsManager.getInstance();
 
   // Initialize Google AdSense
   const adManager = AdManager.getInstance();

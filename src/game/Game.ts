@@ -10,6 +10,7 @@ import { HighScoreManager } from './HighScoreManager';
 import { selectRandomEnemyType, getEnemyConfig, selectRandomBossType } from './config/EnemyConfig';
 import { EnemyBullet } from './entities/EnemyBullet';
 import { Background } from './entities/Background';
+import { AnalyticsManager } from './AnalyticsManager';
 
 export class Game {
   private app: Application;
@@ -70,11 +71,17 @@ export class Game {
   private gameState: 'start' | 'playing' | 'gameover' = 'start';
   private startScreenContainer: HTMLDivElement | null = null;
 
+  // Analytics
+  private analytics: AnalyticsManager;
+  private waveStartTime: number = 0;
+  private bossSpawnTime: number = 0;
+
   constructor(app: Application) {
     this.app = app;
     this.gameContainer = new Container();
     this.app.stage.addChild(this.gameContainer);
     this.audio = new AudioManager();
+    this.analytics = AnalyticsManager.getInstance();
 
     // Create starry background
     this.background = new Background(this.gameContainer, this.app.screen.width, this.app.screen.height);
@@ -260,6 +267,9 @@ export class Game {
       if (this.musicEnabled) {
         this.audio.startBackgroundMusic();
       }
+      // Track game start
+      this.analytics.trackGameStart();
+      this.waveStartTime = Date.now();
     };
 
     container.addEventListener('click', startGame);
@@ -455,6 +465,7 @@ export class Game {
     this.bullets.push(bullet);
     this.gameContainer.addChild(bullet.sprite);
     this.audio.playShoot();
+    this.analytics.trackBulletShot();
   }
 
   private fireMissile(): void {
@@ -472,6 +483,7 @@ export class Game {
     this.missiles.push(missile);
     this.gameContainer.addChild(missile.sprite);
     this.audio.playMissileLaunch();
+    this.analytics.trackMissileFired();
   }
 
   private spawnEnemyBullets(x: number, y: number, pattern: string, playerX?: number, playerY?: number): void {
@@ -826,6 +838,9 @@ export class Game {
 
     // Create sparkle particle effect at powerup collection location
     this.particleSystem.createExplosion(x, y, particleColor, particleCount);
+
+    // Track powerup collection
+    this.analytics.trackPowerupCollected(type);
   }
 
   private checkCollisions(): void {
@@ -870,6 +885,15 @@ export class Game {
             // Use configured points
             this.score += config.points;
             this.scoreText.text = `Score: ${this.score}`;
+
+            // Track enemy killed
+            this.analytics.trackEnemyKilled(enemy.type, config.points);
+
+            // Track boss defeat if it's a boss
+            if (enemy.isBoss) {
+              const timeTaken = Math.floor((Date.now() - this.bossSpawnTime) / 1000);
+              this.analytics.trackBossDefeated(enemy.type, this.currentWave, timeTaken);
+            }
 
             // Track wave progress
             this.enemiesKilledThisWave++;
@@ -922,6 +946,15 @@ export class Game {
             this.score += config.points;
             this.scoreText.text = `Score: ${this.score}`;
 
+            // Track enemy killed
+            this.analytics.trackEnemyKilled(enemy.type, config.points);
+
+            // Track boss defeat if it's a boss
+            if (enemy.isBoss) {
+              const timeTaken = Math.floor((Date.now() - this.bossSpawnTime) / 1000);
+              this.analytics.trackBossDefeated(enemy.type, this.currentWave, timeTaken);
+            }
+
             // Track wave progress
             this.enemiesKilledThisWave++;
             this.checkWaveComplete();
@@ -936,6 +969,10 @@ export class Game {
 
   private checkWaveComplete(): void {
     if (this.enemiesKilledThisWave >= this.enemiesPerWave) {
+      // Track wave completion
+      const timeToComplete = Math.floor((Date.now() - this.waveStartTime) / 1000);
+      this.analytics.trackWaveComplete(this.currentWave, timeToComplete);
+
       // If we're already in a transition (e.g., boss wave intro),
       // clean it up before starting the next wave
       if (this.isWaveTransition) {
@@ -1046,6 +1083,13 @@ export class Game {
 
     // Update wave text
     this.waveText.text = this.isBossWave ? `BOSS WAVE: ${this.currentWave}` : `Wave: ${this.currentWave}`;
+
+    // Track wave start
+    this.analytics.trackWaveStart(this.currentWave, this.isBossWave);
+    this.waveStartTime = Date.now();
+    if (this.isBossWave) {
+      this.bossSpawnTime = Date.now();
+    }
   }
 
   private updateWaveTransition(deltaTime: number): void {
@@ -1186,8 +1230,15 @@ export class Game {
     this.gameState = 'gameover';
     this.audio.playGameOver();
 
+    // Track game over with analytics
+    const stats = this.analytics.getCurrentStats();
+    this.analytics.trackGameOver(this.score, this.currentWave, stats);
+
     // Check for new high score
     const isNewHighScore = HighScoreManager.saveHighScore(this.score);
+    if (isNewHighScore) {
+      this.analytics.trackHighScore(this.score, this.highScore);
+    }
 
     // Create HTML overlay for game over screen
     const container = document.createElement('div');
