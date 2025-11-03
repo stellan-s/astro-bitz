@@ -17,19 +17,21 @@ export class AnalyticsManager {
   private powerupsCollected: number = 0;
 
   private constructor() {
-    const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT ||
-      'https://jqpaorlkzjoubggzwpqx.supabase.co/functions/v1/analytics';
+    const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
     const appName = import.meta.env.VITE_APP_NAME || 'astro-blitz';
-    const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY ||
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcGFvcmxrempvdWJnZ3p3cHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxODIwMzIsImV4cCI6MjA3NDc1ODAzMn0.u601q7OANd5UfGcKHTFCL0hKD3l2Yx5FgbcfDkO2SQc';
+    const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const debug = import.meta.env.VITE_ANALYTICS_DEBUG === 'true';
 
+    if (!endpoint || !apiKey) {
+      console.warn('[Analytics] Missing required environment variables. Analytics disabled.');
+    }
+
     this.analytics = createAnalytics({
-      endpoint,
+      endpoint: endpoint || '',
       appName,
       apiKey,
       debug,
-      disabled: false
+      disabled: !endpoint || !apiKey
     });
 
     this.sessionStartTime = Date.now();
