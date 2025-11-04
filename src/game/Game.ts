@@ -74,7 +74,6 @@ export class Game {
   private difficultyMultiplier: number = 1.0; // Increases enemy speed over time
 
   // Mobile instructions
-  private mobileInstructionsShown: boolean = false;
   private autoFireEnabled: boolean = false;
 
   // Game state
@@ -391,11 +390,7 @@ export class Game {
     // Touch controls for mobile
     let lastTouchY = 0;
 
-    // Show mobile instructions on first load
-    if (this.isMobileDevice() && !this.mobileInstructionsShown) {
-      this.showMobileInstructions();
-      this.mobileInstructionsShown = true;
-    }
+    // Mobile instructions removed - start screen already shows controls
 
     // Touch move (drag to move player)
     canvas.addEventListener('touchstart', (e) => {
@@ -415,8 +410,7 @@ export class Game {
         musicStarted = true;
       }
 
-      // Hide mobile instructions on first touch
-      this.hideMobileInstructions();
+      // Mobile instructions removed - no longer needed
     });
 
     canvas.addEventListener('touchmove', (e) => {
@@ -1246,68 +1240,6 @@ export class Game {
            (window.innerWidth <= 768);
   }
 
-  private mobileInstructionsContainer: HTMLDivElement | null = null;
-
-  private showMobileInstructions(): void {
-    const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.top = '0';
-    container.style.left = '0';
-    container.style.width = '100%';
-    container.style.height = '100%';
-    container.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.justifyContent = 'center';
-    container.style.alignItems = 'center';
-    container.style.zIndex = '10000';
-    container.style.padding = '20px';
-    container.style.fontFamily = 'Orbitron, sans-serif';
-    container.style.color = '#00ffff';
-    container.style.textAlign = 'center';
-    container.style.cursor = 'pointer';
-
-    container.innerHTML = `
-      <div style="max-width: 400px;">
-        <h2 style="font-size: 32px; margin-bottom: 30px; text-shadow: 0 0 10px #00ffff;">TOUCH CONTROLS</h2>
-        <div style="font-size: 18px; line-height: 1.8; margin-bottom: 20px;">
-          <p style="margin-bottom: 15px;"><strong>DRAG LEFT/RIGHT</strong> to steer your ship</p>
-          <p style="margin-bottom: 15px;"><strong>SWIPE UP</strong> while steering to fire missile</p>
-          <p style="margin-bottom: 15px;"><strong>AUTO-FIRE</strong> enabled for bullets</p>
-          <p style="margin-bottom: 15px;">Music starts automatically</p>
-        </div>
-        <div style="font-size: 16px; color: #ffaa00; margin-top: 30px; animation: pulse 2s infinite;">
-          TAP ANYWHERE TO START
-        </div>
-      </div>
-      <style>
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      </style>
-    `;
-
-    // Make it dismissible on click/touch
-    const dismissHandler = () => {
-      this.hideMobileInstructions();
-      // Start music on first interaction
-      this.audio.resume();
-    };
-
-    container.addEventListener('click', dismissHandler);
-    container.addEventListener('touchstart', dismissHandler);
-
-    this.mobileInstructionsContainer = container;
-    document.body.appendChild(container);
-  }
-
-  private hideMobileInstructions(): void {
-    if (this.mobileInstructionsContainer) {
-      document.body.removeChild(this.mobileInstructionsContainer);
-      this.mobileInstructionsContainer = null;
-    }
-  }
 
   private createGameOverAd(): void {
     // Create a styled ad container that appears on game over
@@ -1556,6 +1488,9 @@ export class Game {
     const dismissScreen = () => {
       document.body.removeChild(container);
       window.removeEventListener('keydown', keyHandler);
+      // Reset to start screen when dismissing
+      this.gameState = 'start';
+      this.showStartScreen();
     };
 
     // Keyboard handler - R to restart, Escape to dismiss
