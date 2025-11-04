@@ -1389,19 +1389,19 @@ export class Game {
     // Hide player sprite immediately
     this.player.sprite.visible = false;
 
-    // Create BIG explosion at player position
-    this.particleSystem.createExplosion(playerX, playerY, 0xff6600, 40); // Orange explosion with 40 particles
-    this.particleSystem.createExplosion(playerX, playerY, 0xffff00, 30); // Yellow inner explosion with 30 particles
-    this.particleSystem.createExplosion(playerX, playerY, 0xff0000, 25); // Red core with 25 particles
-    this.particleSystem.createExplosion(playerX, playerY, 0xffffff, 15); // White flash with 15 particles
+    // Create BIG SLOW-MOTION explosion at player position
+    this.particleSystem.createExplosion(playerX, playerY, 0xff6600, 50, true); // Orange explosion with 50 particles (SLOW-MO)
+    this.particleSystem.createExplosion(playerX, playerY, 0xffff00, 40, true); // Yellow inner explosion with 40 particles (SLOW-MO)
+    this.particleSystem.createExplosion(playerX, playerY, 0xff0000, 30, true); // Red core with 30 particles (SLOW-MO)
+    this.particleSystem.createExplosion(playerX, playerY, 0xffffff, 20, true); // White flash with 20 particles (SLOW-MO)
 
     // Play explosion sound - multiple hits for bigger bang
     this.audio.playHit();
     setTimeout(() => this.audio.playHit(), 50);
     setTimeout(() => this.audio.playHit(), 100);
 
-    // Wait for explosion to animate (1.5 seconds)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Wait longer for slow-motion explosion to animate (2.5 seconds)
+    await new Promise(resolve => setTimeout(resolve, 2500));
 
     // NOW set game over state
     this.gameState = 'gameover';

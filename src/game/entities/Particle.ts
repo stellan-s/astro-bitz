@@ -7,20 +7,27 @@ export class Particle {
   private lifetime: number;
   private maxLifetime: number;
   private size: number;
+  private slowMo: boolean;
 
-  constructor(x: number, y: number, color: number = 0xffa500) {
+  constructor(x: number, y: number, color: number = 0xffa500, slowMo: boolean = false) {
     this.sprite = new Container();
     this.sprite.x = x;
     this.sprite.y = y;
+    this.slowMo = slowMo;
 
     // Random velocity for explosion effect
     const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 3 + 1;
+    const baseSpeed = Math.random() * 3 + 1;
+    // Slow motion: reduce speed by 60% and increase lifetime significantly
+    const speed = slowMo ? baseSpeed * 0.4 : baseSpeed;
     this.velocityX = Math.cos(angle) * speed;
     this.velocityY = Math.sin(angle) * speed;
 
     this.lifetime = 0;
-    this.maxLifetime = 30 + Math.random() * 20; // 30-50 frames
+    // Slow motion: 3x longer lifetime (90-150 frames instead of 30-50)
+    this.maxLifetime = slowMo
+      ? 90 + Math.random() * 60
+      : 30 + Math.random() * 20;
     this.size = Math.random() * 3 + 2; // 2-5 pixels
 
     const graphics = new Graphics();
@@ -33,12 +40,13 @@ export class Particle {
   public update(_deltaTime: number): boolean {
     this.lifetime++;
 
-    // Move particle
+    // Move particle (already slowed by constructor)
     this.sprite.x += this.velocityX;
     this.sprite.y += this.velocityY;
 
-    // Apply gravity
-    this.velocityY += 0.1;
+    // Apply gravity (reduced for slow motion)
+    const gravity = this.slowMo ? 0.03 : 0.1;
+    this.velocityY += gravity;
 
     // Fade out
     const lifetimeRatio = this.lifetime / this.maxLifetime;
@@ -61,9 +69,9 @@ export class ParticleSystem {
     this.container = container;
   }
 
-  public createExplosion(x: number, y: number, color: number = 0xffa500, count: number = 15): void {
+  public createExplosion(x: number, y: number, color: number = 0xffa500, count: number = 15, slowMo: boolean = false): void {
     for (let i = 0; i < count; i++) {
-      const particle = new Particle(x, y, color);
+      const particle = new Particle(x, y, color, slowMo);
       this.particles.push(particle);
       this.container.addChild(particle.sprite);
     }
