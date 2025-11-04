@@ -60,7 +60,7 @@ export class ParallaxBackground {
       this.container.addChild(star);
       this.distantStars.push({
         sprite: star,
-        speed: 0.02 // Very slow - barely moving
+        speed: 0.005 // Extremely slow - almost static
       });
     }
   }
@@ -79,7 +79,7 @@ export class ParallaxBackground {
       this.container.addChild(star);
       this.midStars.push({
         sprite: star,
-        speed: 0.05 // Slower
+        speed: 0.01 // Much slower
       });
     }
   }
@@ -98,7 +98,7 @@ export class ParallaxBackground {
       this.container.addChild(star);
       this.nearStars.push({
         sprite: star,
-        speed: 0.15 // Much slower
+        speed: 0.03 // Much slower
       });
     }
   }
@@ -161,18 +161,18 @@ export class ParallaxBackground {
       const data = planetData[Math.floor(Math.random() * planetData.length)];
       const planet = new Graphics();
 
-      // Main planet body
+      // Main planet body - very faded and distant
       planet.circle(0, 0, data.size);
-      planet.fill({ color: data.color, alpha: 0.9 }); // Less transparent
+      planet.fill({ color: data.color, alpha: 0.25 }); // Very transparent for distant look
 
-      // Add darker crescent for dimension
+      // Add subtle crescent for dimension
       planet.circle(data.size * 0.3, 0, data.size);
-      planet.fill({ color: 0x000000, alpha: 0.4 });
+      planet.fill({ color: 0x000000, alpha: 0.15 }); // Very subtle
 
       // Add ring if specified
       if (data.hasRing) {
         planet.ellipse(0, 0, data.size * 1.8, data.size * 0.3);
-        planet.stroke({ color: data.color, width: 3, alpha: 0.7 }); // Less transparent ring
+        planet.stroke({ color: data.color, width: 2, alpha: 0.2 }); // Very faint ring
       }
 
       const x = Math.random() * this.screenWidth;
@@ -186,7 +186,7 @@ export class ParallaxBackground {
 
       this.planets.push({
         sprite: planet,
-        speed: 0.02, // Much slower
+        speed: 0.005, // Extremely slow - almost static like distant object
         x,
         y
       });
