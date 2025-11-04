@@ -1488,6 +1488,43 @@ export class Game {
     const dismissScreen = () => {
       document.body.removeChild(container);
       window.removeEventListener('keydown', keyHandler);
+
+      // Clear all game entities to prevent them from triggering game over
+      for (let i = this.enemies.length - 1; i >= 0; i--) {
+        const enemy = this.enemies[i];
+        this.gameContainer.removeChild(enemy.sprite);
+        enemy.destroy();
+      }
+      this.enemies = [];
+
+      for (let i = this.bullets.length - 1; i >= 0; i--) {
+        const bullet = this.bullets[i];
+        this.gameContainer.removeChild(bullet.sprite);
+        bullet.destroy();
+      }
+      this.bullets = [];
+
+      for (let i = this.missiles.length - 1; i >= 0; i--) {
+        const missile = this.missiles[i];
+        this.gameContainer.removeChild(missile.sprite);
+        missile.destroy();
+      }
+      this.missiles = [];
+
+      for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+        const bullet = this.enemyBullets[i];
+        this.gameContainer.removeChild(bullet.sprite);
+        bullet.destroy();
+      }
+      this.enemyBullets = [];
+
+      for (let i = this.powerUps.length - 1; i >= 0; i--) {
+        const powerUp = this.powerUps[i];
+        this.gameContainer.removeChild(powerUp.sprite);
+        powerUp.destroy();
+      }
+      this.powerUps = [];
+
       // Reset to start screen when dismissing
       this.gameState = 'start';
       this.showStartScreen();
