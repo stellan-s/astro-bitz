@@ -12,6 +12,7 @@ import { EnemyBullet } from './entities/EnemyBullet';
 import { Background } from './entities/Background';
 import { ParallaxBackground } from './ParallaxBackground';
 import { AnalyticsManager } from './AnalyticsManager';
+import { AchievementsManager, type Achievement } from './AchievementsManager';
 
 export class Game {
   private app: Application;
@@ -39,9 +40,15 @@ export class Game {
   private musicText: Text;
   private rapidFireActive: boolean = false;
   private rapidFireTimer: number = 0;
+  private rapidFireSpawnBoost: boolean = false;
+  private rapidFireSpawnTimer: number = 0;
+  private rapidFireSpawnDuration: number = 5000; // 5 seconds of faster spawns
   private shieldCount: number = 0; // Number of shields (can stack)
   private fireRate: number = 300; // milliseconds between shots
   private lastShotTime: number = 0;
+  private isInvincible: boolean = false;
+  private invincibilityTimer: number = 0;
+  private invincibilityDuration: number = 1500; // 1.5 seconds of invincibility after shield break
 
   // Missile system
   private missileAmmo: number = 3; // Start with 3 missiles
@@ -78,12 +85,17 @@ export class Game {
   private waveStartTime: number = 0;
   private bossSpawnTime: number = 0;
 
+  // Achievements
+  private achievementsManager: AchievementsManager;
+  private newAchievements: Achievement[] = []; // Queue of newly unlocked achievements
+
   constructor(app: Application) {
     this.app = app;
     this.gameContainer = new Container();
     this.app.stage.addChild(this.gameContainer);
     this.audio = new AudioManager();
     this.analytics = AnalyticsManager.getInstance();
+    this.achievementsManager = new AchievementsManager();
 
     // Create starry background
     this.background = new Background(this.gameContainer, this.app.screen.width, this.app.screen.height);
@@ -276,6 +288,9 @@ export class Game {
       }
       // Track game start
       this.analytics.trackGameStart();
+      // Reset achievements session tracking
+      this.achievementsManager.resetSession();
+      this.newAchievements = [];
       this.waveStartTime = Date.now();
     };
 
@@ -496,39 +511,43 @@ export class Game {
   private spawnEnemyBullets(x: number, y: number, pattern: string, playerX?: number, playerY?: number): void {
     switch (pattern) {
       case 'single':
-        // Single bullet aimed at player
-        const singleBullet = new EnemyBullet(x, y);
+        // Single bullet aimed at player with slight randomness
+        const randomOffset = (Math.random() - 0.5) * 0.15; // ±0.075 radians (~4 degrees)
+        const singleBullet = new EnemyBullet(x, y, randomOffset);
         this.enemyBullets.push(singleBullet);
         this.gameContainer.addChild(singleBullet.sprite);
         break;
 
       case 'triple':
-        // Three bullets in a spread
+        // Three bullets in a spread with slight randomness
         for (let i = -1; i <= 1; i++) {
-          const angle = i * 0.3; // ±0.3 radians spread
-          const bullet = new EnemyBullet(x, y, angle);
+          const baseAngle = i * 0.3; // ±0.3 radians spread
+          const randomness = (Math.random() - 0.5) * 0.1; // ±0.05 radians (~3 degrees)
+          const bullet = new EnemyBullet(x, y, baseAngle + randomness);
           this.enemyBullets.push(bullet);
           this.gameContainer.addChild(bullet.sprite);
         }
         break;
 
       case 'spread':
-        // Five bullets in a wide spread
+        // Five bullets in a wide spread with slight randomness
         for (let i = -2; i <= 2; i++) {
-          const angle = i * 0.4; // ±0.8 radians spread
-          const bullet = new EnemyBullet(x, y, angle);
+          const baseAngle = i * 0.4; // ±0.8 radians spread
+          const randomness = (Math.random() - 0.5) * 0.1; // ±0.05 radians (~3 degrees)
+          const bullet = new EnemyBullet(x, y, baseAngle + randomness);
           this.enemyBullets.push(bullet);
           this.gameContainer.addChild(bullet.sprite);
         }
         break;
 
       case 'aimed':
-        // Precisely aimed at player position
+        // Precisely aimed at player position with tiny randomness
         if (playerX !== undefined && playerY !== undefined) {
           const dx = playerX - x;
           const dy = playerY - y;
           const angle = Math.atan2(dx, dy);
-          const bullet = new EnemyBullet(x, y, angle);
+          const randomness = (Math.random() - 0.5) * 0.12; // ±0.06 radians (~3.5 degrees)
+          const bullet = new EnemyBullet(x, y, angle + randomness);
           this.enemyBullets.push(bullet);
           this.gameContainer.addChild(bullet.sprite);
         }
@@ -570,12 +589,9 @@ export class Game {
 
         if (this.shieldCount > 0) {
           // Shield absorbs hit
-          this.shieldCount--;
-          if (this.shieldCount === 0) {
-            this.player.hideShield();
-          }
-        } else {
-          // Game over
+          this.handleShieldBreak();
+        } else if (!this.isInvincible) {
+          // Game over (unless invincible)
           this.gameOver();
           return;
         }
@@ -617,8 +633,7 @@ export class Game {
         this.enemiesKilledThisWave++;
 
         // Remove ALL shields on collision
-        this.shieldCount = 0;
-        this.player.hideShield();
+        this.handleShieldBreak();
 
         this.audio.playHit();
         this.checkWaveComplete();
@@ -805,6 +820,9 @@ export class Game {
         particleColor = 0xffa500; // Orange
         this.rapidFireActive = true;
         this.rapidFireTimer = 10000; // 10 seconds - longer for more fun!
+        // Boost enemy spawn rate temporarily
+        this.rapidFireSpawnBoost = true;
+        this.rapidFireSpawnTimer = this.rapidFireSpawnDuration;
         break;
       case 'shield':
         particleColor = 0x4169e1; // Blue
@@ -848,6 +866,104 @@ export class Game {
 
     // Track powerup collection
     this.analytics.trackPowerupCollected(type);
+
+    // Track achievements
+    const powerUpAchievements = this.achievementsManager.trackPowerUpCollected();
+    this.newAchievements.push(...powerUpAchievements);
+  }
+
+  private handleShieldBreak(): void {
+    // Create shield break particles (cyan burst)
+    this.particleSystem.createExplosion(
+      this.player.sprite.x,
+      this.player.sprite.y,
+      0x00ffff, // Cyan shield color
+      30 // More particles for dramatic effect
+    );
+
+    // Play shield break sound
+    this.audio.playShieldBreak();
+
+    // Remove shield
+    this.shieldCount--;
+    if (this.shieldCount === 0) {
+      this.player.hideShield();
+    }
+
+    // Grant brief invincibility
+    this.isInvincible = true;
+    this.invincibilityTimer = this.invincibilityDuration;
+
+    // Track damage taken for achievement
+    this.achievementsManager.trackDamageTaken();
+  }
+
+  private playEnemyDeathAnimation(enemy: Enemy, enemyIndex: number, config: any, particleCount: number = 12, wasMissile: boolean = false): void {
+    // Create explosion particles immediately
+    this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, particleCount);
+
+    // Award points immediately
+    this.score += config.points;
+    this.scoreText.text = `Score: ${this.score}`;
+
+    // Track enemy killed
+    this.analytics.trackEnemyKilled(enemy.type, config.points);
+
+    // Track achievements
+    const achievements = this.achievementsManager.trackEnemyKilled(wasMissile);
+    this.newAchievements.push(...achievements);
+
+    // Track boss defeat if it's a boss
+    if (enemy.isBoss) {
+      const timeTaken = Math.floor((Date.now() - this.bossSpawnTime) / 1000);
+      this.analytics.trackBossDefeated(enemy.type, this.currentWave, timeTaken);
+
+      // Track boss achievement
+      const bossAchievements = this.achievementsManager.trackBossDefeated();
+      this.newAchievements.push(...bossAchievements);
+    }
+
+    // Track wave progress
+    this.enemiesKilledThisWave++;
+    this.checkWaveComplete();
+
+    // Animate the enemy shrinking/exploding
+    const animationDuration = 150; // milliseconds
+    const startTime = Date.now();
+    const startScale = { x: enemy.sprite.scale.x, y: enemy.sprite.scale.y };
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / animationDuration, 1);
+
+      if (progress < 1) {
+        // Scale up then shrink
+        const scale = progress < 0.3
+          ? 1 + (progress / 0.3) * 0.3 // First 30%: scale up to 1.3x
+          : 1.3 - ((progress - 0.3) / 0.7) * 1.3; // Last 70%: shrink to 0
+
+        enemy.sprite.scale.set(startScale.x * scale, startScale.y * scale);
+
+        // Rotate for more dynamic death
+        enemy.sprite.rotation += 0.2;
+
+        // Fade out
+        enemy.sprite.alpha = 1 - progress;
+
+        // Continue animation
+        requestAnimationFrame(animate);
+      } else {
+        // Animation complete - remove enemy
+        const currentIndex = this.enemies.indexOf(enemy);
+        if (currentIndex !== -1) {
+          this.gameContainer.removeChild(enemy.sprite);
+          this.enemies.splice(currentIndex, 1);
+          enemy.destroy();
+        }
+      }
+    };
+
+    animate();
   }
 
   private checkCollisions(): void {
@@ -882,29 +998,8 @@ export class Game {
             // Get enemy config for color and points
             const config = getEnemyConfig(enemy.type);
 
-            // Create explosion particles
-            this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, 12);
-
-            this.gameContainer.removeChild(enemy.sprite);
-            this.enemies.splice(j, 1);
-            enemy.destroy();
-
-            // Use configured points
-            this.score += config.points;
-            this.scoreText.text = `Score: ${this.score}`;
-
-            // Track enemy killed
-            this.analytics.trackEnemyKilled(enemy.type, config.points);
-
-            // Track boss defeat if it's a boss
-            if (enemy.isBoss) {
-              const timeTaken = Math.floor((Date.now() - this.bossSpawnTime) / 1000);
-              this.analytics.trackBossDefeated(enemy.type, this.currentWave, timeTaken);
-            }
-
-            // Track wave progress
-            this.enemiesKilledThisWave++;
-            this.checkWaveComplete();
+            // Play death animation then remove
+            this.playEnemyDeathAnimation(enemy, j, config);
           }
 
           this.audio.playHit(enemy.type);
@@ -942,29 +1037,8 @@ export class Game {
             // Get enemy config for color and points
             const config = getEnemyConfig(enemy.type);
 
-            // Create larger explosion for missile hits
-            this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, 20);
-
-            this.gameContainer.removeChild(enemy.sprite);
-            this.enemies.splice(j, 1);
-            enemy.destroy();
-
-            // Use configured points
-            this.score += config.points;
-            this.scoreText.text = `Score: ${this.score}`;
-
-            // Track enemy killed
-            this.analytics.trackEnemyKilled(enemy.type, config.points);
-
-            // Track boss defeat if it's a boss
-            if (enemy.isBoss) {
-              const timeTaken = Math.floor((Date.now() - this.bossSpawnTime) / 1000);
-              this.analytics.trackBossDefeated(enemy.type, this.currentWave, timeTaken);
-            }
-
-            // Track wave progress
-            this.enemiesKilledThisWave++;
-            this.checkWaveComplete();
+            // Play death animation (with larger explosion for missiles)
+            this.playEnemyDeathAnimation(enemy, j, config, 20, true); // true = was missile
           }
 
           this.audio.playHit(enemy.type);
@@ -979,6 +1053,10 @@ export class Game {
       // Track wave completion
       const timeToComplete = Math.floor((Date.now() - this.waveStartTime) / 1000);
       this.analytics.trackWaveComplete(this.currentWave, timeToComplete);
+
+      // Track achievements for wave completion
+      const waveAchievements = this.achievementsManager.trackWaveCompleted(this.currentWave);
+      this.newAchievements.push(...waveAchievements);
 
       // If we're already in a transition (e.g., boss wave intro),
       // clean it up before starting the next wave
@@ -1004,6 +1082,9 @@ export class Game {
 
     this.currentWave++;
     this.enemiesKilledThisWave = 0;
+
+    // Reset wave tracking for achievements
+    this.achievementsManager.resetWaveTracking();
 
     // Check if this is a boss wave (every 3rd wave: 3, 6, 9, etc.)
     this.isBossWave = this.currentWave % 3 === 0;
@@ -1278,6 +1359,11 @@ export class Game {
     const stats = this.analytics.getCurrentStats();
     this.analytics.trackGameOver(this.score, this.currentWave, stats);
 
+    // Track rank achievement
+    const rankInfo = this.getPilotRank(this.score);
+    const rankAchievements = this.achievementsManager.trackRankReached(rankInfo.rank);
+    this.newAchievements.push(...rankAchievements);
+
     // Check for new high score
     const isNewHighScore = HighScoreManager.saveHighScore(this.score);
     if (isNewHighScore) {
@@ -1442,9 +1528,13 @@ export class Game {
 
       // Don't spawn enemies during wave transition
       if (!this.isWaveTransition) {
-        // Spawn enemies
+        // Spawn enemies (with optional rapid fire boost)
         this.spawnTimer += deltaTime;
-        if (this.spawnTimer >= this.spawnInterval) {
+        const currentSpawnInterval = this.rapidFireSpawnBoost
+          ? Math.max(this.spawnInterval * 0.5, 200) // 50% faster when rapid fire is active, min 200ms
+          : this.spawnInterval;
+
+        if (this.spawnTimer >= currentSpawnInterval) {
           this.spawnEnemy();
           this.spawnTimer = 0;
         }
@@ -1462,6 +1552,27 @@ export class Game {
         this.rapidFireTimer -= deltaTime;
         if (this.rapidFireTimer <= 0) {
           this.rapidFireActive = false;
+        }
+      }
+
+      // Update rapid fire spawn boost timer
+      if (this.rapidFireSpawnBoost) {
+        this.rapidFireSpawnTimer -= deltaTime;
+        if (this.rapidFireSpawnTimer <= 0) {
+          this.rapidFireSpawnBoost = false;
+        }
+      }
+
+      // Update invincibility timer
+      if (this.isInvincible) {
+        this.invincibilityTimer -= deltaTime;
+        if (this.invincibilityTimer <= 0) {
+          this.isInvincible = false;
+          this.player.sprite.alpha = 1.0; // Restore full opacity
+        } else {
+          // Flashing effect: alternate between visible and semi-transparent
+          const flashSpeed = 8; // flashes per second
+          this.player.sprite.alpha = Math.sin(this.invincibilityTimer * flashSpeed) > 0 ? 1.0 : 0.3;
         }
       }
 

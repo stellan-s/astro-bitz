@@ -7,6 +7,7 @@ export class AudioManager {
   private shepardOscillators: OscillatorNode[] = [];
   private shepardGains: GainNode[] = [];
   private shepardTimeoutId: number | null = null;
+  private shepardBaseFreq: number = 55; // Store the base frequency for Shepard tone
 
   // Dynamic music intensity
   private drumsGainNode: GainNode | null = null;
@@ -398,6 +399,50 @@ export class AudioManager {
     oscillator.stop(this.audioContext.currentTime + 0.5);
   }
 
+  // Shield break sound - sharp crack with descending tone
+  public playShieldBreak(): void {
+    const now = this.audioContext.currentTime;
+
+    // Sharp crack
+    const crack = this.audioContext.createOscillator();
+    const crackGain = this.audioContext.createGain();
+
+    crack.connect(crackGain);
+    crackGain.connect(this.audioContext.destination);
+
+    crack.type = 'square';
+    crack.frequency.setValueAtTime(1500, now);
+    crack.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+
+    crackGain.gain.setValueAtTime(this.masterVolume * 0.35, now);
+    crackGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+    crack.start(now);
+    crack.stop(now + 0.1);
+
+    // Glass shatter effect
+    const shatter = this.audioContext.createOscillator();
+    const shatterGain = this.audioContext.createGain();
+    const filter = this.audioContext.createBiquadFilter();
+
+    shatter.connect(filter);
+    filter.connect(shatterGain);
+    shatterGain.connect(this.audioContext.destination);
+
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(2000, now);
+
+    shatter.type = 'square';
+    shatter.frequency.setValueAtTime(3000, now + 0.02);
+    shatter.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+
+    shatterGain.gain.setValueAtTime(this.masterVolume * 0.25, now + 0.02);
+    shatterGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+    shatter.start(now + 0.02);
+    shatter.stop(now + 0.15);
+  }
+
   // Powerup sound - ascending chime with harmonics
   public playPowerUp(): void {
     const now = this.audioContext.currentTime;
@@ -786,7 +831,9 @@ export class AudioManager {
 
     // Shepard tone: multiple octaves of the same pitch class cycling
     // Creates illusion of infinitely rising pitch (subtle background tension)
-    const baseFreq = 55; // A1
+    // Start on a somewhat random note within a low range
+    const randomNotes = [55, 58.27, 61.74, 65.41, 69.30, 73.42]; // A1, A#1, B1, C2, C#2, D2
+    this.shepardBaseFreq = randomNotes[Math.floor(Math.random() * randomNotes.length)];
     const numOctaves = 8; // More octaves for smoother overlap
 
     for (let i = 0; i < numOctaves; i++) {
@@ -797,7 +844,7 @@ export class AudioManager {
       gain.connect(this.audioContext.destination);
 
       osc.type = 'sine';
-      const freq = baseFreq * Math.pow(2, i);
+      const freq = this.shepardBaseFreq * Math.pow(2, i);
       osc.frequency.setValueAtTime(freq, this.audioContext.currentTime);
 
       // Bell curve envelope: fade in and out to create seamless loop
@@ -824,7 +871,7 @@ export class AudioManager {
 
     const now = this.audioContext.currentTime;
     const riseDuration = 10; // Slower rise for more overlap
-    const baseFreq = 55;
+    const baseFreq = this.shepardBaseFreq;
     const numOctaves = this.shepardOscillators.length;
 
     for (let i = 0; i < numOctaves; i++) {
