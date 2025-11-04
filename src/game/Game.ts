@@ -1636,6 +1636,12 @@ export class Game {
 
     // Keyboard handler - R to restart, Escape to dismiss
     const keyHandler = (e: KeyboardEvent) => {
+      // Don't trigger restart if typing in an input field
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        return;
+      }
+
       if (e.key === 'r' || e.key === 'R') {
         restartGame();
       } else if (e.key === 'Escape') {
