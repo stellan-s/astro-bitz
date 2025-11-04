@@ -84,6 +84,7 @@ export class Game {
   private analytics: AnalyticsManager;
   private waveStartTime: number = 0;
   private bossSpawnTime: number = 0;
+  private gameStartTime: number = 0; // Track when game starts for grace period
 
   // Achievements
   private achievementsManager: AchievementsManager;
@@ -242,6 +243,14 @@ export class Game {
   }
 
   private showStartScreen(): void {
+    // Remove any existing start screen first
+    if (this.startScreenContainer) {
+      if (document.body.contains(this.startScreenContainer)) {
+        document.body.removeChild(this.startScreenContainer);
+      }
+      this.startScreenContainer = null;
+    }
+
     const container = document.createElement('div');
     container.style.cssText = `
       position: fixed;
@@ -294,7 +303,20 @@ export class Game {
       </style>
     `;
 
-    const startGame = () => {
+    let startGameCalled = false;
+
+    const startGame = (e: Event) => {
+      // Prevent double-firing
+      if (startGameCalled) return;
+      startGameCalled = true;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Remove event listeners
+      container.removeEventListener('click', startGame);
+      container.removeEventListener('touchstart', startGame);
+
       if (this.startScreenContainer) {
         document.body.removeChild(this.startScreenContainer);
         this.startScreenContainer = null;
@@ -328,6 +350,9 @@ export class Game {
       }
       this.player.hideShield();
 
+      // Make player visible again (in case it was hidden from game over)
+      this.player.sprite.visible = true;
+
       this.gameState = 'playing';
       this.audio.resume();
       if (this.musicEnabled) {
@@ -339,6 +364,7 @@ export class Game {
       this.achievementsManager.resetSession();
       this.newAchievements = [];
       this.waveStartTime = Date.now();
+      this.gameStartTime = Date.now(); // Set grace period start time
     };
 
     container.addEventListener('click', startGame);
@@ -1324,7 +1350,12 @@ export class Game {
       { name: 'Sky Marshal', threshold: 5500, color: '#ff4500' },
       { name: 'Fleet Admiral', threshold: 7500, color: '#dc143c' },
       { name: 'Legendary Pilot', threshold: 10000, color: '#9400d3' },
-      { name: 'Astro Ace', threshold: 15000, color: '#ffd700' },
+      { name: 'Void Commander', threshold: 13000, color: '#8b00ff' },
+      { name: 'Cosmic Guardian', threshold: 16500, color: '#ff00ff' },
+      { name: 'Nebula Sovereign', threshold: 20000, color: '#ff1493' },
+      { name: 'Galactic Champion', threshold: 24000, color: '#ff69b4' },
+      { name: 'Celestial Master', threshold: 28000, color: '#ffb6c1' },
+      { name: 'Astro Ace', threshold: 35000, color: '#ffd700' },
     ];
 
     let currentRank = ranks[0];
@@ -1349,7 +1380,25 @@ export class Game {
 
   private async gameOver(): Promise<void> {
     this.gameState = 'gameover';
+
+    // Store player position before hiding
+    const playerX = this.player.sprite.x;
+    const playerY = this.player.sprite.y;
+
+    // Hide player sprite immediately
+    this.player.sprite.visible = false;
+
+    // Create explosion at player position
+    this.particleSystem.createExplosion(playerX, playerY, 0xff6600, 30); // Orange explosion with 30 particles
+    this.particleSystem.createExplosion(playerX, playerY, 0xffff00, 20); // Yellow inner explosion with 20 particles
+    this.particleSystem.createExplosion(playerX, playerY, 0xff0000, 15); // Red core with 15 particles
+
+    // Play explosion sound
+    this.audio.playHit();
     this.audio.playGameOver();
+
+    // Wait for explosion to finish (1.5 seconds)
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     // Track game over with analytics
     const stats = this.analytics.getCurrentStats();
@@ -1625,6 +1674,24 @@ export class Game {
       }
       this.powerUps = [];
 
+      // Clear particles
+      for (let i = this.particleSystem.particles.length - 1; i >= 0; i--) {
+        const particle = this.particleSystem.particles[i];
+        this.gameContainer.removeChild(particle.sprite);
+        particle.destroy();
+      }
+      this.particleSystem.particles = [];
+
+      // Reset player position and make visible
+      this.player.sprite.x = this.app.screen.width / 2;
+      this.player.sprite.y = this.app.screen.height - 80;
+      this.player.sprite.visible = true;
+      this.player.sprite.alpha = 1.0;
+
+      // Stop any background music
+      this.audio.stopBackgroundMusic();
+      this.audio.stopBossMusic();
+
       // Reset to start screen when dismissing
       this.gameState = 'start';
       this.showStartScreen();
@@ -1829,8 +1896,11 @@ export class Game {
       // Update wave transition
       this.updateWaveTransition(deltaTime);
 
-      // Don't spawn enemies during wave transition
-      if (!this.isWaveTransition) {
+      // Check if grace period has ended (2 seconds after game start)
+      const gracePeriodActive = (currentTime - this.gameStartTime) < 2000;
+
+      // Don't spawn enemies during wave transition or grace period
+      if (!this.isWaveTransition && !gracePeriodActive) {
         // Spawn enemies (with optional rapid fire boost)
         this.spawnTimer += deltaTime;
         const currentSpawnInterval = this.rapidFireSpawnBoost
