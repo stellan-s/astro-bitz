@@ -1318,7 +1318,7 @@ export class Game {
     };
   }
 
-  private gameOver(): void {
+  private async gameOver(): Promise<void> {
     this.gameState = 'gameover';
     this.audio.playGameOver();
 
@@ -1443,6 +1443,62 @@ export class Game {
           </div>
         </div>
 
+        <!-- Leaderboard Submission -->
+        ${this.leaderboardManager ? `
+        <div id="leaderboard-section" style="background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 10px;
+                    border: 1px solid #444; margin-bottom: 25px; margin-top: 25px;">
+          <div style="font-size: 18px; color: #00ffff; margin-bottom: 15px;">SUBMIT TO LEADERBOARD</div>
+          <div style="display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap;">
+            <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="20"
+                   style="padding: 10px; border-radius: 5px; border: 2px solid #00ffff;
+                          background: rgba(0, 0, 0, 0.5); color: #fff; font-family: 'Orbitron', sans-serif;
+                          font-size: 16px; flex: 1; min-width: 200px; max-width: 300px;">
+            <button id="submit-score-btn" style="padding: 10px 20px; border-radius: 5px;
+                                                   border: 2px solid #00ffff; background: rgba(0, 255, 255, 0.2);
+                                                   color: #00ffff; font-family: 'Orbitron', sans-serif;
+                                                   font-size: 16px; cursor: pointer; transition: all 0.3s;
+                                                   font-weight: bold;">
+              SUBMIT SCORE
+            </button>
+          </div>
+          <div id="submit-status" style="margin-top: 10px; font-size: 14px; min-height: 20px;"></div>
+        </div>
+
+        <!-- Leaderboard Display -->
+        <div style="background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 10px;
+                    border: 1px solid #444; margin-bottom: 25px;">
+          <div style="font-size: 18px; color: #ffd700; margin-bottom: 15px;">🏆 LEADERBOARD</div>
+
+          <!-- Tabs -->
+          <div style="display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap;">
+            <button class="leaderboard-tab" data-tab="alltime" style="padding: 8px 16px; border-radius: 5px;
+                                                                       border: 2px solid #ffd700; background: rgba(255, 215, 0, 0.3);
+                                                                       color: #ffd700; font-family: 'Orbitron', sans-serif;
+                                                                       font-size: 14px; cursor: pointer; transition: all 0.3s;
+                                                                       font-weight: bold;">
+              ALL-TIME
+            </button>
+            <button class="leaderboard-tab" data-tab="weekly" style="padding: 8px 16px; border-radius: 5px;
+                                                                      border: 2px solid #888; background: rgba(136, 136, 136, 0.2);
+                                                                      color: #888; font-family: 'Orbitron', sans-serif;
+                                                                      font-size: 14px; cursor: pointer; transition: all 0.3s;">
+              WEEKLY
+            </button>
+            <button class="leaderboard-tab" data-tab="daily" style="padding: 8px 16px; border-radius: 5px;
+                                                                     border: 2px solid #888; background: rgba(136, 136, 136, 0.2);
+                                                                     color: #888; font-family: 'Orbitron', sans-serif;
+                                                                     font-size: 14px; cursor: pointer; transition: all 0.3s;">
+              DAILY
+            </button>
+          </div>
+
+          <!-- Leaderboard Content -->
+          <div id="leaderboard-content" style="font-size: 14px; color: #fff; text-align: left;">
+            <div style="text-align: center; color: #888;">Loading...</div>
+          </div>
+        </div>
+        ` : ''}
+
         <div style="font-size: 20px; color: #888; margin-top: 20px; margin-bottom: 30px;">
           ${this.isMobileDevice() ? 'Press R to restart' : 'Press R to restart'}
         </div>
@@ -1469,10 +1525,23 @@ export class Game {
         #dismiss-btn:active {
           transform: scale(0.95);
         }
+        #submit-score-btn:hover {
+          background: rgba(0, 255, 255, 0.4);
+          transform: scale(1.05);
+        }
+        #submit-score-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .leaderboard-tab:hover {
+          transform: scale(1.05);
+        }
         /* Mobile optimizations */
         @media (max-width: 768px) {
           h1 { font-size: 40px !important; }
           #dismiss-btn { font-size: 14px; padding: 10px 20px; }
+          #player-name-input { min-width: 150px; font-size: 14px; }
+          #submit-score-btn { font-size: 14px; padding: 8px 16px; }
         }
         @media (max-height: 700px) {
           /* Ensure content is accessible on short screens */
@@ -1557,8 +1626,160 @@ export class Game {
       }
     }, 0);
 
+    // Set up leaderboard functionality
+    if (this.leaderboardManager) {
+      this.setupLeaderboard(container, rankInfo.rank);
+    }
+
     // Create game-over ad container below the game over message
     setTimeout(() => this.createGameOverAd(), 100);
+  }
+
+  private setupLeaderboard(container: HTMLDivElement, rank: string): void {
+    // Get saved player name from localStorage
+    const savedName = localStorage.getItem('player_name') || '';
+    const nameInput = document.getElementById('player-name-input') as HTMLInputElement;
+    if (nameInput && savedName) {
+      nameInput.value = savedName;
+    }
+
+    // Submit score handler
+    const submitBtn = document.getElementById('submit-score-btn');
+    const statusDiv = document.getElementById('submit-status');
+
+    if (submitBtn && nameInput && statusDiv) {
+      submitBtn.addEventListener('click', async () => {
+        const playerName = nameInput.value.trim();
+        if (!playerName) {
+          statusDiv.style.color = '#ff4500';
+          statusDiv.textContent = 'Please enter your name';
+          return;
+        }
+
+        if (playerName.length < 2) {
+          statusDiv.style.color = '#ff4500';
+          statusDiv.textContent = 'Name must be at least 2 characters';
+          return;
+        }
+
+        // Save name for next time
+        localStorage.setItem('player_name', playerName);
+
+        // Disable button during submission
+        submitBtn.textContent = 'SUBMITTING...';
+        (submitBtn as HTMLButtonElement).disabled = true;
+        statusDiv.style.color = '#888';
+        statusDiv.textContent = 'Submitting...';
+
+        try {
+          const success = await this.leaderboardManager!.submitScore({
+            player_name: playerName,
+            score: this.score,
+            wave: this.currentWave,
+            rank: rank
+          });
+
+          if (success) {
+            statusDiv.style.color = '#32cd32';
+            statusDiv.textContent = '✓ Score submitted successfully!';
+            submitBtn.textContent = '✓ SUBMITTED';
+            // Refresh leaderboard
+            await this.loadLeaderboard('alltime');
+          } else {
+            throw new Error('Submission failed');
+          }
+        } catch (error) {
+          statusDiv.style.color = '#ff4500';
+          statusDiv.textContent = '✗ Failed to submit score';
+          submitBtn.textContent = 'SUBMIT SCORE';
+          (submitBtn as HTMLButtonElement).disabled = false;
+        }
+      });
+    }
+
+    // Tab switching
+    const tabs = container.querySelectorAll('.leaderboard-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', async () => {
+        const tabName = (tab as HTMLElement).dataset.tab!;
+
+        // Update tab styles
+        tabs.forEach(t => {
+          if (t === tab) {
+            (t as HTMLElement).style.border = '2px solid #ffd700';
+            (t as HTMLElement).style.background = 'rgba(255, 215, 0, 0.3)';
+            (t as HTMLElement).style.color = '#ffd700';
+            (t as HTMLElement).style.fontWeight = 'bold';
+          } else {
+            (t as HTMLElement).style.border = '2px solid #888';
+            (t as HTMLElement).style.background = 'rgba(136, 136, 136, 0.2)';
+            (t as HTMLElement).style.color = '#888';
+            (t as HTMLElement).style.fontWeight = 'normal';
+          }
+        });
+
+        // Load leaderboard data
+        await this.loadLeaderboard(tabName);
+      });
+    });
+
+    // Load initial leaderboard data
+    this.loadLeaderboard('alltime');
+  }
+
+  private async loadLeaderboard(tab: string): Promise<void> {
+    const contentDiv = document.getElementById('leaderboard-content');
+    if (!contentDiv || !this.leaderboardManager) return;
+
+    contentDiv.innerHTML = '<div style="text-align: center; color: #888;">Loading...</div>';
+
+    try {
+      let scores;
+      switch (tab) {
+        case 'daily':
+          scores = await this.leaderboardManager.getTodayTopScores(10);
+          break;
+        case 'weekly':
+          scores = await this.leaderboardManager.getWeekTopScores(10);
+          break;
+        default:
+          scores = await this.leaderboardManager.getTopScores(10);
+      }
+
+      if (scores.length === 0) {
+        contentDiv.innerHTML = '<div style="text-align: center; color: #888;">No scores yet. Be the first!</div>';
+        return;
+      }
+
+      // Build leaderboard HTML
+      let html = '<table style="width: 100%; border-collapse: collapse;">';
+      scores.forEach((entry, index) => {
+        const position = index + 1;
+        const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : `${position}.`;
+        const rowColor = position <= 3 ? 'rgba(255, 215, 0, 0.1)' : 'transparent';
+
+        html += `
+          <tr style="background: ${rowColor}; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+            <td style="padding: 8px; text-align: left; color: #ffd700; font-weight: bold;">${medal}</td>
+            <td style="padding: 8px; text-align: left; color: #fff;">${this.escapeHtml(entry.player_name)}</td>
+            <td style="padding: 8px; text-align: right; color: #00ffff; font-weight: bold;">${entry.score}</td>
+            <td style="padding: 8px; text-align: right; color: #888; font-size: 12px;">Wave ${entry.wave}</td>
+          </tr>
+        `;
+      });
+      html += '</table>';
+
+      contentDiv.innerHTML = html;
+    } catch (error) {
+      console.error('Failed to load leaderboard:', error);
+      contentDiv.innerHTML = '<div style="text-align: center; color: #ff4500;">Failed to load leaderboard</div>';
+    }
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   public start(): void {
