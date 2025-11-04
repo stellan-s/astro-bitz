@@ -13,6 +13,7 @@ import { Background } from './entities/Background';
 import { ParallaxBackground } from './ParallaxBackground';
 import { AnalyticsManager } from './AnalyticsManager';
 import { AchievementsManager, type Achievement } from './AchievementsManager';
+import { LeaderboardManager, type LeaderboardEntry } from './LeaderboardManager';
 
 export class Game {
   private app: Application;
@@ -89,6 +90,9 @@ export class Game {
   private achievementsManager: AchievementsManager;
   private newAchievements: Achievement[] = []; // Queue of newly unlocked achievements
 
+  // Leaderboard
+  private leaderboardManager: LeaderboardManager | null = null;
+
   constructor(app: Application) {
     this.app = app;
     this.gameContainer = new Container();
@@ -96,6 +100,16 @@ export class Game {
     this.audio = new AudioManager();
     this.analytics = AnalyticsManager.getInstance();
     this.achievementsManager = new AchievementsManager();
+
+    // Initialize leaderboard if Supabase is configured
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (supabaseUrl && supabaseKey) {
+      this.leaderboardManager = new LeaderboardManager({
+        supabaseUrl,
+        supabaseKey
+      });
+    }
 
     // Create starry background
     this.background = new Background(this.gameContainer, this.app.screen.width, this.app.screen.height);
@@ -1386,13 +1400,16 @@ export class Game {
       background: rgba(0, 0, 0, 0.9);
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       align-items: center;
       z-index: 10000;
       font-family: 'Orbitron', sans-serif;
       text-align: center;
       padding: 20px;
       box-sizing: border-box;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
     `;
 
     const titleColor = isNewHighScore ? '#ffd700' : '#ff0000';
@@ -1402,7 +1419,17 @@ export class Game {
       Math.min(100, Math.round((this.score / rankInfo.nextThreshold) * 100));
 
     container.innerHTML = `
-      <div style="max-width: 700px;">
+      <div style="max-width: 700px; width: 100%; margin: auto; position: relative; padding-top: 20px; padding-bottom: 40px;">
+        <!-- Dismiss Button -->
+        <button id="dismiss-btn" style="position: absolute; top: 10px; right: 10px;
+                                        background: rgba(255, 0, 0, 0.2); border: 2px solid #ff0000;
+                                        color: #ff0000; padding: 8px 16px; border-radius: 5px;
+                                        font-family: 'Orbitron', sans-serif; font-size: 14px;
+                                        cursor: pointer; transition: all 0.3s;
+                                        font-weight: bold; z-index: 10001;">
+          ✕ CLOSE
+        </button>
+
         <h1 style="font-size: 56px; margin-bottom: 20px; color: ${titleColor};
                    text-shadow: 0 0 20px ${glowColor}, 0 0 40px ${glowColor};
                    font-weight: 900;">
@@ -1488,6 +1515,23 @@ export class Game {
           0%, 100% { text-shadow: 0 0 15px rgba(255, 215, 0, 0.7); }
           50% { text-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 0 50px rgba(255, 215, 0, 0.5); }
         }
+        #dismiss-btn:hover {
+          background: rgba(255, 0, 0, 0.4);
+          transform: scale(1.05);
+          box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+        #dismiss-btn:active {
+          transform: scale(0.95);
+        }
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+          h1 { font-size: 40px !important; }
+          #dismiss-btn { font-size: 12px; padding: 6px 12px; }
+        }
+        @media (max-height: 700px) {
+          /* Ensure content is accessible on short screens */
+          body { overflow-y: auto; }
+        }
       </style>
     `;
 
@@ -1495,18 +1539,52 @@ export class Game {
       window.location.reload();
     };
 
-    container.addEventListener('click', restartGame);
-    container.addEventListener('touchstart', restartGame);
+    const dismissScreen = () => {
+      document.body.removeChild(container);
+      window.removeEventListener('keydown', keyHandler);
+    };
+
+    // Add click handler to container (but prevent clicks on dismiss button from restarting)
+    container.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.id !== 'dismiss-btn' && !target.closest('#dismiss-btn')) {
+        restartGame();
+      }
+    });
+
+    container.addEventListener('touchstart', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.id !== 'dismiss-btn' && !target.closest('#dismiss-btn')) {
+        restartGame();
+      }
+    });
 
     // Keyboard restart
     const keyHandler = (e: KeyboardEvent) => {
       if (e.key === 'r' || e.key === 'R') {
         restartGame();
+      } else if (e.key === 'Escape') {
+        dismissScreen();
       }
     };
     window.addEventListener('keydown', keyHandler);
 
     document.body.appendChild(container);
+
+    // Add dismiss button handler after DOM is added
+    setTimeout(() => {
+      const dismissBtn = document.getElementById('dismiss-btn');
+      if (dismissBtn) {
+        dismissBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dismissScreen();
+        });
+        dismissBtn.addEventListener('touchstart', (e) => {
+          e.stopPropagation();
+          dismissScreen();
+        });
+      }
+    }, 0);
 
     // Create game-over ad container below the game over message
     setTimeout(() => this.createGameOverAd(), 100);
