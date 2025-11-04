@@ -17,112 +17,78 @@ export class Player {
     this.jetBeams = new Graphics();
     this.sprite.addChild(this.jetBeams);
 
-    // Draw player as a retro 80s LEGO spaceship - more triangular
+    // Draw player as simple classic LEGO spaceship (like 6872/10497)
     const graphics = new Graphics();
 
     // Classic LEGO space colors
     const blue = 0x0055BF;           // LEGO classic blue
     const lightGray = 0xA0A0A0;      // LEGO light gray
-    const darkGray = 0x6C6C6C;       // Darker gray for details
     const neonYellow = 0xFFFF00;     // Bright neon yellow
     const transYellow = 0xFFFF00;    // Trans-neon yellow windscreen
 
-    // Main triangular fuselage (classic LEGO spaceship triangle)
-    graphics.moveTo(0, -40);      // Sharp nose point
-    graphics.lineTo(20, 15);      // Right back corner (wider triangle)
-    graphics.lineTo(-20, 15);     // Left back corner
-    graphics.lineTo(0, -40);      // Back to nose
+    // Simple triangular body (clean and blocky)
+    graphics.moveTo(0, -35);      // Nose
+    graphics.lineTo(18, 12);      // Right back
+    graphics.lineTo(-18, 12);     // Left back
+    graphics.lineTo(0, -35);      // Close
     graphics.fill({ color: blue });
 
-    // Cockpit windscreen (trans-neon YELLOW) - angular
-    graphics.moveTo(0, -32);
-    graphics.lineTo(10, -18);
-    graphics.lineTo(10, -8);
-    graphics.lineTo(-10, -8);
-    graphics.lineTo(-10, -18);
-    graphics.lineTo(0, -32);
+    // Trans-yellow windscreen - simple trapezoid
+    graphics.moveTo(0, -28);
+    graphics.lineTo(8, -15);
+    graphics.lineTo(8, -5);
+    graphics.lineTo(-8, -5);
+    graphics.lineTo(-8, -15);
+    graphics.lineTo(0, -28);
     graphics.fill({ color: transYellow, alpha: 0.6 });
 
-    // Light gray panels on sides (LEGO style)
-    graphics.moveTo(8, -10);
-    graphics.lineTo(16, 10);
-    graphics.lineTo(12, 10);
-    graphics.lineTo(8, -5);
+    // Simple gray wing blocks (like LEGO plates)
+    graphics.rect(14, 5, 4, 7);
+    graphics.fill({ color: lightGray });
+    graphics.rect(-18, 5, 4, 7);
     graphics.fill({ color: lightGray });
 
-    graphics.moveTo(-8, -10);
-    graphics.lineTo(-16, 10);
-    graphics.lineTo(-12, 10);
-    graphics.lineTo(-8, -5);
-    graphics.fill({ color: lightGray });
-
-    // Yellow racing stripe down the center
-    graphics.moveTo(0, -38);
-    graphics.lineTo(3, -30);
-    graphics.lineTo(3, 8);
-    graphics.lineTo(-3, 8);
-    graphics.lineTo(-3, -30);
-    graphics.lineTo(0, -38);
-    graphics.fill({ color: neonYellow });
-
-    // Wing tips with yellow accents (LEGO style blocky)
-    // Right wing tip
-    graphics.rect(15, 8, 5, 7);
-    graphics.fill({ color: neonYellow });
-    // Left wing tip
-    graphics.rect(-20, 8, 5, 7);
-    graphics.fill({ color: neonYellow });
-
-    // Gray engine housings at back
-    graphics.rect(10, 11, 4, 6);
-    graphics.fill({ color: lightGray });
-    graphics.rect(-14, 11, 4, 6);
-    graphics.fill({ color: lightGray });
-
-    // Engine nozzles (dark gray circles)
-    // Right engine
-    graphics.circle(12, 13, 4);
-    graphics.fill({ color: darkGray });
-    graphics.circle(12, 13, 2);
-    graphics.fill({ color: 0x1a1a1a }); // Very dark for nozzle depth
-
-    // Left engine
-    graphics.circle(-12, 13, 4);
-    graphics.fill({ color: darkGray });
-    graphics.circle(-12, 13, 2);
-    graphics.fill({ color: 0x1a1a1a });
-
-    // Classic LEGO Space logo on the hull (planet with rocket and rings)
+    // Classic LEGO Space logo - simplified
     const logoX = 0;
-    const logoY = 2;
-    const logoScale = 0.7;
+    const logoY = 0;
 
     // Planet circle (gray)
-    graphics.circle(logoX, logoY, 6 * logoScale);
+    graphics.circle(logoX, logoY, 5);
     graphics.fill({ color: lightGray });
 
-    // Saturn-like rings (yellow)
-    graphics.ellipse(logoX, logoY, 9 * logoScale, 3 * logoScale);
+    // Simple rings (yellow ellipse)
+    graphics.ellipse(logoX, logoY, 8, 2.5);
     graphics.stroke({ color: neonYellow, width: 1.5 });
 
-    // Rocket on the logo (tiny yellow rocket)
-    graphics.moveTo(logoX + 4 * logoScale, logoY - 3 * logoScale);
-    graphics.lineTo(logoX + 6 * logoScale, logoY - 1 * logoScale);
-    graphics.lineTo(logoX + 6 * logoScale, logoY + 1 * logoScale);
-    graphics.lineTo(logoX + 4 * logoScale, logoY + 3 * logoScale);
+    // Tiny rocket (just a simple triangle)
+    graphics.moveTo(logoX + 4, logoY - 2);
+    graphics.lineTo(logoX + 7, logoY);
+    graphics.lineTo(logoX + 4, logoY + 2);
     graphics.fill({ color: neonYellow });
 
-    // Rocket exhaust trail (small yellow dash)
-    graphics.rect(logoX + 1 * logoScale, logoY - 0.5 * logoScale, 3 * logoScale, 1 * logoScale);
-    graphics.fill({ color: neonYellow, alpha: 0.6 });
+    // Rocket trail
+    graphics.rect(logoX + 1, logoY - 0.5, 3, 1);
+    graphics.fill({ color: neonYellow, alpha: 0.7 });
 
-    // Yellow detail dots (LEGO style studs)
-    graphics.circle(0, -25, 2);
+    // Simple yellow stripe on nose
+    graphics.moveTo(0, -33);
+    graphics.lineTo(2, -25);
+    graphics.lineTo(2, -10);
+    graphics.lineTo(-2, -10);
+    graphics.lineTo(-2, -25);
+    graphics.lineTo(0, -33);
     graphics.fill({ color: neonYellow });
-    graphics.circle(8, -15, 1.5);
-    graphics.fill({ color: neonYellow });
-    graphics.circle(-8, -15, 1.5);
-    graphics.fill({ color: neonYellow });
+
+    // Two simple engine blocks at back
+    graphics.rect(10, 10, 4, 4);
+    graphics.fill({ color: lightGray });
+    graphics.circle(12, 12, 2);
+    graphics.fill({ color: 0x1a1a1a });
+
+    graphics.rect(-14, 10, 4, 4);
+    graphics.fill({ color: lightGray });
+    graphics.circle(-12, 12, 2);
+    graphics.fill({ color: 0x1a1a1a });
 
     this.sprite.addChild(graphics);
   }
