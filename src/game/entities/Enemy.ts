@@ -272,38 +272,35 @@ export class Enemy {
     const w = config.size.width / 2;
     const h = config.size.height / 2;
 
+    // Start in cloaked state (almost invisible)
+    const alpha = 0.03; // Nearly invisible when cloaked
+
     // Main body - angular stealth design
     graphics.moveTo(0, -h);
     graphics.lineTo(w * 0.7, 0);
     graphics.lineTo(0, h);
     graphics.lineTo(-w * 0.7, 0);
     graphics.lineTo(0, -h);
-    graphics.fill(config.color); // Will change based on cloak state
+    graphics.fill({ color: config.color, alpha: alpha });
 
     // Wings - angular
     graphics.moveTo(-w * 0.7, 0);
     graphics.lineTo(-w * 1.2, h * 0.3);
     graphics.lineTo(-w * 0.9, h * 0.5);
     graphics.lineTo(-w * 0.7, 0);
-    graphics.fill(config.color);
+    graphics.fill({ color: config.color, alpha: alpha });
 
     graphics.moveTo(w * 0.7, 0);
     graphics.lineTo(w * 1.2, h * 0.3);
     graphics.lineTo(w * 0.9, h * 0.5);
     graphics.lineTo(w * 0.7, 0);
-    graphics.fill(config.color);
+    graphics.fill({ color: config.color, alpha: alpha });
 
-    // Cockpit/core - will glow when uncloaked
+    // Cockpit/core - barely visible when cloaked
     graphics.circle(0, 0, 6);
-    graphics.fill(config.secondaryColor);
+    graphics.fill({ color: config.color, alpha: 0.05 });
 
-    // Edge highlights - barely visible when cloaked
-    graphics.moveTo(0, -h);
-    graphics.lineTo(w * 0.7, 0);
-    graphics.lineTo(0, h);
-    graphics.lineTo(-w * 0.7, 0);
-    graphics.lineTo(0, -h);
-    graphics.stroke({ color: config.tertiaryColor, width: 1, alpha: 0.3 });
+    // No edge highlights when starting cloaked
 
     this.sprite.addChild(graphics);
   }
