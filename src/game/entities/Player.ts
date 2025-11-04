@@ -30,7 +30,7 @@ export class Player {
 
     img.onload = () => {
       // Image loaded successfully, use it
-      const shipTexture = Texture.from('/player-ship.png');
+      const shipTexture = Texture.from('/space_ship_6872.png');
       const shipSprite = new Sprite(shipTexture);
       shipSprite.anchor.set(0.5, 0.5);
       this.sprite.addChild(shipSprite);
@@ -43,7 +43,7 @@ export class Player {
       this.drawFallbackShip();
     };
 
-    img.src = '/player-ship.png';
+    img.src = '/space_ship_6872.png';
   }
 
   private drawFallbackShip(): void {
