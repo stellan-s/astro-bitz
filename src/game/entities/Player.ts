@@ -11,20 +11,82 @@ export class Player {
     this.sprite.x = x;
     this.sprite.y = y;
 
-    // Draw player as a tank-like shape
+    // Draw player as a retro 80s LEGO spaceship
     const graphics = new Graphics();
 
-    // Base of tank
-    graphics.rect(-25, -10, 50, 20);
-    graphics.fill(0x4a90e2);
+    // Classic LEGO space colors
+    const blue = 0x0055BF;        // LEGO classic blue
+    const darkBlue = 0x003D99;    // Darker blue
+    const neonYellow = 0xFFFF00;  // Bright neon yellow
+    const trans = 0x00FFFF;       // Trans-neon blue windscreen
 
-    // Turret
-    graphics.rect(-15, -20, 30, 15);
-    graphics.fill(0x357abd);
+    // Main fuselage (blue body)
+    graphics.moveTo(0, -35);      // Nose point
+    graphics.lineTo(12, -25);     // Right front
+    graphics.lineTo(15, -5);      // Right side
+    graphics.lineTo(15, 10);      // Right back corner
+    graphics.lineTo(8, 15);       // Right back slope
+    graphics.lineTo(-8, 15);      // Left back slope
+    graphics.lineTo(-15, 10);     // Left back corner
+    graphics.lineTo(-15, -5);     // Left side
+    graphics.lineTo(-12, -25);    // Left front
+    graphics.lineTo(0, -35);      // Back to nose
+    graphics.fill({ color: blue });
 
-    // Cannon
-    graphics.rect(-3, -35, 6, 20);
-    graphics.fill(0x2c5f8d);
+    // Cockpit windscreen (trans-neon blue)
+    graphics.moveTo(0, -28);
+    graphics.lineTo(8, -22);
+    graphics.lineTo(8, -12);
+    graphics.lineTo(-8, -12);
+    graphics.lineTo(-8, -22);
+    graphics.lineTo(0, -28);
+    graphics.fill({ color: trans, alpha: 0.6 });
+
+    // Neon yellow accents on nose
+    graphics.rect(-2, -35, 4, 8);
+    graphics.fill({ color: neonYellow });
+
+    // Wing stripes (neon yellow)
+    // Right wing stripe
+    graphics.rect(10, -5, 5, 12);
+    graphics.fill({ color: neonYellow });
+    // Left wing stripe
+    graphics.rect(-15, -5, 5, 12);
+    graphics.fill({ color: neonYellow });
+
+    // Engine exhausts (dark blue circles with yellow glow)
+    // Right engine
+    graphics.circle(10, 12, 4);
+    graphics.fill({ color: darkBlue });
+    graphics.circle(10, 12, 3);
+    graphics.fill({ color: neonYellow, alpha: 0.4 });
+
+    // Left engine
+    graphics.circle(-10, 12, 4);
+    graphics.fill({ color: darkBlue });
+    graphics.circle(-10, 12, 3);
+    graphics.fill({ color: neonYellow, alpha: 0.4 });
+
+    // Center engine
+    graphics.circle(0, 13, 5);
+    graphics.fill({ color: darkBlue });
+    graphics.circle(0, 13, 4);
+    graphics.fill({ color: neonYellow, alpha: 0.4 });
+
+    // Detail lines (dark blue panel lines)
+    graphics.moveTo(-10, -10);
+    graphics.lineTo(-10, 8);
+    graphics.stroke({ color: darkBlue, width: 1 });
+
+    graphics.moveTo(10, -10);
+    graphics.lineTo(10, 8);
+    graphics.stroke({ color: darkBlue, width: 1 });
+
+    // Yellow highlights on wings
+    graphics.circle(12, 0, 2);
+    graphics.fill({ color: neonYellow });
+    graphics.circle(-12, 0, 2);
+    graphics.fill({ color: neonYellow });
 
     this.sprite.addChild(graphics);
   }
