@@ -304,7 +304,7 @@ export class Game {
       this.score = 0;
       this.currentWave = 1;
       this.enemiesKilledThisWave = 0;
-      this.enemiesPerWave = 5;
+      this.enemiesPerWave = 15;
       this.spawnTimer = 0;
       this.spawnInterval = 1200;
       this.powerUpTimer = 0;
@@ -1528,8 +1528,8 @@ export class Game {
         </div>
         ` : ''}
 
-        <div style="font-size: 20px; color: #888; margin-top: 20px; margin-bottom: 30px;">
-          ${this.isMobileDevice() ? 'Press R to restart' : 'Press R to restart'}
+        <div style="font-size: 18px; color: #888; margin-top: 20px; margin-bottom: 30px;">
+          Click "CLOSE STATS" to return to menu
         </div>
 
         <!-- Dismiss Button at Bottom -->
@@ -1578,10 +1578,6 @@ export class Game {
         }
       </style>
     `;
-
-    const restartGame = () => {
-      window.location.reload();
-    };
 
     const dismissScreen = () => {
       document.body.removeChild(container);
@@ -1634,17 +1630,9 @@ export class Game {
       this.showStartScreen();
     };
 
-    // Keyboard handler - R to restart, Escape to dismiss
+    // Keyboard handler - Escape to dismiss
     const keyHandler = (e: KeyboardEvent) => {
-      // Don't trigger restart if typing in an input field
-      const target = e.target as HTMLElement;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-        return;
-      }
-
-      if (e.key === 'r' || e.key === 'R') {
-        restartGame();
-      } else if (e.key === 'Escape') {
+      if (e.key === 'Escape') {
         dismissScreen();
       }
     };
