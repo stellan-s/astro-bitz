@@ -118,7 +118,7 @@ export class Player {
   }
 
   public updateJetBeams(deltaTime: number): void {
-    this.jetAnimationTime += deltaTime * 0.005;
+    this.jetAnimationTime += deltaTime * 0.002; // Slower animation
 
     this.jetBeams.clear();
 
@@ -129,16 +129,16 @@ export class Player {
     for (const engineX of [-12, 12]) {
       const baseY = 13;
 
-      // Flame length varies with animation
-      const flameLength = 25 + Math.sin(this.jetAnimationTime * 3 + engineX) * 8;
+      // Flame length varies less
+      const flameLength = 25 + Math.sin(this.jetAnimationTime * 2 + engineX) * 3; // Less variation (3 instead of 8)
 
-      // Outer flame (orange glow)
+      // Outer flame (orange glow) - more stable opacity
       this.jetBeams.moveTo(engineX, baseY);
       this.jetBeams.lineTo(engineX + 4, baseY + flameLength * 0.6);
       this.jetBeams.lineTo(engineX, baseY + flameLength);
       this.jetBeams.lineTo(engineX - 4, baseY + flameLength * 0.6);
       this.jetBeams.lineTo(engineX, baseY);
-      this.jetBeams.fill({ color: orange, alpha: 0.5 + Math.sin(this.jetAnimationTime * 4) * 0.2 });
+      this.jetBeams.fill({ color: orange, alpha: 0.6 + Math.sin(this.jetAnimationTime * 2) * 0.1 }); // Less flickering
 
       // Inner flame (bright yellow core)
       const coreLength = flameLength * 0.7;
@@ -147,7 +147,7 @@ export class Player {
       this.jetBeams.lineTo(engineX, baseY + coreLength);
       this.jetBeams.lineTo(engineX - 2, baseY + coreLength * 0.6);
       this.jetBeams.lineTo(engineX, baseY);
-      this.jetBeams.fill({ color: neonYellow, alpha: 0.8 });
+      this.jetBeams.fill({ color: neonYellow, alpha: 0.85 }); // More stable
 
       // Bright center streak
       this.jetBeams.rect(engineX - 1, baseY, 2, coreLength * 0.5);
