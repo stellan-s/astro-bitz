@@ -77,7 +77,7 @@ export class Game {
   private autoFireEnabled: boolean = false;
 
   // Game state
-  private gameState: 'start' | 'playing' | 'gameover' = 'start';
+  private gameState: 'start' | 'playing' | 'dying' | 'gameover' = 'start';
   private startScreenContainer: HTMLDivElement | null = null;
 
   // Analytics
@@ -1379,7 +1379,8 @@ export class Game {
   }
 
   private async gameOver(): Promise<void> {
-    this.gameState = 'gameover';
+    // Set to 'dying' state - keeps particles animating but stops gameplay
+    this.gameState = 'dying';
 
     // Store player position before hiding
     const playerX = this.player.sprite.x;
@@ -1388,17 +1389,25 @@ export class Game {
     // Hide player sprite immediately
     this.player.sprite.visible = false;
 
-    // Create explosion at player position
-    this.particleSystem.createExplosion(playerX, playerY, 0xff6600, 30); // Orange explosion with 30 particles
-    this.particleSystem.createExplosion(playerX, playerY, 0xffff00, 20); // Yellow inner explosion with 20 particles
-    this.particleSystem.createExplosion(playerX, playerY, 0xff0000, 15); // Red core with 15 particles
+    // Create BIG explosion at player position
+    this.particleSystem.createExplosion(playerX, playerY, 0xff6600, 40); // Orange explosion with 40 particles
+    this.particleSystem.createExplosion(playerX, playerY, 0xffff00, 30); // Yellow inner explosion with 30 particles
+    this.particleSystem.createExplosion(playerX, playerY, 0xff0000, 25); // Red core with 25 particles
+    this.particleSystem.createExplosion(playerX, playerY, 0xffffff, 15); // White flash with 15 particles
 
-    // Play explosion sound
+    // Play explosion sound - multiple hits for bigger bang
     this.audio.playHit();
-    this.audio.playGameOver();
+    setTimeout(() => this.audio.playHit(), 50);
+    setTimeout(() => this.audio.playHit(), 100);
 
-    // Wait for explosion to finish (1.5 seconds)
+    // Wait for explosion to animate (1.5 seconds)
     await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // NOW set game over state
+    this.gameState = 'gameover';
+
+    // Play game over sound after explosion
+    this.audio.playGameOver();
 
     // Track game over with analytics
     const stats = this.analytics.getCurrentStats();
@@ -1903,12 +1912,20 @@ export class Game {
     let lastTime = Date.now();
 
     this.app.ticker.add(() => {
-      // Only run game logic when in playing state
-      if (this.gameState !== 'playing') return;
+      // Skip if not playing or dying
+      if (this.gameState !== 'playing' && this.gameState !== 'dying') return;
 
       const currentTime = Date.now();
       const deltaTime = currentTime - lastTime;
       lastTime = currentTime;
+
+      // If dying, only update particles and background
+      if (this.gameState === 'dying') {
+        this.background.update(deltaTime);
+        this.parallaxBackground.update(deltaTime);
+        this.particleSystem.update(deltaTime);
+        return;
+      }
 
       // Update wave transition
       this.updateWaveTransition(deltaTime);
