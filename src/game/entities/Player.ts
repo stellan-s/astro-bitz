@@ -5,13 +5,19 @@ export class Player {
   private speed: number = 5;
   private shieldGraphics: Graphics | null = null;
   private shieldAnimationTime: number = 0;
+  private jetBeams: Graphics;
+  private jetAnimationTime: number = 0;
 
   constructor(x: number, y: number) {
     this.sprite = new Container();
     this.sprite.x = x;
     this.sprite.y = y;
 
-    // Draw player as a retro 80s LEGO spaceship
+    // Create jet beams first (so they appear behind the ship)
+    this.jetBeams = new Graphics();
+    this.sprite.addChild(this.jetBeams);
+
+    // Draw player as a retro 80s LEGO spaceship - more triangular
     const graphics = new Graphics();
 
     // Classic LEGO space colors
@@ -20,72 +26,71 @@ export class Player {
     const neonYellow = 0xFFFF00;  // Bright neon yellow
     const trans = 0x00FFFF;       // Trans-neon blue windscreen
 
-    // Main fuselage (blue body)
-    graphics.moveTo(0, -35);      // Nose point
-    graphics.lineTo(12, -25);     // Right front
-    graphics.lineTo(15, -5);      // Right side
-    graphics.lineTo(15, 10);      // Right back corner
-    graphics.lineTo(8, 15);       // Right back slope
-    graphics.lineTo(-8, 15);      // Left back slope
-    graphics.lineTo(-15, 10);     // Left back corner
-    graphics.lineTo(-15, -5);     // Left side
-    graphics.lineTo(-12, -25);    // Left front
-    graphics.lineTo(0, -35);      // Back to nose
+    // Main triangular fuselage (classic LEGO spaceship triangle)
+    graphics.moveTo(0, -40);      // Sharp nose point
+    graphics.lineTo(20, 15);      // Right back corner (wider triangle)
+    graphics.lineTo(-20, 15);     // Left back corner
+    graphics.lineTo(0, -40);      // Back to nose
     graphics.fill({ color: blue });
 
-    // Cockpit windscreen (trans-neon blue)
-    graphics.moveTo(0, -28);
-    graphics.lineTo(8, -22);
-    graphics.lineTo(8, -12);
-    graphics.lineTo(-8, -12);
-    graphics.lineTo(-8, -22);
-    graphics.lineTo(0, -28);
-    graphics.fill({ color: trans, alpha: 0.6 });
+    // Cockpit windscreen (trans-neon blue) - angular
+    graphics.moveTo(0, -32);
+    graphics.lineTo(10, -18);
+    graphics.lineTo(10, -8);
+    graphics.lineTo(-10, -8);
+    graphics.lineTo(-10, -18);
+    graphics.lineTo(0, -32);
+    graphics.fill({ color: trans, alpha: 0.7 });
 
-    // Neon yellow accents on nose
-    graphics.rect(-2, -35, 4, 8);
+    // Yellow racing stripe down the center
+    graphics.moveTo(0, -38);
+    graphics.lineTo(3, -30);
+    graphics.lineTo(3, 8);
+    graphics.lineTo(-3, 8);
+    graphics.lineTo(-3, -30);
+    graphics.lineTo(0, -38);
     graphics.fill({ color: neonYellow });
 
-    // Wing stripes (neon yellow)
-    // Right wing stripe
-    graphics.rect(10, -5, 5, 12);
+    // Wing tips with yellow accents (LEGO style blocky)
+    // Right wing tip
+    graphics.rect(15, 8, 5, 7);
     graphics.fill({ color: neonYellow });
-    // Left wing stripe
-    graphics.rect(-15, -5, 5, 12);
+    // Left wing tip
+    graphics.rect(-20, 8, 5, 7);
     graphics.fill({ color: neonYellow });
 
-    // Engine exhausts (dark blue circles with yellow glow)
-    // Right engine
-    graphics.circle(10, 12, 4);
+    // Side panels (darker blue for depth)
+    graphics.moveTo(8, -10);
+    graphics.lineTo(16, 10);
+    graphics.lineTo(12, 10);
+    graphics.lineTo(8, -5);
     graphics.fill({ color: darkBlue });
-    graphics.circle(10, 12, 3);
-    graphics.fill({ color: neonYellow, alpha: 0.4 });
+
+    graphics.moveTo(-8, -10);
+    graphics.lineTo(-16, 10);
+    graphics.lineTo(-12, 10);
+    graphics.lineTo(-8, -5);
+    graphics.fill({ color: darkBlue });
+
+    // Engine nozzles (dark blue circles at back)
+    // Right engine
+    graphics.circle(12, 13, 5);
+    graphics.fill({ color: darkBlue });
+    graphics.circle(12, 13, 3);
+    graphics.fill({ color: 0x001a33 }); // Very dark for nozzle depth
 
     // Left engine
-    graphics.circle(-10, 12, 4);
+    graphics.circle(-12, 13, 5);
     graphics.fill({ color: darkBlue });
-    graphics.circle(-10, 12, 3);
-    graphics.fill({ color: neonYellow, alpha: 0.4 });
+    graphics.circle(-12, 13, 3);
+    graphics.fill({ color: 0x001a33 });
 
-    // Center engine
-    graphics.circle(0, 13, 5);
-    graphics.fill({ color: darkBlue });
-    graphics.circle(0, 13, 4);
-    graphics.fill({ color: neonYellow, alpha: 0.4 });
-
-    // Detail lines (dark blue panel lines)
-    graphics.moveTo(-10, -10);
-    graphics.lineTo(-10, 8);
-    graphics.stroke({ color: darkBlue, width: 1 });
-
-    graphics.moveTo(10, -10);
-    graphics.lineTo(10, 8);
-    graphics.stroke({ color: darkBlue, width: 1 });
-
-    // Yellow highlights on wings
-    graphics.circle(12, 0, 2);
+    // Yellow detail dots (LEGO style)
+    graphics.circle(0, -25, 2);
     graphics.fill({ color: neonYellow });
-    graphics.circle(-12, 0, 2);
+    graphics.circle(8, 0, 2);
+    graphics.fill({ color: neonYellow });
+    graphics.circle(-8, 0, 2);
     graphics.fill({ color: neonYellow });
 
     this.sprite.addChild(graphics);
@@ -115,7 +120,48 @@ export class Player {
     }
   }
 
+  public updateJetBeams(deltaTime: number): void {
+    this.jetAnimationTime += deltaTime * 0.005;
+
+    this.jetBeams.clear();
+
+    const neonYellow = 0xFFFF00;
+    const orange = 0xFF8800;
+
+    // Animated jet flames from both engines
+    for (const engineX of [-12, 12]) {
+      const baseY = 13;
+
+      // Flame length varies with animation
+      const flameLength = 25 + Math.sin(this.jetAnimationTime * 3 + engineX) * 8;
+
+      // Outer flame (orange glow)
+      this.jetBeams.moveTo(engineX, baseY);
+      this.jetBeams.lineTo(engineX + 4, baseY + flameLength * 0.6);
+      this.jetBeams.lineTo(engineX, baseY + flameLength);
+      this.jetBeams.lineTo(engineX - 4, baseY + flameLength * 0.6);
+      this.jetBeams.lineTo(engineX, baseY);
+      this.jetBeams.fill({ color: orange, alpha: 0.5 + Math.sin(this.jetAnimationTime * 4) * 0.2 });
+
+      // Inner flame (bright yellow core)
+      const coreLength = flameLength * 0.7;
+      this.jetBeams.moveTo(engineX, baseY);
+      this.jetBeams.lineTo(engineX + 2, baseY + coreLength * 0.6);
+      this.jetBeams.lineTo(engineX, baseY + coreLength);
+      this.jetBeams.lineTo(engineX - 2, baseY + coreLength * 0.6);
+      this.jetBeams.lineTo(engineX, baseY);
+      this.jetBeams.fill({ color: neonYellow, alpha: 0.8 });
+
+      // Bright center streak
+      this.jetBeams.rect(engineX - 1, baseY, 2, coreLength * 0.5);
+      this.jetBeams.fill({ color: 0xFFFFFF, alpha: 0.9 });
+    }
+  }
+
   public updateShield(deltaTime: number, shieldCount: number = 1): void {
+    // Always update jet beams
+    this.updateJetBeams(deltaTime);
+
     if (!this.shieldGraphics) return;
 
     this.shieldAnimationTime += deltaTime * 0.003; // Slow animation
