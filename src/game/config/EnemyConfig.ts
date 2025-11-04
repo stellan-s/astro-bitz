@@ -173,7 +173,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
     movePattern: 'circular', // Orbits around while shooting
     heatEmission: 1.0,
     isBoss: true,
-    shootInterval: 2000, // Shoots every 2 seconds
+    shootInterval: 800, // Shoots every 0.8 seconds - much faster fire rate
     shootPattern: 'aimed', // Precise aimed shots at player
     maxY: 200, // Stays higher up
   },
