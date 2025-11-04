@@ -1439,17 +1439,7 @@ export class Game {
       Math.min(100, Math.round((this.score / rankInfo.nextThreshold) * 100));
 
     container.innerHTML = `
-      <div style="max-width: 700px; width: 100%; margin: auto; position: relative; padding-top: 20px; padding-bottom: 40px;">
-        <!-- Dismiss Button -->
-        <button id="dismiss-btn" style="position: absolute; top: 10px; right: 10px;
-                                        background: rgba(255, 0, 0, 0.2); border: 2px solid #ff0000;
-                                        color: #ff0000; padding: 8px 16px; border-radius: 5px;
-                                        font-family: 'Orbitron', sans-serif; font-size: 14px;
-                                        cursor: pointer; transition: all 0.3s;
-                                        font-weight: bold; z-index: 10001;">
-          ✕ CLOSE
-        </button>
-
+      <div style="max-width: 700px; width: 100%; margin: auto; position: relative; padding-top: 20px; padding-bottom: 100px;">
         <h1 style="font-size: 56px; margin-bottom: 20px; color: ${titleColor};
                    text-shadow: 0 0 20px ${glowColor}, 0 0 40px ${glowColor};
                    font-weight: 900;">
@@ -1521,16 +1511,20 @@ export class Game {
           </div>
         </div>
 
-        <div style="font-size: 28px; color: #ff4500; font-weight: bold;
-                    animation: pulse 2s infinite; cursor: pointer; margin-top: 20px;">
-          ${this.isMobileDevice() ? 'TAP TO RESTART' : 'PRESS R OR CLICK TO RESTART'}
+        <div style="font-size: 20px; color: #888; margin-top: 20px; margin-bottom: 30px;">
+          ${this.isMobileDevice() ? 'Press R to restart' : 'Press R to restart'}
         </div>
+
+        <!-- Dismiss Button at Bottom -->
+        <button id="dismiss-btn" style="background: rgba(255, 0, 0, 0.2); border: 2px solid #ff0000;
+                                        color: #ff0000; padding: 12px 24px; border-radius: 5px;
+                                        font-family: 'Orbitron', sans-serif; font-size: 16px;
+                                        cursor: pointer; transition: all 0.3s;
+                                        font-weight: bold; margin-top: 20px;">
+          ✕ CLOSE STATS
+        </button>
       </div>
       <style>
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.05); }
-        }
         @keyframes glow {
           0%, 100% { text-shadow: 0 0 15px rgba(255, 215, 0, 0.7); }
           50% { text-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 0 50px rgba(255, 215, 0, 0.5); }
@@ -1546,7 +1540,7 @@ export class Game {
         /* Mobile optimizations */
         @media (max-width: 768px) {
           h1 { font-size: 40px !important; }
-          #dismiss-btn { font-size: 12px; padding: 6px 12px; }
+          #dismiss-btn { font-size: 14px; padding: 10px 20px; }
         }
         @media (max-height: 700px) {
           /* Ensure content is accessible on short screens */
@@ -1564,22 +1558,7 @@ export class Game {
       window.removeEventListener('keydown', keyHandler);
     };
 
-    // Add click handler to container (but prevent clicks on dismiss button from restarting)
-    container.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      if (target.id !== 'dismiss-btn' && !target.closest('#dismiss-btn')) {
-        restartGame();
-      }
-    });
-
-    container.addEventListener('touchstart', (e) => {
-      const target = e.target as HTMLElement;
-      if (target.id !== 'dismiss-btn' && !target.closest('#dismiss-btn')) {
-        restartGame();
-      }
-    });
-
-    // Keyboard restart
+    // Keyboard handler - R to restart, Escape to dismiss
     const keyHandler = (e: KeyboardEvent) => {
       if (e.key === 'r' || e.key === 'R') {
         restartGame();
