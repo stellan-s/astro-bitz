@@ -265,7 +265,7 @@ export class Game {
       this.gameState = 'playing';
       this.audio.resume();
       if (this.musicEnabled) {
-        this.audio.startBackgroundMusic();
+        this.audio.startBackgroundMusic(this.currentWave);
       }
       // Track game start
       this.analytics.trackGameStart();
@@ -1006,7 +1006,7 @@ export class Game {
     // If we just completed a boss wave, stop boss music
     if (wasBossWave && !this.isBossWave && this.musicEnabled) {
       this.audio.stopBossMusic();
-      this.audio.startBackgroundMusic();
+      this.audio.startBackgroundMusic(this.currentWave);
     }
 
     if (this.isBossWave) {

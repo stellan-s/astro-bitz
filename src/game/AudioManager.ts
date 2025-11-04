@@ -197,9 +197,11 @@ export class AudioManager {
   }
 
   // Background music with melody and bass
-  public startBackgroundMusic(): void {
+  public startBackgroundMusic(waveNumber: number = 1): void {
     if (this.musicPlaying) return;
     this.musicPlaying = true;
+
+    const isEvenWave = waveNumber % 2 === 0;
 
     // --- Notes map ---
     const notes: Record<string, number> = {
@@ -232,7 +234,8 @@ export class AudioManager {
       return notes[name] ?? freqFromName(name);
     };
 
-    const BPM = 96;
+    // Slightly faster tempo on even waves for more intensity
+    const BPM = isEvenWave ? 104 : 96;
     const beat = 60 / BPM;
 
     // --- Progression: C | G | Am | F | C | G | Am | F ---
@@ -241,8 +244,8 @@ export class AudioManager {
       ['C4','E4','G4'], ['G3','B3','D4'], ['A3','C4','E4'], ['F3','A3','C4'],
     ];
 
-    // Hooky melody
-    const melody = [
+    // Hooky melody - original for odd waves
+    const melodyOdd = [
       { n:'E5', beat: 3.5, len: 0.5 }, { n:'G5', beat: 4.0, len: 0.5 }, { n:'A5', beat: 4.5, len: 0.5 },
       { n:'G5', beat: 5.0, len: 0.5 }, { n:'E5', beat: 5.5, len: 0.5 }, { n:'D5', beat: 6.0, len: 0.75 },
       { n:'A5', beat: 8.0, len: 0.5 }, { n:'C6', beat: 8.5, len: 0.5 }, { n:'B5', beat: 9.0, len: 0.75 },
@@ -252,6 +255,20 @@ export class AudioManager {
       { n:'A5', beat: 20.0, len: 0.5 }, { n:'C6', beat: 20.5, len: 0.5 }, { n:'E6', beat: 21.0, len: 0.5 },
       { n:'D6', beat: 24.0, len: 0.5 }, { n:'C6', beat: 24.5, len: 0.5 }, { n:'G5', beat: 25.0, len: 1.0 },
     ];
+
+    // Alternative melody for even waves - more intense and higher
+    const melodyEven = [
+      { n:'G5', beat: 3.5, len: 0.5 }, { n:'A5', beat: 4.0, len: 0.5 }, { n:'C6', beat: 4.5, len: 0.5 },
+      { n:'B5', beat: 5.0, len: 0.5 }, { n:'G5', beat: 5.5, len: 0.5 }, { n:'E5', beat: 6.0, len: 0.75 },
+      { n:'C6', beat: 8.0, len: 0.5 }, { n:'D6', beat: 8.5, len: 0.5 }, { n:'E6', beat: 9.0, len: 0.75 },
+      { n:'D6', beat: 12.0, len: 0.5 }, { n:'B5', beat: 12.5, len: 0.5 }, { n:'G5', beat: 13.0, len: 1.0 },
+      { n:'A5', beat: 15.5, len: 0.5 }, { n:'B5', beat: 16.0, len: 0.5 }, { n:'C6', beat: 16.5, len: 0.5 },
+      { n:'D6', beat: 17.0, len: 0.5 }, { n:'C6', beat: 17.5, len: 0.5 }, { n:'B5', beat: 18.0, len: 0.75 },
+      { n:'C6', beat: 20.0, len: 0.5 }, { n:'E6', beat: 20.5, len: 0.5 }, { n:'G6', beat: 21.0, len: 0.5 },
+      { n:'E6', beat: 24.0, len: 0.5 }, { n:'D6', beat: 24.5, len: 0.5 }, { n:'C6', beat: 25.0, len: 1.0 },
+    ];
+
+    const melody = isEvenWave ? melodyEven : melodyOdd;
 
     // Counter melody
     const countermel = [
