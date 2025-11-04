@@ -1793,12 +1793,16 @@ export class Game {
         const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : `${position}.`;
         const rowColor = position <= 3 ? 'rgba(255, 215, 0, 0.1)' : 'transparent';
 
+        // Get rank info for color
+        const rankInfo = this.getPilotRank(entry.score);
+
         html += `
           <tr style="background: ${rowColor}; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-            <td style="padding: 8px; text-align: left; color: #ffd700; font-weight: bold;">${medal}</td>
+            <td style="padding: 8px; text-align: left; color: #ffd700; font-weight: bold; width: 40px;">${medal}</td>
             <td style="padding: 8px; text-align: left; color: #fff;">${this.escapeHtml(entry.player_name)}</td>
+            <td style="padding: 8px; text-align: center; color: ${rankInfo.color}; font-size: 11px; font-weight: bold;">${entry.rank}</td>
             <td style="padding: 8px; text-align: right; color: #00ffff; font-weight: bold;">${entry.score}</td>
-            <td style="padding: 8px; text-align: right; color: #888; font-size: 12px;">Wave ${entry.wave}</td>
+            <td style="padding: 8px; text-align: right; color: #888; font-size: 12px; width: 70px;">W${entry.wave}</td>
           </tr>
         `;
       });
