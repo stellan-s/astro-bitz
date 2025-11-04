@@ -614,9 +614,9 @@ export class Enemy {
     const w = config.size.width / 2;
     const h = config.size.height / 2;
 
-    // Choose color based on cloak state - much more subtle when uncloaked
+    // Choose color based on cloak state - almost invisible when cloaked
     const bodyColor = cloaked ? config.color : config.secondaryColor;
-    const alpha = cloaked ? 0.15 : 0.35; // Barely visible even when uncloaked
+    const alpha = cloaked ? 0.03 : 0.35; // Nearly invisible when cloaked, subtle when uncloaked
 
     // Subtle outer glow when uncloaked (blurred effect with multiple circles)
     if (!cloaked) {
@@ -653,7 +653,7 @@ export class Enemy {
     // Cockpit/core - very subtle glow when uncloaked
     if (cloaked) {
       graphics.circle(0, 0, 6);
-      graphics.fill({ color: config.color, alpha: 0.2 });
+      graphics.fill({ color: config.color, alpha: 0.05 }); // Barely visible cockpit when cloaked
     } else {
       // Subtle blurred glow layers when uncloaked
       graphics.circle(0, 0, 12);
