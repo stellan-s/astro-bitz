@@ -946,12 +946,26 @@ export class Game {
     this.enemiesKilledThisWave++;
     this.checkWaveComplete();
 
+    // Mark enemy as being destroyed to prevent concurrent animations
+    const isBeingDestroyed = (enemy as any).isBeingDestroyed;
+    if (isBeingDestroyed) {
+      return; // Already being destroyed, don't start another animation
+    }
+    (enemy as any).isBeingDestroyed = true;
+
     // Animate the enemy shrinking/exploding
     const animationDuration = 150; // milliseconds
     const startTime = Date.now();
     const startScale = { x: enemy.sprite.scale.x, y: enemy.sprite.scale.y };
 
     const animate = () => {
+      // Check if enemy still exists and hasn't been removed
+      const currentIndex = this.enemies.indexOf(enemy);
+      if (currentIndex === -1) {
+        // Enemy was removed externally (e.g., boss wave cleanup), stop animation
+        return;
+      }
+
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / animationDuration, 1);
 
@@ -973,10 +987,10 @@ export class Game {
         requestAnimationFrame(animate);
       } else {
         // Animation complete - remove enemy
-        const currentIndex = this.enemies.indexOf(enemy);
-        if (currentIndex !== -1) {
+        const finalIndex = this.enemies.indexOf(enemy);
+        if (finalIndex !== -1) {
           this.gameContainer.removeChild(enemy.sprite);
-          this.enemies.splice(currentIndex, 1);
+          this.enemies.splice(finalIndex, 1);
           enemy.destroy();
         }
       }
@@ -1121,8 +1135,10 @@ export class Game {
       this.enemiesPerWave = 1;
 
       // Clear all remaining enemies from previous wave
+      // Mark them as being destroyed to stop any ongoing death animations
       for (let i = this.enemies.length - 1; i >= 0; i--) {
         const enemy = this.enemies[i];
+        (enemy as any).isBeingDestroyed = true; // Stop any ongoing animations
         this.gameContainer.removeChild(enemy.sprite);
         enemy.destroy();
       }
