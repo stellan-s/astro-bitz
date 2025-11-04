@@ -8,6 +8,10 @@ export class AudioManager {
   private shepardGains: GainNode[] = [];
   private shepardTimeoutId: number | null = null;
 
+  // Dynamic music intensity
+  private drumsGainNode: GainNode | null = null;
+  private drumsEnabled: boolean = false;
+
   constructor() {
     this.audioContext = new AudioContext();
   }
@@ -349,6 +353,83 @@ export class AudioManager {
 
     const loopDuration = 32 * beat; // 8 bars * 4 beats
 
+    // Drum layer function (called dynamically based on enemy count)
+    const scheduleDrums = () => {
+      if (!this.drumsEnabled) return;
+
+      const start = this.audioContext.currentTime + 0.1;
+      const drumPattern = [
+        { beat: 0, type: 'kick' }, { beat: 1, type: 'snare' },
+        { beat: 2, type: 'kick' }, { beat: 3, type: 'snare' },
+        { beat: 4, type: 'kick' }, { beat: 5, type: 'snare' },
+        { beat: 6, type: 'kick' }, { beat: 7, type: 'snare' },
+        { beat: 8, type: 'kick' }, { beat: 9, type: 'snare' },
+        { beat: 10, type: 'kick' }, { beat: 11, type: 'snare' },
+        { beat: 12, type: 'kick' }, { beat: 13, type: 'snare' },
+        { beat: 14, type: 'kick' }, { beat: 15, type: 'snare' },
+        { beat: 16, type: 'kick' }, { beat: 17, type: 'snare' },
+        { beat: 18, type: 'kick' }, { beat: 19, type: 'snare' },
+        { beat: 20, type: 'kick' }, { beat: 21, type: 'snare' },
+        { beat: 22, type: 'kick' }, { beat: 23, type: 'snare' },
+        { beat: 24, type: 'kick' }, { beat: 25, type: 'snare' },
+        { beat: 26, type: 'kick' }, { beat: 27, type: 'snare' },
+        { beat: 28, type: 'kick' }, { beat: 29, type: 'snare' },
+        { beat: 30, type: 'kick' }, { beat: 31, type: 'snare' },
+      ];
+
+      for (const drum of drumPattern) {
+        const time = start + drum.beat * beat;
+
+        if (drum.type === 'kick') {
+          // Kick drum - deep thump
+          const kick = this.audioContext.createOscillator();
+          const kickGain = this.audioContext.createGain();
+
+          kick.connect(kickGain);
+
+          // Connect to drums gain node for volume control
+          if (!this.drumsGainNode) {
+            this.drumsGainNode = this.audioContext.createGain();
+            this.drumsGainNode.connect(this.audioContext.destination);
+            this.drumsGainNode.gain.value = 0;
+          }
+          kickGain.connect(this.drumsGainNode);
+
+          kick.type = 'sine';
+          kick.frequency.setValueAtTime(80, time);
+          kick.frequency.exponentialRampToValueAtTime(40, time + 0.1);
+
+          kickGain.gain.setValueAtTime(this.masterVolume * 0.5, time);
+          kickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+
+          kick.start(time);
+          kick.stop(time + 0.15);
+        } else {
+          // Snare - sharp crack
+          const snare = this.audioContext.createOscillator();
+          const snareGain = this.audioContext.createGain();
+
+          snare.connect(snareGain);
+
+          if (!this.drumsGainNode) {
+            this.drumsGainNode = this.audioContext.createGain();
+            this.drumsGainNode.connect(this.audioContext.destination);
+            this.drumsGainNode.gain.value = 0;
+          }
+          snareGain.connect(this.drumsGainNode);
+
+          snare.type = 'triangle';
+          snare.frequency.setValueAtTime(200, time);
+
+          snareGain.gain.setValueAtTime(this.masterVolume * 0.3, time);
+          snareGain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+
+          snare.start(time);
+          snare.stop(time + 0.1);
+        }
+      }
+    };
+
     const loopMusic = () => {
       if (!this.musicPlaying) return;
 
@@ -356,6 +437,7 @@ export class AudioManager {
       schedulePart(chords, 'square', 0.35);
       schedulePart(countermel, 'triangle', 0.5);
       schedulePart(melody, 'sawtooth', 0.55);
+      scheduleDrums();
 
       this.musicIntervalId = window.setTimeout(loopMusic, loopDuration * 1000 - 50);
     };
@@ -368,6 +450,31 @@ export class AudioManager {
     if (this.musicIntervalId !== null) {
       clearTimeout(this.musicIntervalId);
       this.musicIntervalId = null;
+    }
+    this.drumsEnabled = false;
+    if (this.drumsGainNode) {
+      this.drumsGainNode.gain.setTargetAtTime(0, this.audioContext.currentTime, 0.5);
+    }
+  }
+
+  // Update music intensity based on enemy count
+  public updateMusicIntensity(enemyCount: number): void {
+    if (!this.musicPlaying || this.bossMusic) return;
+
+    const shouldHaveDrums = enemyCount > 10;
+
+    if (shouldHaveDrums && !this.drumsEnabled) {
+      // Fade in drums
+      this.drumsEnabled = true;
+      if (this.drumsGainNode) {
+        this.drumsGainNode.gain.setTargetAtTime(1, this.audioContext.currentTime, 0.5);
+      }
+    } else if (!shouldHaveDrums && this.drumsEnabled) {
+      // Fade out drums
+      this.drumsEnabled = false;
+      if (this.drumsGainNode) {
+        this.drumsGainNode.gain.setTargetAtTime(0, this.audioContext.currentTime, 0.5);
+      }
     }
   }
 

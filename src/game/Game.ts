@@ -1384,6 +1384,9 @@ export class Game {
       this.checkCollisions();
       this.checkShieldCollisions(); // Check for shield-enemy collisions
       this.checkEnemyBulletCollisions();
+
+      // Update music intensity based on enemy count
+      this.audio.updateMusicIntensity(this.enemies.length);
     });
   }
 }
