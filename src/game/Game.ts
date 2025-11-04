@@ -240,10 +240,10 @@ export class Game {
                    -webkit-text-fill-color: transparent;
                    background-clip: text;
                    text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);">
-          ASTRO BLITZ
+          ASTRO ACE
         </h1>
         <p style="font-size: 24px; color: #ffaa00; margin-bottom: 40px;">
-          Survive the cosmic onslaught
+          The stars are calling
         </p>
         <div style="font-size: 18px; color: #ffffff; margin-bottom: 40px; line-height: 1.8;">
           <p style="margin-bottom: 15px;">⬅️ ➡️ or A/D - Move</p>
@@ -1233,6 +1233,43 @@ export class Game {
     }
   }
 
+  private getPilotRank(score: number): { rank: string; color: string; nextRank: string; nextThreshold: number } {
+    const ranks = [
+      { name: 'Cadet', threshold: 0, color: '#888888' },
+      { name: 'Rookie', threshold: 100, color: '#8b7355' },
+      { name: 'Navigator', threshold: 300, color: '#4169e1' },
+      { name: 'Pilot', threshold: 600, color: '#00ced1' },
+      { name: 'Aviator', threshold: 1000, color: '#32cd32' },
+      { name: 'Squadron Leader', threshold: 1500, color: '#9acd32' },
+      { name: 'Wing Commander', threshold: 2200, color: '#ffa500' },
+      { name: 'Flight Captain', threshold: 3000, color: '#ff8c00' },
+      { name: 'Star Colonel', threshold: 4000, color: '#ff6347' },
+      { name: 'Sky Marshal', threshold: 5500, color: '#ff4500' },
+      { name: 'Fleet Admiral', threshold: 7500, color: '#dc143c' },
+      { name: 'Legendary Pilot', threshold: 10000, color: '#9400d3' },
+      { name: 'Astro Ace', threshold: 15000, color: '#ffd700' },
+    ];
+
+    let currentRank = ranks[0];
+    let nextRank = ranks[1];
+
+    for (let i = 0; i < ranks.length; i++) {
+      if (score >= ranks[i].threshold) {
+        currentRank = ranks[i];
+        nextRank = ranks[i + 1] || ranks[i]; // Stay at top rank if maxed
+      } else {
+        break;
+      }
+    }
+
+    return {
+      rank: currentRank.name,
+      color: currentRank.color,
+      nextRank: nextRank.name,
+      nextThreshold: nextRank.threshold
+    };
+  }
+
   private gameOver(): void {
     this.gameState = 'gameover';
     this.audio.playGameOver();
@@ -1246,6 +1283,11 @@ export class Game {
     if (isNewHighScore) {
       this.analytics.trackHighScore(this.score, this.highScore);
     }
+
+    // Get pilot rank and stats
+    const rankInfo = this.getPilotRank(this.score);
+    const accuracy = stats.bulletsShot > 0 ?
+      Math.round((stats.enemiesKilled / stats.bulletsShot) * 100) : 0;
 
     // Create HTML overlay for game over screen
     const container = document.createElement('div');
@@ -1270,8 +1312,11 @@ export class Game {
     const titleColor = isNewHighScore ? '#ffd700' : '#ff0000';
     const glowColor = isNewHighScore ? 'rgba(255, 215, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
 
+    const progressToNext = rankInfo.rank === 'Astro Ace' ? 100 :
+      Math.min(100, Math.round((this.score / rankInfo.nextThreshold) * 100));
+
     container.innerHTML = `
-      <div style="max-width: 600px;">
+      <div style="max-width: 700px;">
         <h1 style="font-size: 56px; margin-bottom: 20px; color: ${titleColor};
                    text-shadow: 0 0 20px ${glowColor}, 0 0 40px ${glowColor};
                    font-weight: 900;">
@@ -1281,20 +1326,70 @@ export class Game {
           <p style="font-size: 32px; color: #ffd700; margin-bottom: 30px;
                     text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
                     animation: glow 1.5s infinite alternate;">
-            NEW HIGH SCORE!
+            ★ NEW HIGH SCORE! ★
           </p>
         ` : ''}
-        <div style="font-size: 28px; color: #00ffff; margin-bottom: 15px;">
-          Final Score: <span style="color: #ffffff; font-weight: bold;">${this.score}</span>
+
+        <!-- Pilot Rank Section -->
+        <div style="background: rgba(0, 0, 0, 0.5); padding: 20px; border-radius: 10px;
+                    border: 2px solid ${rankInfo.color}; margin-bottom: 30px;
+                    box-shadow: 0 0 20px ${rankInfo.color}40;">
+          <div style="font-size: 18px; color: #aaa; margin-bottom: 10px;">PILOT RANK</div>
+          <div style="font-size: 36px; font-weight: bold; color: ${rankInfo.color};
+                      text-shadow: 0 0 15px ${rankInfo.color}; margin-bottom: 15px;">
+            ${rankInfo.rank}
+          </div>
+          ${rankInfo.rank !== 'Astro Ace' ? `
+            <div style="font-size: 14px; color: #888; margin-bottom: 8px;">
+              Next: ${rankInfo.nextRank} (${rankInfo.nextThreshold} pts)
+            </div>
+            <div style="background: #333; height: 8px; border-radius: 4px; overflow: hidden;">
+              <div style="background: linear-gradient(90deg, ${rankInfo.color}, ${rankInfo.color}cc);
+                          height: 100%; width: ${progressToNext}%; transition: width 0.5s;"></div>
+            </div>
+          ` : '<div style="font-size: 16px; color: #ffd700;">★ MAXIMUM RANK ACHIEVED ★</div>'}
         </div>
-        <div style="font-size: 24px; color: #ffaa00; margin-bottom: 40px;">
-          Wave Reached: <span style="color: #ffffff; font-weight: bold;">${this.currentWave}</span>
+
+        <!-- Score Section -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+          <div style="background: rgba(0, 100, 150, 0.3); padding: 15px; border-radius: 8px; border: 1px solid #00ffff;">
+            <div style="font-size: 14px; color: #00ffff; margin-bottom: 5px;">FINAL SCORE</div>
+            <div style="font-size: 32px; font-weight: bold; color: #ffffff;">${this.score}</div>
+          </div>
+          <div style="background: rgba(150, 100, 0, 0.3); padding: 15px; border-radius: 8px; border: 1px solid #ffaa00;">
+            <div style="font-size: 14px; color: #ffaa00; margin-bottom: 5px;">WAVE REACHED</div>
+            <div style="font-size: 32px; font-weight: bold; color: #ffffff;">${this.currentWave}</div>
+          </div>
         </div>
-        <div style="font-size: 20px; color: #888888; margin-bottom: 30px;">
-          High Score: ${this.highScore}
+
+        <!-- Detailed Stats -->
+        <div style="background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 10px;
+                    border: 1px solid #444; margin-bottom: 25px;">
+          <div style="font-size: 16px; color: #aaa; margin-bottom: 15px; text-align: left;">MISSION STATISTICS</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: left; font-size: 14px;">
+            <div style="color: #888;">Enemies Destroyed:</div>
+            <div style="color: #fff; text-align: right; font-weight: bold;">${stats.enemiesKilled}</div>
+
+            <div style="color: #888;">Shots Fired:</div>
+            <div style="color: #fff; text-align: right; font-weight: bold;">${stats.bulletsShot}</div>
+
+            <div style="color: #888;">Accuracy:</div>
+            <div style="color: ${accuracy >= 25 ? '#32cd32' : accuracy >= 15 ? '#ffaa00' : '#ff4500'};
+                        text-align: right; font-weight: bold;">${accuracy}%</div>
+
+            <div style="color: #888;">Missiles Fired:</div>
+            <div style="color: #fff; text-align: right; font-weight: bold;">${stats.missilesUsed}</div>
+
+            <div style="color: #888;">Power-Ups Collected:</div>
+            <div style="color: #fff; text-align: right; font-weight: bold;">${stats.powerupsCollected}</div>
+
+            <div style="color: #888;">High Score:</div>
+            <div style="color: #ffd700; text-align: right; font-weight: bold;">${this.highScore}</div>
+          </div>
         </div>
+
         <div style="font-size: 28px; color: #ff4500; font-weight: bold;
-                    animation: pulse 2s infinite; cursor: pointer; margin-bottom: 30px;">
+                    animation: pulse 2s infinite; cursor: pointer; margin-top: 20px;">
           ${this.isMobileDevice() ? 'TAP TO RESTART' : 'PRESS R OR CLICK TO RESTART'}
         </div>
       </div>

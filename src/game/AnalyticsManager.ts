@@ -18,7 +18,7 @@ export class AnalyticsManager {
 
   private constructor() {
     const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
-    const appName = import.meta.env.VITE_APP_NAME || 'astro-blitz';
+    const appName = import.meta.env.VITE_APP_NAME || 'astro-ace';
     const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const debug = import.meta.env.VITE_ANALYTICS_DEBUG === 'true';
 
