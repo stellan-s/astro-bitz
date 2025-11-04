@@ -13,7 +13,7 @@ import { Background } from './entities/Background';
 import { ParallaxBackground } from './ParallaxBackground';
 import { AnalyticsManager } from './AnalyticsManager';
 import { AchievementsManager, type Achievement } from './AchievementsManager';
-import { LeaderboardManager, type LeaderboardEntry } from './LeaderboardManager';
+import { LeaderboardManager } from './LeaderboardManager';
 
 export class Game {
   private app: Application;
@@ -90,8 +90,13 @@ export class Game {
   private achievementsManager: AchievementsManager;
   private newAchievements: Achievement[] = []; // Queue of newly unlocked achievements
 
-  // Leaderboard
+  // Leaderboard (initialized but not yet integrated into UI)
   private leaderboardManager: LeaderboardManager | null = null;
+
+  // Getter for future leaderboard integration
+  public getLeaderboardManager(): LeaderboardManager | null {
+    return this.leaderboardManager;
+  }
 
   constructor(app: Application) {
     this.app = app;
@@ -912,7 +917,7 @@ export class Game {
     this.achievementsManager.trackDamageTaken();
   }
 
-  private playEnemyDeathAnimation(enemy: Enemy, enemyIndex: number, config: any, particleCount: number = 12, wasMissile: boolean = false): void {
+  private playEnemyDeathAnimation(enemy: Enemy, _enemyIndex: number, config: any, particleCount: number = 12, wasMissile: boolean = false): void {
     // Create explosion particles immediately
     this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, particleCount);
 
@@ -1373,11 +1378,6 @@ export class Game {
     const stats = this.analytics.getCurrentStats();
     this.analytics.trackGameOver(this.score, this.currentWave, stats);
 
-    // Track rank achievement
-    const rankInfo = this.getPilotRank(this.score);
-    const rankAchievements = this.achievementsManager.trackRankReached(rankInfo.rank);
-    this.newAchievements.push(...rankAchievements);
-
     // Check for new high score
     const isNewHighScore = HighScoreManager.saveHighScore(this.score);
     if (isNewHighScore) {
@@ -1386,6 +1386,10 @@ export class Game {
 
     // Get pilot rank and stats
     const rankInfo = this.getPilotRank(this.score);
+
+    // Track rank achievement
+    const rankAchievements = this.achievementsManager.trackRankReached(rankInfo.rank);
+    this.newAchievements.push(...rankAchievements);
     const accuracy = stats.bulletsShot > 0 ?
       Math.round((stats.enemiesKilled / stats.bulletsShot) * 100) : 0;
 
