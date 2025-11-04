@@ -61,7 +61,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
   tank: {
     speed: 0.8,
     speedVariation: 0.1,
-    health: 3,
+    health: 5,
     points: 30,
     color: 0x8b008b,
     secondaryColor: 0x696969,
@@ -122,7 +122,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
   stealth: {
     speed: 1.2,
     speedVariation: 0.2,
-    health: 2,
+    health: 4,
     points: 50, // High points for rare, challenging enemy
     color: 0x1a1a2e, // Almost background color when cloaked
     secondaryColor: 0x00ffaa, // Glow color when uncloaked
@@ -136,6 +136,22 @@ export const ENEMY_CONFIG: EnemyConfig = {
     heatEmission: 0.1, // Very low heat - stealth tech keeps signature low
     shootInterval: 3000, // Shoots every 3 seconds
     shootPattern: 'aimed', // Precise aimed shots
+  },
+  kamikaze: {
+    speed: 4.0,
+    speedVariation: 0.5,
+    health: 1,
+    points: 40, // High points for risk/reward
+    color: 0xff5555,
+    secondaryColor: 0xff0000,
+    size: {
+      width: 30,
+      height: 30,
+    },
+    spawnWeight: 0.05, // 5% chance - rare but dangerous
+    movePattern: 'straight', // Direct approach
+    heatEmission: 0.9, // High heat - aggressive engines
+    // No shootInterval or shootPattern - kamikaze crashes into player 
   },
   boss: {
     speed: 1.5, // Increased from 1.0 - faster movement
