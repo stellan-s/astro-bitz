@@ -10,12 +10,14 @@ import { HighScoreManager } from './HighScoreManager';
 import { selectRandomEnemyType, getEnemyConfig, selectRandomBossType } from './config/EnemyConfig';
 import { EnemyBullet } from './entities/EnemyBullet';
 import { Background } from './entities/Background';
+import { ParallaxBackground } from './ParallaxBackground';
 import { AnalyticsManager } from './AnalyticsManager';
 
 export class Game {
   private app: Application;
   private gameContainer: Container;
   private background: Background;
+  private parallaxBackground: ParallaxBackground;
   private player: Player;
   private enemies: Enemy[] = [];
   private bullets: Bullet[] = [];
@@ -85,6 +87,11 @@ export class Game {
 
     // Create starry background
     this.background = new Background(this.gameContainer, this.app.screen.width, this.app.screen.height);
+
+    // Create parallax background with depth layers
+    this.parallaxBackground = new ParallaxBackground(this.app.screen.width, this.app.screen.height);
+    // Add parallax behind everything but after the static background
+    this.gameContainer.addChildAt(this.parallaxBackground.getContainer(), 1);
 
     this.particleSystem = new ParticleSystem(this.gameContainer);
 
@@ -1374,6 +1381,7 @@ export class Game {
 
       // Update game objects
       this.background.update(deltaTime);
+      this.parallaxBackground.update(deltaTime);
       this.updateBullets(deltaTime);
       this.updateMissiles(deltaTime);
       this.updateEnemies(deltaTime);
