@@ -106,13 +106,13 @@ export class Game {
     this.analytics = AnalyticsManager.getInstance();
     this.achievementsManager = new AchievementsManager();
 
-    // Initialize leaderboard if Supabase is configured
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if (supabaseUrl && supabaseKey) {
+    // Initialize leaderboard with game-specific Supabase instance
+    const leaderboardUrl = import.meta.env.VITE_LEADERBOARD_URL;
+    const leaderboardKey = import.meta.env.VITE_LEADERBOARD_ANON_KEY;
+    if (leaderboardUrl && leaderboardKey) {
       this.leaderboardManager = new LeaderboardManager({
-        supabaseUrl,
-        supabaseKey
+        supabaseUrl: leaderboardUrl,
+        supabaseKey: leaderboardKey
       });
     }
 
