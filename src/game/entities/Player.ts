@@ -25,30 +25,27 @@ export class Player {
   }
 
   private loadShipSprite(): void {
-    // Try to load custom player ship image
-    const shipTexture = Texture.from('/player-ship.png');
-    const shipSprite = new Sprite(shipTexture);
-
-    // Center the sprite
-    shipSprite.anchor.set(0.5, 0.5);
-
-    // Add to container
-    this.sprite.addChild(shipSprite);
-
-    // If texture fails to load, it will show as blank and we have fallback
-    // The fallback graphics will be drawn if the image isn't found
-    // Check after a short delay if texture loaded
-    setTimeout(() => {
-      if (shipTexture.width === 0 || shipTexture.height === 0) {
-        // Remove the invalid sprite
-        this.sprite.removeChild(shipSprite);
-        // Draw fallback
+    // Check if custom ship sprite exists by trying to load it
+    fetch('/player-ship.png', { method: 'HEAD' })
+      .then(response => {
+        if (response.ok) {
+          // File exists, load the texture
+          const shipTexture = Texture.from('/player-ship.png');
+          const shipSprite = new Sprite(shipTexture);
+          shipSprite.anchor.set(0.5, 0.5);
+          this.sprite.addChild(shipSprite);
+          console.log('Custom ship sprite loaded successfully');
+        } else {
+          // File doesn't exist, use fallback
+          console.log('Custom ship sprite not found, using fallback graphics');
+          this.drawFallbackShip();
+        }
+      })
+      .catch(() => {
+        // Error loading file, use fallback
         console.log('Custom ship sprite not found, using fallback graphics');
         this.drawFallbackShip();
-      } else {
-        console.log('Custom ship sprite loaded successfully');
-      }
-    }, 100);
+      });
   }
 
   private drawFallbackShip(): void {
