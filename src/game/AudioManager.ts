@@ -126,6 +126,9 @@ export class AudioManager {
       case 'stealth':
         this.playStealthHit(now);
         break;
+      case 'kamikaze':
+        this.playKamikazeHit(now);
+        break;
       case 'boss':
       case 'bossSniper':
       case 'bossTank':
@@ -324,6 +327,44 @@ export class AudioManager {
 
     glitch.start(now);
     glitch.stop(now + 0.12);
+  }
+
+  // Kamikaze enemy - explosive impact with ascending pitch
+  private playKamikazeHit(now: number): void {
+    // Sharp explosion
+    const explosion = this.audioContext.createOscillator();
+    const explosionGain = this.audioContext.createGain();
+
+    explosion.connect(explosionGain);
+    explosionGain.connect(this.audioContext.destination);
+
+    explosion.type = 'sawtooth';
+    explosion.frequency.setValueAtTime(150, now);
+    explosion.frequency.exponentialRampToValueAtTime(600, now + 0.08); // Rising pitch for impact
+    explosion.frequency.exponentialRampToValueAtTime(100, now + 0.2); // Then drops
+
+    explosionGain.gain.setValueAtTime(this.masterVolume * 0.5, now);
+    explosionGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+    explosion.start(now);
+    explosion.stop(now + 0.2);
+
+    // Sizzle/burn effect
+    const sizzle = this.audioContext.createOscillator();
+    const sizzleGain = this.audioContext.createGain();
+
+    sizzle.connect(sizzleGain);
+    sizzleGain.connect(this.audioContext.destination);
+
+    sizzle.type = 'square';
+    sizzle.frequency.setValueAtTime(2500, now + 0.05);
+    sizzle.frequency.exponentialRampToValueAtTime(1000, now + 0.25);
+
+    sizzleGain.gain.setValueAtTime(this.masterVolume * 0.3, now + 0.05);
+    sizzleGain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+    sizzle.start(now + 0.05);
+    sizzle.stop(now + 0.25);
   }
 
   // Boss enemy - massive explosion with rumble

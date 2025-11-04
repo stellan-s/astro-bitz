@@ -1,7 +1,7 @@
 import { Graphics, Container } from 'pixi.js';
 import { getEnemyConfig, type MovePattern } from '../config/EnemyConfig';
 
-export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'stealth' | 'boss' | 'bossSniper' | 'bossTank' | 'bossSwarm';
+export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'stealth' | 'kamikaze' | 'boss' | 'bossSniper' | 'bossTank' | 'bossSwarm';
 
 export class Enemy {
   public sprite: Container;
@@ -81,6 +81,9 @@ export class Enemy {
       case 'stealth':
         this.drawStealth();
         this.lastCloakChange = Date.now();
+        break;
+      case 'kamikaze':
+        this.drawKamikaze();
         break;
       case 'boss':
       case 'bossSniper':
@@ -305,6 +308,48 @@ export class Enemy {
     this.sprite.addChild(graphics);
   }
 
+  private drawKamikaze(): void {
+    const graphics = new Graphics();
+    const config = getEnemyConfig('kamikaze');
+
+    const w = config.size.width / 2;
+    const h = config.size.height / 2;
+
+    // Warning symbol inspired design - dangerous and fast
+    // Inverted triangle/arrow pointing downward
+    graphics.moveTo(0, h);
+    graphics.lineTo(-w, -h);
+    graphics.lineTo(w, -h);
+    graphics.lineTo(0, h);
+    graphics.fill(config.color);
+
+    // Inner warning stripes
+    graphics.moveTo(0, h * 0.6);
+    graphics.lineTo(-w * 0.6, -h * 0.4);
+    graphics.lineTo(w * 0.6, -h * 0.4);
+    graphics.lineTo(0, h * 0.6);
+    graphics.fill(config.secondaryColor);
+
+    // Explosive core (pulsing effect will be added in update)
+    graphics.circle(0, 0, 5);
+    graphics.fill(0xffff00);
+
+    // Speed fins/wings - aggressive angle
+    graphics.moveTo(-w, -h);
+    graphics.lineTo(-w * 1.3, -h * 0.5);
+    graphics.lineTo(-w * 0.8, -h * 0.3);
+    graphics.lineTo(-w, -h);
+    graphics.fill(config.color);
+
+    graphics.moveTo(w, -h);
+    graphics.lineTo(w * 1.3, -h * 0.5);
+    graphics.lineTo(w * 0.8, -h * 0.3);
+    graphics.lineTo(w, -h);
+    graphics.fill(config.color);
+
+    this.sprite.addChild(graphics);
+  }
+
   private drawBoss(): void {
     const graphics = new Graphics();
     const config = getEnemyConfig(this.type);
@@ -466,6 +511,20 @@ export class Enemy {
 
     // Update movement pattern counter
     this.movePattern += 0.1;
+
+    // Kamikaze specific behavior - pulsing/shaking as it approaches
+    if (this.type === 'kamikaze') {
+      // Pulse the sprite scale to create warning effect
+      const pulseSpeed = 5;
+      const pulseAmount = 0.15;
+      const scale = 1 + Math.sin(this.movePattern * pulseSpeed) * pulseAmount;
+      this.sprite.scale.set(scale, scale);
+
+      // Add slight shake/vibration
+      const shakeAmount = 2;
+      this.sprite.rotation = Math.sin(this.movePattern * 8) * 0.1;
+      this.sprite.x += Math.sin(this.movePattern * 10) * shakeAmount;
+    }
 
     // Shooting logic for bosses and stealth enemies
     if (currentTime !== undefined && this.onShoot) {
