@@ -1628,13 +1628,22 @@ export class Game {
       </style>
     `;
 
+    let dismissCalled = false;
+
     const dismissScreen = () => {
-      document.body.removeChild(container);
+      // Prevent multiple calls
+      if (dismissCalled) return;
+      dismissCalled = true;
+
+      // Remove the container from DOM
+      if (document.body.contains(container)) {
+        document.body.removeChild(container);
+      }
       window.removeEventListener('keydown', keyHandler);
 
       // Remove game over ad if it exists
       const adContainer = document.getElementById('game-over-ad');
-      if (adContainer) {
+      if (adContainer && document.body.contains(adContainer)) {
         document.body.removeChild(adContainer);
       }
 
@@ -1711,14 +1720,22 @@ export class Game {
     setTimeout(() => {
       const dismissBtn = document.getElementById('dismiss-btn');
       if (dismissBtn) {
-        dismissBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          dismissScreen();
-        });
-        dismissBtn.addEventListener('touchstart', (e) => {
-          e.stopPropagation();
-          dismissScreen();
-        });
+        // Use touchstart OR click, not both
+        if ('ontouchstart' in window) {
+          // Mobile - use touchstart only
+          dismissBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dismissScreen();
+          });
+        } else {
+          // Desktop - use click only
+          dismissBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dismissScreen();
+          });
+        }
       }
     }, 0);
 
