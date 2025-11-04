@@ -1,4 +1,4 @@
-import { Graphics, Container, Sprite, Texture } from 'pixi.js';
+import { Graphics, Container, Sprite, Assets } from 'pixi.js';
 
 export class Player {
   public sprite: Container;
@@ -24,26 +24,30 @@ export class Player {
     this.loadShipSprite();
   }
 
-  private loadShipSprite(): void {
-    // Try to load the image, handle both success and failure
-    const img = new Image();
-
-    img.onload = () => {
-      // Image loaded successfully, use it
-      const shipTexture = Texture.from('/space_ship_6872.png');
+  private async loadShipSprite(): Promise<void> {
+    try {
+      // Load the texture using Pixi.js v8 Assets API
+      const shipTexture = await Assets.load('/space_ship_6872.png');
       const shipSprite = new Sprite(shipTexture);
+
       shipSprite.anchor.set(0.5, 0.5);
+      shipSprite.scale.set(0.8, 0.8);
+
+      // Add to container
       this.sprite.addChild(shipSprite);
-      console.log('Custom ship sprite loaded successfully');
-    };
 
-    img.onerror = () => {
+      console.log('Custom ship sprite loaded successfully:', {
+        width: shipSprite.width,
+        height: shipSprite.height,
+        visible: shipSprite.visible,
+        alpha: shipSprite.alpha,
+        children: this.sprite.children.length
+      });
+    } catch (error) {
       // Image failed to load, use fallback
-      console.log('Custom ship sprite not found, using fallback graphics');
+      console.log('Custom ship sprite not found, using fallback graphics:', error);
       this.drawFallbackShip();
-    };
-
-    img.src = '/space_ship_6872.png';
+    }
   }
 
   private drawFallbackShip(): void {
