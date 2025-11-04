@@ -60,7 +60,7 @@ export class ParallaxBackground {
       this.container.addChild(star);
       this.distantStars.push({
         sprite: star,
-        speed: 0.1 // Very slow
+        speed: 0.02 // Very slow - barely moving
       });
     }
   }
@@ -79,7 +79,7 @@ export class ParallaxBackground {
       this.container.addChild(star);
       this.midStars.push({
         sprite: star,
-        speed: 0.3
+        speed: 0.05 // Slower
       });
     }
   }
@@ -98,7 +98,7 @@ export class ParallaxBackground {
       this.container.addChild(star);
       this.nearStars.push({
         sprite: star,
-        speed: 0.6
+        speed: 0.15 // Much slower
       });
     }
   }
@@ -140,7 +140,7 @@ export class ParallaxBackground {
 
       this.nebulaClouds.push({
         sprite: cloud,
-        speed: 0.05, // Very slow
+        speed: 0.01, // Extremely slow
         opacity
       });
     }
@@ -148,7 +148,7 @@ export class ParallaxBackground {
 
   // Distant planets
   private initPlanets(): void {
-    const planetCount = 3;
+    const planetCount = 1; // Just one planet
     const planetData = [
       { color: 0x8b4513, size: 40, hasRing: false }, // Brown
       { color: 0x4169e1, size: 35, hasRing: true },  // Blue with rings
@@ -163,16 +163,16 @@ export class ParallaxBackground {
 
       // Main planet body
       planet.circle(0, 0, data.size);
-      planet.fill({ color: data.color, alpha: 0.7 });
+      planet.fill({ color: data.color, alpha: 0.9 }); // Less transparent
 
       // Add darker crescent for dimension
       planet.circle(data.size * 0.3, 0, data.size);
-      planet.fill({ color: 0x000000, alpha: 0.3 });
+      planet.fill({ color: 0x000000, alpha: 0.4 });
 
       // Add ring if specified
       if (data.hasRing) {
         planet.ellipse(0, 0, data.size * 1.8, data.size * 0.3);
-        planet.stroke({ color: data.color, width: 3, alpha: 0.5 });
+        planet.stroke({ color: data.color, width: 3, alpha: 0.7 }); // Less transparent ring
       }
 
       const x = Math.random() * this.screenWidth;
@@ -186,7 +186,7 @@ export class ParallaxBackground {
 
       this.planets.push({
         sprite: planet,
-        speed: 0.08,
+        speed: 0.02, // Much slower
         x,
         y
       });
