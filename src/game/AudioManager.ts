@@ -470,7 +470,7 @@ export class AudioManager {
       bass.frequency.setValueAtTime(55, time); // Deep A1
       bass.frequency.exponentialRampToValueAtTime(40, time + 0.1);
 
-      bassGain.gain.setValueAtTime(this.masterVolume * 0.25, time);
+      bassGain.gain.setValueAtTime(this.masterVolume * 0.45, time); // Increased from 0.25 to 0.45
       bassGain.gain.exponentialRampToValueAtTime(0.001, time + 0.2);
 
       bass.start(time);
