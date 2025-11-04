@@ -1558,6 +1558,12 @@ export class Game {
       document.body.removeChild(container);
       window.removeEventListener('keydown', keyHandler);
 
+      // Remove game over ad if it exists
+      const adContainer = document.getElementById('game-over-ad');
+      if (adContainer) {
+        document.body.removeChild(adContainer);
+      }
+
       // Clear all game entities to prevent them from triggering game over
       for (let i = this.enemies.length - 1; i >= 0; i--) {
         const enemy = this.enemies[i];
