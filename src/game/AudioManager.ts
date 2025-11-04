@@ -597,28 +597,52 @@ export class AudioManager {
 
     const loopDuration = 32 * beat; // 8 bars * 4 beats
 
-    // Drum layer function (called dynamically based on enemy count)
+    // Drum layer function (always scheduled, volume controlled by gain node)
     const scheduleDrums = () => {
-      if (!this.drumsEnabled) return;
-
       const start = this.audioContext.currentTime + 0.1;
+
+      // Enhanced drum pattern with kicks, snares, and hi-hats
       const drumPattern = [
-        { beat: 0, type: 'kick' }, { beat: 1, type: 'snare' },
-        { beat: 2, type: 'kick' }, { beat: 3, type: 'snare' },
-        { beat: 4, type: 'kick' }, { beat: 5, type: 'snare' },
-        { beat: 6, type: 'kick' }, { beat: 7, type: 'snare' },
-        { beat: 8, type: 'kick' }, { beat: 9, type: 'snare' },
-        { beat: 10, type: 'kick' }, { beat: 11, type: 'snare' },
-        { beat: 12, type: 'kick' }, { beat: 13, type: 'snare' },
-        { beat: 14, type: 'kick' }, { beat: 15, type: 'snare' },
-        { beat: 16, type: 'kick' }, { beat: 17, type: 'snare' },
-        { beat: 18, type: 'kick' }, { beat: 19, type: 'snare' },
-        { beat: 20, type: 'kick' }, { beat: 21, type: 'snare' },
-        { beat: 22, type: 'kick' }, { beat: 23, type: 'snare' },
-        { beat: 24, type: 'kick' }, { beat: 25, type: 'snare' },
-        { beat: 26, type: 'kick' }, { beat: 27, type: 'snare' },
-        { beat: 28, type: 'kick' }, { beat: 29, type: 'snare' },
-        { beat: 30, type: 'kick' }, { beat: 31, type: 'snare' },
+        // Bar 1
+        { beat: 0, type: 'kick' }, { beat: 0.5, type: 'hihat' },
+        { beat: 1, type: 'snare' }, { beat: 1.5, type: 'hihat' },
+        { beat: 2, type: 'kick' }, { beat: 2.5, type: 'hihat' },
+        { beat: 3, type: 'snare' }, { beat: 3.5, type: 'hihat' },
+        // Bar 2
+        { beat: 4, type: 'kick' }, { beat: 4.5, type: 'hihat' },
+        { beat: 5, type: 'snare' }, { beat: 5.5, type: 'hihat' },
+        { beat: 6, type: 'kick' }, { beat: 6.5, type: 'hihat' }, { beat: 6.75, type: 'kick' },
+        { beat: 7, type: 'snare' }, { beat: 7.5, type: 'hihat' },
+        // Bar 3
+        { beat: 8, type: 'kick' }, { beat: 8.5, type: 'hihat' },
+        { beat: 9, type: 'snare' }, { beat: 9.5, type: 'hihat' },
+        { beat: 10, type: 'kick' }, { beat: 10.5, type: 'hihat' },
+        { beat: 11, type: 'snare' }, { beat: 11.5, type: 'hihat' },
+        // Bar 4
+        { beat: 12, type: 'kick' }, { beat: 12.5, type: 'hihat' },
+        { beat: 13, type: 'snare' }, { beat: 13.5, type: 'hihat' },
+        { beat: 14, type: 'kick' }, { beat: 14.5, type: 'hihat' }, { beat: 14.75, type: 'kick' },
+        { beat: 15, type: 'snare' }, { beat: 15.5, type: 'hihat' },
+        // Bar 5
+        { beat: 16, type: 'kick' }, { beat: 16.5, type: 'hihat' },
+        { beat: 17, type: 'snare' }, { beat: 17.5, type: 'hihat' },
+        { beat: 18, type: 'kick' }, { beat: 18.5, type: 'hihat' },
+        { beat: 19, type: 'snare' }, { beat: 19.5, type: 'hihat' },
+        // Bar 6
+        { beat: 20, type: 'kick' }, { beat: 20.5, type: 'hihat' },
+        { beat: 21, type: 'snare' }, { beat: 21.5, type: 'hihat' },
+        { beat: 22, type: 'kick' }, { beat: 22.5, type: 'hihat' }, { beat: 22.75, type: 'kick' },
+        { beat: 23, type: 'snare' }, { beat: 23.5, type: 'hihat' },
+        // Bar 7
+        { beat: 24, type: 'kick' }, { beat: 24.5, type: 'hihat' },
+        { beat: 25, type: 'snare' }, { beat: 25.5, type: 'hihat' },
+        { beat: 26, type: 'kick' }, { beat: 26.5, type: 'hihat' },
+        { beat: 27, type: 'snare' }, { beat: 27.5, type: 'hihat' },
+        // Bar 8 - fill
+        { beat: 28, type: 'kick' }, { beat: 28.5, type: 'hihat' },
+        { beat: 29, type: 'snare' }, { beat: 29.5, type: 'hihat' },
+        { beat: 30, type: 'kick' }, { beat: 30.25, type: 'snare' }, { beat: 30.5, type: 'kick' },
+        { beat: 31, type: 'snare' }, { beat: 31.5, type: 'snare' },
       ];
 
       for (const drum of drumPattern) {
@@ -643,12 +667,12 @@ export class AudioManager {
           kick.frequency.setValueAtTime(80, time);
           kick.frequency.exponentialRampToValueAtTime(40, time + 0.1);
 
-          kickGain.gain.setValueAtTime(this.masterVolume * 0.5, time);
+          kickGain.gain.setValueAtTime(this.masterVolume * 0.6, time);
           kickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
 
           kick.start(time);
           kick.stop(time + 0.15);
-        } else {
+        } else if (drum.type === 'snare') {
           // Snare - sharp crack
           const snare = this.audioContext.createOscillator();
           const snareGain = this.audioContext.createGain();
@@ -665,14 +689,44 @@ export class AudioManager {
           snare.type = 'triangle';
           snare.frequency.setValueAtTime(200, time);
 
-          snareGain.gain.setValueAtTime(this.masterVolume * 0.3, time);
+          snareGain.gain.setValueAtTime(this.masterVolume * 0.4, time);
           snareGain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
 
           snare.start(time);
           snare.stop(time + 0.1);
+        } else if (drum.type === 'hihat') {
+          // Hi-hat - bright crisp metallic sound
+          const hihat = this.audioContext.createOscillator();
+          const hihatGain = this.audioContext.createGain();
+
+          hihat.connect(hihatGain);
+
+          if (!this.drumsGainNode) {
+            this.drumsGainNode = this.audioContext.createGain();
+            this.drumsGainNode.connect(this.audioContext.destination);
+            this.drumsGainNode.gain.value = 0;
+          }
+          hihatGain.connect(this.drumsGainNode);
+
+          // High frequency square wave for metallic sound
+          hihat.type = 'square';
+          hihat.frequency.setValueAtTime(8000, time);
+
+          hihatGain.gain.setValueAtTime(this.masterVolume * 0.15, time);
+          hihatGain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+
+          hihat.start(time);
+          hihat.stop(time + 0.05);
         }
       }
     };
+
+    // Initialize drums gain node at start
+    if (!this.drumsGainNode) {
+      this.drumsGainNode = this.audioContext.createGain();
+      this.drumsGainNode.connect(this.audioContext.destination);
+      this.drumsGainNode.gain.value = 0; // Start silent
+    }
 
     const loopMusic = () => {
       if (!this.musicPlaying) return;
@@ -705,7 +759,7 @@ export class AudioManager {
   public updateMusicIntensity(enemyCount: number): void {
     if (!this.musicPlaying || this.bossMusic) return;
 
-    const shouldHaveDrums = enemyCount > 10;
+    const shouldHaveDrums = enemyCount > 6;
 
     if (shouldHaveDrums && !this.drumsEnabled) {
       // Fade in drums

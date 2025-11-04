@@ -193,13 +193,17 @@ export class ParallaxBackground {
     }
   }
 
-  // Get random star color (white, blue-white, or yellow-white)
+  // Get random star color (white, blue-white, yellow-white, with subtle green/purple tints)
   private getStarColor(): number {
     const colors = [
       0xffffff, // White
       0xf0f8ff, // Blue-white
       0xfffacd, // Yellow-white
       0xe0ffff, // Cyan-white
+      0xe8ffe8, // Subtle green tint
+      0xf0e8ff, // Subtle purple tint
+      0xd8ffd8, // Light green tint
+      0xf8e8ff, // Light purple tint
     ];
     return colors[Math.floor(Math.random() * colors.length)];
   }
