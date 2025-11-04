@@ -1,4 +1,4 @@
-import { Graphics, Container } from 'pixi.js';
+import { Graphics, Container, Sprite, Texture } from 'pixi.js';
 
 export class Player {
   public sprite: Container;
@@ -6,7 +6,7 @@ export class Player {
   private shieldGraphics: Graphics | null = null;
   private shieldAnimationTime: number = 0;
   private jetBeams: Graphics;
-  private jetAnimationTime: number = 0;
+  private exhaustFlames: Graphics[] = [];
 
   constructor(x: number, y: number) {
     this.sprite = new Container();
@@ -17,78 +17,106 @@ export class Player {
     this.jetBeams = new Graphics();
     this.sprite.addChild(this.jetBeams);
 
-    // Draw player as simple classic LEGO spaceship (like 6872/10497)
+    // Create exhaust flames (like enemies)
+    this.createExhaustFlames();
+
+    // Try to load custom ship sprite, fall back to procedural graphics
+    this.loadShipSprite();
+  }
+
+  private loadShipSprite(): void {
+    // Try to load custom player ship image
+    const shipTexture = Texture.from('/player-ship.png');
+    const shipSprite = new Sprite(shipTexture);
+
+    // Center the sprite
+    shipSprite.anchor.set(0.5, 0.5);
+
+    // Add to container
+    this.sprite.addChild(shipSprite);
+
+    // If texture fails to load, it will show as blank and we have fallback
+    // The fallback graphics will be drawn if the image isn't found
+    // Check after a short delay if texture loaded
+    setTimeout(() => {
+      if (shipTexture.width === 0 || shipTexture.height === 0) {
+        // Remove the invalid sprite
+        this.sprite.removeChild(shipSprite);
+        // Draw fallback
+        console.log('Custom ship sprite not found, using fallback graphics');
+        this.drawFallbackShip();
+      } else {
+        console.log('Custom ship sprite loaded successfully');
+      }
+    }, 100);
+  }
+
+  private drawFallbackShip(): void {
     const graphics = new Graphics();
 
     // Classic LEGO space colors
     const blue = 0x0055BF;           // LEGO classic blue
     const lightGray = 0xA0A0A0;      // LEGO light gray
+    const darkGray = 0x6B6B6B;       // LEGO dark gray
     const neonYellow = 0xFFFF00;     // Bright neon yellow
     const transYellow = 0xFFFF00;    // Trans-neon yellow windscreen
+    const red = 0xFF0000;            // LEGO red
 
-    // Simple triangular body (clean and blocky)
-    graphics.moveTo(0, -35);      // Nose
-    graphics.lineTo(18, 12);      // Right back
-    graphics.lineTo(-18, 12);     // Left back
-    graphics.lineTo(0, -35);      // Close
+    // Main blue body - LEGO blocky delta wing design
+    // Large swept delta wings
+    graphics.moveTo(0, -28);      // Front nose point
+    graphics.lineTo(26, 10);      // Right wing tip
+    graphics.lineTo(10, 10);      // Right inner
+    graphics.lineTo(10, 2);       // Right step
+    graphics.lineTo(-10, 2);      // Left step
+    graphics.lineTo(-10, 10);     // Left inner
+    graphics.lineTo(-26, 10);     // Left wing tip
+    graphics.lineTo(0, -28);      // Close
     graphics.fill({ color: blue });
 
-    // Trans-yellow windscreen - simple trapezoid
-    graphics.moveTo(0, -28);
-    graphics.lineTo(8, -15);
-    graphics.lineTo(8, -5);
-    graphics.lineTo(-8, -5);
-    graphics.lineTo(-8, -15);
-    graphics.lineTo(0, -28);
-    graphics.fill({ color: transYellow, alpha: 0.6 });
+    // Center fuselage body (raised section)
+    graphics.rect(-8, -16, 16, 18);
+    graphics.fill({ color: blue });
 
-    // Simple gray wing blocks (like LEGO plates)
-    graphics.rect(14, 5, 4, 7);
-    graphics.fill({ color: lightGray });
-    graphics.rect(-18, 5, 4, 7);
+    // Front nose block
+    graphics.rect(-6, -22, 12, 6);
+    graphics.fill({ color: blue });
+
+    // Gray structural block on top
+    graphics.rect(-5, -18, 10, 5);
     graphics.fill({ color: lightGray });
 
-    // Classic LEGO Space logo - simplified
-    const logoX = 0;
-    const logoY = 0;
+    // Trans-yellow cockpit - more rectangular and LEGO-like
+    graphics.rect(-8, -12, 16, 12);
+    graphics.fill({ color: transYellow, alpha: 0.7 });
 
-    // Planet circle (gray)
-    graphics.circle(logoX, logoY, 5);
-    graphics.fill({ color: lightGray });
-
-    // Simple rings (yellow ellipse)
-    graphics.ellipse(logoX, logoY, 8, 2.5);
+    // Yellow cockpit frame/border
+    graphics.rect(-8, -12, 16, 12);
     graphics.stroke({ color: neonYellow, width: 1.5 });
 
-    // Tiny rocket (just a simple triangle)
-    graphics.moveTo(logoX + 4, logoY - 2);
-    graphics.lineTo(logoX + 7, logoY);
-    graphics.lineTo(logoX + 4, logoY + 2);
+    // Yellow laser cannons/blasters on wings
+    graphics.rect(-18, -2, 4, 10);
+    graphics.fill({ color: neonYellow });
+    graphics.rect(14, -2, 4, 10);
     graphics.fill({ color: neonYellow });
 
-    // Rocket trail
-    graphics.rect(logoX + 1, logoY - 0.5, 3, 1);
-    graphics.fill({ color: neonYellow, alpha: 0.7 });
-
-    // Simple yellow stripe on nose
-    graphics.moveTo(0, -33);
-    graphics.lineTo(2, -25);
-    graphics.lineTo(2, -10);
-    graphics.lineTo(-2, -10);
-    graphics.lineTo(-2, -25);
-    graphics.lineTo(0, -33);
+    // Small yellow detail blocks on wing tips
+    graphics.rect(-26, 8, 5, 3);
+    graphics.fill({ color: neonYellow });
+    graphics.rect(21, 8, 5, 3);
     graphics.fill({ color: neonYellow });
 
-    // Two simple engine blocks at back
-    graphics.rect(10, 10, 4, 4);
-    graphics.fill({ color: lightGray });
-    graphics.circle(12, 12, 2);
-    graphics.fill({ color: 0x1a1a1a });
+    // Red exhaust/thruster blocks at back
+    graphics.rect(-7, 8, 3, 4);
+    graphics.fill({ color: red });
+    graphics.rect(4, 8, 3, 4);
+    graphics.fill({ color: red });
 
-    graphics.rect(-14, 10, 4, 4);
-    graphics.fill({ color: lightGray });
-    graphics.circle(-12, 12, 2);
-    graphics.fill({ color: 0x1a1a1a });
+    // Dark gray engine housing blocks
+    graphics.rect(-10, 6, 6, 6);
+    graphics.fill({ color: darkGray });
+    graphics.rect(4, 6, 6, 6);
+    graphics.fill({ color: darkGray });
 
     this.sprite.addChild(graphics);
   }
@@ -117,41 +145,55 @@ export class Player {
     }
   }
 
-  public updateJetBeams(deltaTime: number): void {
-    this.jetAnimationTime += deltaTime * 0.002; // Slower animation
+  private createExhaustFlames(): void {
+    // Create animated exhaust flames for both engines
+    const flameCount = 4; // Multiple particles per engine
+    const enginePositions = [-5.5, 5.5]; // Match red exhaust positions
 
-    this.jetBeams.clear();
+    for (const engineX of enginePositions) {
+      for (let i = 0; i < flameCount; i++) {
+        const flame = new Graphics();
 
-    const neonYellow = 0xFFFF00;
-    const orange = 0xFF8800;
+        // Flame size varies
+        const baseSize = 3 + Math.random() * 2;
+        flame.circle(0, 0, baseSize);
 
-    // Animated jet flames from both engines
-    for (const engineX of [-12, 12]) {
-      const baseY = 13;
+        // Color gradient: more orange/yellow, less red
+        const colors = [0xffaa00, 0xff8800, 0xffcc00, 0xffff00];
+        const colorIndex = Math.floor(Math.random() * colors.length);
+        flame.fill(colors[colorIndex]);
 
-      // Flame length varies less
-      const flameLength = 25 + Math.sin(this.jetAnimationTime * 2 + engineX) * 3; // Less variation (3 instead of 8)
+        // Random opacity
+        flame.alpha = 0.6 + Math.random() * 0.3;
 
-      // Outer flame (orange glow) - more stable opacity
-      this.jetBeams.moveTo(engineX, baseY);
-      this.jetBeams.lineTo(engineX + 4, baseY + flameLength * 0.6);
-      this.jetBeams.lineTo(engineX, baseY + flameLength);
-      this.jetBeams.lineTo(engineX - 4, baseY + flameLength * 0.6);
-      this.jetBeams.lineTo(engineX, baseY);
-      this.jetBeams.fill({ color: orange, alpha: 0.6 + Math.sin(this.jetAnimationTime * 2) * 0.1 }); // Less flickering
+        // Position flames BEHIND ship (positive Y = downward)
+        flame.x = engineX + (Math.random() - 0.5) * 4; // Slight spread
+        flame.y = 13 + i * 8; // Behind ship, staggered downward
 
-      // Inner flame (bright yellow core)
-      const coreLength = flameLength * 0.7;
-      this.jetBeams.moveTo(engineX, baseY);
-      this.jetBeams.lineTo(engineX + 2, baseY + coreLength * 0.6);
-      this.jetBeams.lineTo(engineX, baseY + coreLength);
-      this.jetBeams.lineTo(engineX - 2, baseY + coreLength * 0.6);
-      this.jetBeams.lineTo(engineX, baseY);
-      this.jetBeams.fill({ color: neonYellow, alpha: 0.85 }); // More stable
+        this.exhaustFlames.push(flame);
+        this.sprite.addChild(flame);
+      }
+    }
+  }
 
-      // Bright center streak
-      this.jetBeams.rect(engineX - 1, baseY, 2, coreLength * 0.5);
-      this.jetBeams.fill({ color: 0xFFFFFF, alpha: 0.9 });
+  public updateJetBeams(_deltaTime: number): void {
+    // Update exhaust flames (like enemies)
+    for (let i = 0; i < this.exhaustFlames.length; i++) {
+      const flame = this.exhaustFlames[i];
+      const engineIndex = i < 4 ? 0 : 1; // Which engine (left or right)
+      const engineX = engineIndex === 0 ? -5.5 : 5.5;
+
+      // Flicker alpha
+      const baseAlpha = 0.6;
+      flame.alpha = baseAlpha + Math.random() * 0.4;
+
+      // Slight horizontal position variation
+      const spread = 5;
+      flame.x = engineX + (Math.random() - 0.5) * spread;
+
+      // Scale variation for flickering effect
+      const scale = 0.8 + Math.random() * 0.4;
+      flame.scale.set(scale);
     }
   }
 
