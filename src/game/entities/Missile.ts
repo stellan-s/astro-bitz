@@ -46,7 +46,10 @@ export class Missile {
     this.sprite.addChild(graphics);
   }
 
-  public update(_deltaTime: number, enemies: Enemy[]): void {
+  public update(deltaTime: number, enemies: Enemy[]): void {
+    // Normalize deltaTime to be frame-rate independent (assuming 60 FPS as baseline)
+    const normalizedDelta = deltaTime / 16.67; // 16.67ms = 60 FPS
+
     // Find or update target
     this.updateTarget(enemies);
 
@@ -70,8 +73,8 @@ export class Missile {
         const heatScaledTurnSpeed = 0.02 + (heat * 0.13);
 
         // Gradually turn towards target - better tracking for hotter enemies
-        this.velocity.x += (desiredVelX - this.velocity.x) * heatScaledTurnSpeed;
-        this.velocity.y += (desiredVelY - this.velocity.y) * heatScaledTurnSpeed;
+        this.velocity.x += (desiredVelX - this.velocity.x) * heatScaledTurnSpeed * normalizedDelta;
+        this.velocity.y += (desiredVelY - this.velocity.y) * heatScaledTurnSpeed * normalizedDelta;
 
         // Normalize velocity
         const velMag = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
@@ -83,8 +86,8 @@ export class Missile {
     }
 
     // Move in current direction
-    this.sprite.x += this.velocity.x * this.speed;
-    this.sprite.y += this.velocity.y * this.speed;
+    this.sprite.x += this.velocity.x * this.speed * normalizedDelta;
+    this.sprite.y += this.velocity.y * this.speed * normalizedDelta;
 
     // Rotate sprite to face direction of travel
     this.sprite.rotation = Math.atan2(this.velocity.y, this.velocity.x) + Math.PI / 2;

@@ -32,10 +32,13 @@ export class EnemyBullet {
     this.sprite.addChild(graphics);
   }
 
-  public update(_deltaTime: number): void {
+  public update(deltaTime: number): void {
+    // Normalize deltaTime to be frame-rate independent (assuming 60 FPS as baseline)
+    const normalizedDelta = deltaTime / 16.67; // 16.67ms = 60 FPS
+
     // Move bullet
-    this.sprite.x += this.velocityX * this.speed;
-    this.sprite.y += this.velocityY * this.speed;
+    this.sprite.x += this.velocityX * this.speed * normalizedDelta;
+    this.sprite.y += this.velocityY * this.speed * normalizedDelta;
   }
 
   public destroy(): void {

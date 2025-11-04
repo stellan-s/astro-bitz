@@ -19,10 +19,14 @@ export class Bullet {
     this.sprite.addChild(graphics);
   }
 
-  public update(_deltaTime: number): void {
+  public update(deltaTime: number): void {
+    // Normalize deltaTime to be frame-rate independent (assuming 60 FPS as baseline)
+    const normalizedDelta = deltaTime / 16.67; // 16.67ms = 60 FPS
+
     // Move bullet upward
-    this.sprite.y -= this.speed;
-    this.travelDistance += this.speed;
+    const movement = this.speed * normalizedDelta;
+    this.sprite.y -= movement;
+    this.travelDistance += movement;
 
     // Enable collision after bullet travels just 10 pixels (minimal clearance from player)
     if (this.travelDistance > 10) {

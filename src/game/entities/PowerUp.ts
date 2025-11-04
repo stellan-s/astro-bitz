@@ -69,9 +69,12 @@ export class PowerUp {
     this.sprite.addChild(graphics);
   }
 
-  public update(_deltaTime: number): void {
+  public update(deltaTime: number): void {
+    // Normalize deltaTime to be frame-rate independent (assuming 60 FPS as baseline)
+    const normalizedDelta = deltaTime / 16.67; // 16.67ms = 60 FPS
+
     // Move power-up downward slowly
-    this.sprite.y += this.speed;
+    this.sprite.y += this.speed * normalizedDelta;
   }
 
   public destroy(): void {

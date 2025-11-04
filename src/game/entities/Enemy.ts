@@ -499,10 +499,13 @@ export class Enemy {
     this.sprite.addChild(graphics);
   }
 
-  public update(_deltaTime: number, currentTime?: number, playerX?: number, playerY?: number): void {
+  public update(deltaTime: number, currentTime?: number, playerX?: number, playerY?: number): void {
+    // Normalize deltaTime to be frame-rate independent (assuming 60 FPS as baseline)
+    const normalizedDelta = deltaTime / 16.67; // 16.67ms = 60 FPS
+
     // Move enemy downward, but respect maxY for bosses
     if (this.maxY === undefined || this.sprite.y < this.maxY) {
-      this.sprite.y += this.speed;
+      this.sprite.y += this.speed * normalizedDelta;
     } else {
       // Boss has reached its max Y position, stop downward movement
       // Constrain to maxY
@@ -510,7 +513,7 @@ export class Enemy {
     }
 
     // Update movement pattern counter
-    this.movePattern += 0.1;
+    this.movePattern += 0.1 * normalizedDelta;
 
     // Kamikaze specific behavior - pulsing/shaking as it approaches
     if (this.type === 'kamikaze') {
@@ -585,14 +588,14 @@ export class Enemy {
       case 'circular':
         // Circular pattern (spinner) with rotation
         this.sprite.x = this.initialX + Math.cos(this.movePattern) * 30;
-        this.sprite.rotation += this.rotationSpeed;
+        this.sprite.rotation += this.rotationSpeed * normalizedDelta;
         break;
 
       case 'diagonal':
         // Diagonal movement (dasher)
-        this.sprite.x += this.direction * this.speed * 0.8;
+        this.sprite.x += this.direction * this.speed * 0.8 * normalizedDelta;
         // Slight wave to make it more interesting
-        this.sprite.x += Math.sin(this.movePattern * 2) * 1;
+        this.sprite.x += Math.sin(this.movePattern * 2) * normalizedDelta;
 
         // Bounce off edges to stay on screen
         if (this.sprite.x < minX || this.sprite.x > maxX) {
