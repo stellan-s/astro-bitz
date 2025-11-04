@@ -299,6 +299,35 @@ export class Game {
         document.body.removeChild(this.startScreenContainer);
         this.startScreenContainer = null;
       }
+
+      // Reset all game state
+      this.score = 0;
+      this.currentWave = 1;
+      this.enemiesKilledThisWave = 0;
+      this.enemiesPerWave = 5;
+      this.spawnTimer = 0;
+      this.spawnInterval = 1200;
+      this.powerUpTimer = 0;
+      this.difficultyMultiplier = 1.0;
+      this.shieldCount = 0;
+      this.rapidFireActive = false;
+      this.rapidFireTimer = 0;
+      this.rapidFireSpawnBoost = false;
+      this.rapidFireSpawnTimer = 0;
+      this.missileAmmo = 3;
+      this.isInvincible = false;
+      this.invincibilityTimer = 0;
+      this.isBossWave = false;
+      this.bossSpawned = false;
+
+      // Update UI
+      this.scoreText.text = `Score: ${this.score}`;
+      this.waveText.text = `Wave: ${this.currentWave}`;
+      if (this.missileText) {
+        this.missileText.text = `Missiles: ${this.missileAmmo}`;
+      }
+      this.player.hideShield();
+
       this.gameState = 'playing';
       this.audio.resume();
       if (this.musicEnabled) {
