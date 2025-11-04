@@ -98,41 +98,285 @@ export class AudioManager {
     sizzle.stop(now + 0.4);
   }
 
-  // Hit sound - explosion
-  public playHit(): void {
+  // Hit sound - explosion with enemy-specific variations
+  public playHit(enemyType?: string): void {
+    const now = this.audioContext.currentTime;
+
+    // Different sounds based on enemy type
+    switch (enemyType) {
+      case 'basic':
+        this.playBasicHit(now);
+        break;
+      case 'fast':
+        this.playFastHit(now);
+        break;
+      case 'tank':
+        this.playTankHit(now);
+        break;
+      case 'weaver':
+        this.playWeaverHit(now);
+        break;
+      case 'spinner':
+        this.playSpinnerHit(now);
+        break;
+      case 'dasher':
+        this.playDasherHit(now);
+        break;
+      case 'stealth':
+        this.playStealthHit(now);
+        break;
+      case 'boss':
+      case 'bossSniper':
+      case 'bossTank':
+      case 'bossSwarm':
+        this.playBossHit(now);
+        break;
+      default:
+        // Default explosion sound
+        this.playBasicHit(now);
+        break;
+    }
+  }
+
+  // Basic enemy - standard explosion
+  private playBasicHit(now: number): void {
     const oscillator = this.audioContext.createOscillator();
     const gainNode = this.audioContext.createGain();
-    const noiseGain = this.audioContext.createGain();
-
-    // Create noise for explosion effect
-    const bufferSize = this.audioContext.sampleRate * 0.2;
-    const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-    const noise = this.audioContext.createBufferSource();
-    noise.buffer = buffer;
 
     oscillator.connect(gainNode);
     gainNode.connect(this.audioContext.destination);
-    noise.connect(noiseGain);
-    noiseGain.connect(this.audioContext.destination);
 
     oscillator.type = 'sawtooth';
-    oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + 0.2);
+    oscillator.frequency.setValueAtTime(200, now);
+    oscillator.frequency.exponentialRampToValueAtTime(50, now + 0.15);
 
-    gainNode.gain.setValueAtTime(this.masterVolume * 0.4, this.audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+    gainNode.gain.setValueAtTime(this.masterVolume * 0.4, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
 
-    noiseGain.gain.setValueAtTime(this.masterVolume * 0.2, this.audioContext.currentTime);
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+    oscillator.start(now);
+    oscillator.stop(now + 0.15);
+  }
 
-    oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.2);
-    noise.start(this.audioContext.currentTime);
-    noise.stop(this.audioContext.currentTime + 0.2);
+  // Fast enemy - higher pitched, quick snap
+  private playFastHit(now: number): void {
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(500, now);
+    oscillator.frequency.exponentialRampToValueAtTime(150, now + 0.08);
+
+    gainNode.gain.setValueAtTime(this.masterVolume * 0.35, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.08);
+  }
+
+  // Tank enemy - deep, heavy thud with metal clang
+  private playTankHit(now: number): void {
+    // Deep thud
+    const thud = this.audioContext.createOscillator();
+    const thudGain = this.audioContext.createGain();
+
+    thud.connect(thudGain);
+    thudGain.connect(this.audioContext.destination);
+
+    thud.type = 'sine';
+    thud.frequency.setValueAtTime(80, now);
+    thud.frequency.exponentialRampToValueAtTime(30, now + 0.25);
+
+    thudGain.gain.setValueAtTime(this.masterVolume * 0.6, now);
+    thudGain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+    thud.start(now);
+    thud.stop(now + 0.25);
+
+    // Metal clang
+    const clang = this.audioContext.createOscillator();
+    const clanGain = this.audioContext.createGain();
+
+    clang.connect(clanGain);
+    clanGain.connect(this.audioContext.destination);
+
+    clang.type = 'square';
+    clang.frequency.setValueAtTime(800, now + 0.02);
+    clang.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+
+    clanGain.gain.setValueAtTime(this.masterVolume * 0.3, now + 0.02);
+    clanGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+    clang.start(now + 0.02);
+    clang.stop(now + 0.15);
+  }
+
+  // Weaver enemy - warbling, modulated sound
+  private playWeaverHit(now: number): void {
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    const lfo = this.audioContext.createOscillator();
+    const lfoGain = this.audioContext.createGain();
+
+    // LFO for warble effect
+    lfo.connect(lfoGain);
+    lfoGain.connect(oscillator.frequency);
+    lfo.frequency.setValueAtTime(30, now);
+    lfoGain.gain.setValueAtTime(40, now);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(300, now);
+
+    gainNode.gain.setValueAtTime(this.masterVolume * 0.4, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+
+    lfo.start(now);
+    lfo.stop(now + 0.18);
+    oscillator.start(now);
+    oscillator.stop(now + 0.18);
+  }
+
+  // Spinner enemy - spinning down sound
+  private playSpinnerHit(now: number): void {
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+
+    oscillator.type = 'sawtooth';
+    // Rapidly descending pitch like a spinning object losing power
+    oscillator.frequency.setValueAtTime(800, now);
+    oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+
+    gainNode.gain.setValueAtTime(this.masterVolume * 0.45, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.3);
+  }
+
+  // Dasher enemy - sharp crack with whoosh
+  private playDasherHit(now: number): void {
+    // Sharp crack
+    const crack = this.audioContext.createOscillator();
+    const crackGain = this.audioContext.createGain();
+
+    crack.connect(crackGain);
+    crackGain.connect(this.audioContext.destination);
+
+    crack.type = 'square';
+    crack.frequency.setValueAtTime(1200, now);
+    crack.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+
+    crackGain.gain.setValueAtTime(this.masterVolume * 0.4, now);
+    crackGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+
+    crack.start(now);
+    crack.stop(now + 0.05);
+
+    // Trailing whoosh
+    const whoosh = this.audioContext.createOscillator();
+    const whooshGain = this.audioContext.createGain();
+
+    whoosh.connect(whooshGain);
+    whooshGain.connect(this.audioContext.destination);
+
+    whoosh.type = 'triangle';
+    whoosh.frequency.setValueAtTime(400, now + 0.03);
+    whoosh.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+
+    whooshGain.gain.setValueAtTime(this.masterVolume * 0.3, now + 0.03);
+    whooshGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+    whoosh.start(now + 0.03);
+    whoosh.stop(now + 0.2);
+  }
+
+  // Stealth enemy - muffled, electronic glitch
+  private playStealthHit(now: number): void {
+    // Electronic glitch
+    const glitch = this.audioContext.createOscillator();
+    const glitchGain = this.audioContext.createGain();
+    const filter = this.audioContext.createBiquadFilter();
+
+    glitch.connect(filter);
+    filter.connect(glitchGain);
+    glitchGain.connect(this.audioContext.destination);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.exponentialRampToValueAtTime(200, now + 0.12);
+
+    glitch.type = 'square';
+    glitch.frequency.setValueAtTime(250, now);
+    glitch.frequency.setValueAtTime(180, now + 0.04);
+    glitch.frequency.setValueAtTime(300, now + 0.08);
+
+    glitchGain.gain.setValueAtTime(this.masterVolume * 0.35, now);
+    glitchGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+    glitch.start(now);
+    glitch.stop(now + 0.12);
+  }
+
+  // Boss enemy - massive explosion with rumble
+  private playBossHit(now: number): void {
+    // Deep rumble
+    const rumble = this.audioContext.createOscillator();
+    const rumbleGain = this.audioContext.createGain();
+
+    rumble.connect(rumbleGain);
+    rumbleGain.connect(this.audioContext.destination);
+
+    rumble.type = 'sine';
+    rumble.frequency.setValueAtTime(60, now);
+    rumble.frequency.exponentialRampToValueAtTime(25, now + 0.4);
+
+    rumbleGain.gain.setValueAtTime(this.masterVolume * 0.7, now);
+    rumbleGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+    rumble.start(now);
+    rumble.stop(now + 0.4);
+
+    // Explosion crack
+    const explosion = this.audioContext.createOscillator();
+    const explosionGain = this.audioContext.createGain();
+
+    explosion.connect(explosionGain);
+    explosionGain.connect(this.audioContext.destination);
+
+    explosion.type = 'sawtooth';
+    explosion.frequency.setValueAtTime(400, now);
+    explosion.frequency.exponentialRampToValueAtTime(80, now + 0.3);
+
+    explosionGain.gain.setValueAtTime(this.masterVolume * 0.5, now);
+    explosionGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+    explosion.start(now);
+    explosion.stop(now + 0.3);
+
+    // High-frequency debris
+    const debris = this.audioContext.createOscillator();
+    const debrisGain = this.audioContext.createGain();
+
+    debris.connect(debrisGain);
+    debrisGain.connect(this.audioContext.destination);
+
+    debris.type = 'square';
+    debris.frequency.setValueAtTime(2000, now + 0.05);
+    debris.frequency.exponentialRampToValueAtTime(500, now + 0.35);
+
+    debrisGain.gain.setValueAtTime(this.masterVolume * 0.3, now + 0.05);
+    debrisGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+    debris.start(now + 0.05);
+    debris.stop(now + 0.35);
   }
 
   // Game over sound - descending tone

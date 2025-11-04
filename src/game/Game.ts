@@ -900,7 +900,7 @@ export class Game {
             this.checkWaveComplete();
           }
 
-          this.audio.playHit();
+          this.audio.playHit(enemy.type);
           break;
         }
       }
@@ -960,7 +960,7 @@ export class Game {
             this.checkWaveComplete();
           }
 
-          this.audio.playHit();
+          this.audio.playHit(enemy.type);
           break;
         }
       }
