@@ -25,27 +25,25 @@ export class Player {
   }
 
   private loadShipSprite(): void {
-    // Check if custom ship sprite exists by trying to load it
-    fetch('/player-ship.png', { method: 'HEAD' })
-      .then(response => {
-        if (response.ok) {
-          // File exists, load the texture
-          const shipTexture = Texture.from('/player-ship.png');
-          const shipSprite = new Sprite(shipTexture);
-          shipSprite.anchor.set(0.5, 0.5);
-          this.sprite.addChild(shipSprite);
-          console.log('Custom ship sprite loaded successfully');
-        } else {
-          // File doesn't exist, use fallback
-          console.log('Custom ship sprite not found, using fallback graphics');
-          this.drawFallbackShip();
-        }
-      })
-      .catch(() => {
-        // Error loading file, use fallback
-        console.log('Custom ship sprite not found, using fallback graphics');
-        this.drawFallbackShip();
-      });
+    // Try to load the image, handle both success and failure
+    const img = new Image();
+
+    img.onload = () => {
+      // Image loaded successfully, use it
+      const shipTexture = Texture.from('/player-ship.png');
+      const shipSprite = new Sprite(shipTexture);
+      shipSprite.anchor.set(0.5, 0.5);
+      this.sprite.addChild(shipSprite);
+      console.log('Custom ship sprite loaded successfully');
+    };
+
+    img.onerror = () => {
+      // Image failed to load, use fallback
+      console.log('Custom ship sprite not found, using fallback graphics');
+      this.drawFallbackShip();
+    };
+
+    img.src = '/player-ship.png';
   }
 
   private drawFallbackShip(): void {
