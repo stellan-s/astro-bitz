@@ -36,7 +36,6 @@ CREATE POLICY "Anyone can insert scores"
 
 -- Grant access to anon role
 GRANT SELECT, INSERT ON public.leaderboard TO anon;
-GRANT USAGE ON SEQUENCE IF EXISTS public.leaderboard_id_seq TO anon;
 
 -- Create a view for daily leaderboard (optional, for better performance)
 CREATE OR REPLACE VIEW public.daily_leaderboard AS
