@@ -60,7 +60,7 @@ export class ParallaxBackground {
       this.container.addChild(star);
       this.distantStars.push({
         sprite: star,
-        speed: 0.005 // Extremely slow - almost static
+        speed: 0.001 // Glacially slow - nearly imperceptible
       });
     }
   }
@@ -79,7 +79,7 @@ export class ParallaxBackground {
       this.container.addChild(star);
       this.midStars.push({
         sprite: star,
-        speed: 0.01 // Much slower
+        speed: 0.003 // Glacially slow
       });
     }
   }
@@ -98,7 +98,7 @@ export class ParallaxBackground {
       this.container.addChild(star);
       this.nearStars.push({
         sprite: star,
-        speed: 0.03 // Much slower
+        speed: 0.008 // Still very slow
       });
     }
   }
@@ -140,7 +140,7 @@ export class ParallaxBackground {
 
       this.nebulaClouds.push({
         sprite: cloud,
-        speed: 0.01, // Extremely slow
+        speed: 0.002, // Glacially slow
         opacity
       });
     }
@@ -186,7 +186,7 @@ export class ParallaxBackground {
 
       this.planets.push({
         sprite: planet,
-        speed: 0.005, // Extremely slow - almost static like distant object
+        speed: 0.001, // Glacially slow - essentially static
         x,
         y
       });
