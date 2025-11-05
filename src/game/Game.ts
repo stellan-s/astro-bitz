@@ -355,8 +355,16 @@ export class Game {
 
       this.gameState = 'playing';
       this.audio.resume();
+
+      // Stop any existing music before starting new game
+      this.audio.stopBackgroundMusic();
+      this.audio.stopBossMusic();
+
+      // Start fresh music after a brief delay to ensure stop completes
       if (this.musicEnabled) {
-        this.audio.startBackgroundMusic(this.currentWave);
+        setTimeout(() => {
+          this.audio.startBackgroundMusic(this.currentWave);
+        }, 100);
       }
       // Track game start
       this.analytics.trackGameStart();
