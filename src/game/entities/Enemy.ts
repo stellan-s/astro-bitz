@@ -35,6 +35,9 @@ export class Enemy {
   private kamikazeTargetRotation: number = 0; // Target rotation for smooth turning
   private kamikazeCurrentRotation: number = 0; // Current rotation
   private kamikazeApproachSide: number = 0; // Which side to approach from (left=-1, right=1)
+  private kamikazeTargetX: number = 0; // Fixed target X position (doesn't update)
+  private kamikazeTargetY: number = 0; // Fixed target Y position (doesn't update)
+  private kamikazeHasLockedTarget: boolean = false; // Whether target has been locked
 
   constructor(x: number, y: number, type: EnemyType = 'basic', speedMultiplier: number = 1.0, screenWidth: number = 800) {
     this.sprite = new Container();
@@ -67,6 +70,7 @@ export class Enemy {
     switch (type) {
       case 'basic':
         this.drawBasic();
+        // Basic enemy rotation moved here (after flames will be added)
         break;
       case 'fast':
         this.drawFast();
@@ -109,6 +113,11 @@ export class Enemy {
     if (config.heatEmission > 0) {
       this.createExhaustFlames();
     }
+
+    // Apply rotation AFTER flames are added for basic enemy
+    if (type === 'basic') {
+      this.sprite.rotation = Math.PI;
+    }
   }
 
   private createExhaustFlames(): void {
@@ -118,6 +127,11 @@ export class Enemy {
 
     // More particles for hotter enemies
     const flameCount = Math.max(2, Math.floor(heat * 5)); // 2-5 particles based on heat
+
+    // Check if this enemy type is rotated 180° (basic and kamikaze)
+    // For these, the ship graphic points UP but sprite is rotated to point DOWN
+    // So in local coordinates, flames should be at POSITIVE Y (bottom of upward-pointing graphic)
+    const isRotated = this.type === 'basic' || this.type === 'kamikaze';
 
     for (let i = 0; i < flameCount; i++) {
       const flame = new Graphics();
@@ -134,9 +148,18 @@ export class Enemy {
       // Hotter enemies have more opaque flames
       flame.alpha = 0.5 + heat * 0.4 + Math.random() * 0.2;
 
-      // Position flames BEHIND enemy (negative Y = above enemy, pointing up/back)
+      // Position flames BEHIND enemy in local coordinates (before rotation is applied)
       flame.x = (Math.random() - 0.5) * (8 + heat * 4); // Spread scales with heat
-      flame.y = -config.size.height / 2 - 5 - i * (6 + heat * 4); // Behind enemy, staggered upward
+
+      // For basic/kamikaze: graphic drawn pointing up, so flames at bottom (positive Y)
+      // For others: graphic drawn pointing down, so flames at top (negative Y)
+      if (isRotated) {
+        // Flames at bottom of upward-pointing graphic (becomes rear after 180° rotation)
+        flame.y = config.size.height / 2 + 5 + i * (6 + heat * 4);
+      } else {
+        // Flames at top of downward-pointing graphic (rear)
+        flame.y = -config.size.height / 2 - 5 - i * (6 + heat * 4);
+      }
 
       this.exhaustFlames.push(flame);
       this.sprite.addChild(flame);
@@ -179,9 +202,6 @@ export class Enemy {
     graphics.lineTo(12, 10);
     graphics.lineTo(12, 5);
     graphics.fill(config.color);
-
-    // Rotate the entire sprite 180 degrees to point downward
-    this.sprite.rotation = Math.PI;
 
     this.sprite.addChild(graphics);
   }
@@ -593,45 +613,52 @@ export class Enemy {
       const scale = 1 + Math.sin(this.movePattern * pulseSpeed) * pulseAmount;
       this.sprite.scale.set(scale, scale);
 
-      // Calculate offset target position to approach from the side
-      const sideOffset = 150; // How far to the side to aim
-      const targetX = playerX + (this.kamikazeApproachSide * sideOffset);
-      const targetY = playerY;
+      // Lock onto target position only once (when close enough to player)
+      if (!this.kamikazeHasLockedTarget && this.sprite.y > 50) {
+        // Calculate offset target position to approach from the side
+        const sideOffset = 150; // How far to the side to aim
+        this.kamikazeTargetX = playerX + (this.kamikazeApproachSide * sideOffset);
+        // Aim for a point past the player (below them on screen)
+        this.kamikazeTargetY = playerY + 200; // Fly past player by 200 pixels
+        this.kamikazeHasLockedTarget = true;
+      }
 
-      // Home in on offset target position (side approach)
-      const dx = targetX - this.sprite.x;
-      const dy = targetY - this.sprite.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      // Continue toward FIXED target position (doesn't update with player movement)
+      if (this.kamikazeHasLockedTarget) {
+        const dx = this.kamikazeTargetX - this.sprite.x;
+        const dy = this.kamikazeTargetY - this.sprite.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance > 0) {
-        // Add random drift to make aim worse (±30% targeting error)
-        const aimError = 0.3;
-        const randomDriftX = (Math.random() - 0.5) * this.speed * aimError * normalizedDelta;
-        const randomDriftY = (Math.random() - 0.5) * this.speed * aimError * normalizedDelta;
+        if (distance > 0) {
+          // Add random drift to make aim worse (±30% targeting error)
+          const aimError = 0.3;
+          const randomDriftX = (Math.random() - 0.5) * this.speed * aimError * normalizedDelta;
+          const randomDriftY = (Math.random() - 0.5) * this.speed * aimError * normalizedDelta;
 
-        // Move toward offset target with aggressive speed but imperfect aim
-        const moveX = (dx / distance) * this.speed * normalizedDelta + randomDriftX;
-        const moveY = (dy / distance) * this.speed * normalizedDelta + randomDriftY;
-        this.sprite.x += moveX;
-        this.sprite.y += moveY;
+          // Move toward fixed target with aggressive speed but imperfect aim
+          const moveX = (dx / distance) * this.speed * normalizedDelta + randomDriftX;
+          const moveY = (dy / distance) * this.speed * normalizedDelta + randomDriftY;
+          this.sprite.x += moveX;
+          this.sprite.y += moveY;
 
-        // Calculate target rotation based on movement direction
-        // Add Math.PI since the sprite is drawn pointing up and rotated 180° initially
-        this.kamikazeTargetRotation = Math.atan2(dx, dy) + Math.PI;
+          // Calculate target rotation based on movement direction
+          // Add Math.PI since the sprite is drawn pointing up and rotated 180° initially
+          this.kamikazeTargetRotation = Math.atan2(dx, dy) + Math.PI;
 
-        // Smoothly interpolate rotation (slower turn rate)
-        const turnRate = 0.04; // Lower = slower turning (was instant before)
-        let rotationDiff = this.kamikazeTargetRotation - this.kamikazeCurrentRotation;
+          // Smoothly interpolate rotation (slower turn rate)
+          const turnRate = 0.04; // Lower = slower turning
+          let rotationDiff = this.kamikazeTargetRotation - this.kamikazeCurrentRotation;
 
-        // Normalize angle difference to -PI to PI range
-        while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
-        while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+          // Normalize angle difference to -PI to PI range
+          while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+          while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
 
-        // Apply smooth turning
-        this.kamikazeCurrentRotation += rotationDiff * turnRate * normalizedDelta;
+          // Apply smooth turning
+          this.kamikazeCurrentRotation += rotationDiff * turnRate * normalizedDelta;
 
-        // Apply rotation to sprite
-        this.sprite.rotation = this.kamikazeCurrentRotation;
+          // Apply rotation to sprite
+          this.sprite.rotation = this.kamikazeCurrentRotation;
+        }
       }
     }
 
