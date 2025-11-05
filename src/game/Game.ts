@@ -1382,6 +1382,10 @@ export class Game {
     // Set to 'dying' state - keeps particles animating but stops gameplay
     this.gameState = 'dying';
 
+    // Stop all game music immediately
+    this.audio.stopBackgroundMusic();
+    this.audio.stopBossMusic();
+
     // Store player position before hiding
     const playerX = this.player.sprite.x;
     const playerY = this.player.sprite.y;
