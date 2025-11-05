@@ -518,19 +518,22 @@ export class Enemy {
     const normalizedDelta = deltaTime / 16.67; // 16.67ms = 60 FPS
 
     // Move enemy downward, but respect maxY for bosses
-    if (this.maxY === undefined || this.sprite.y < this.maxY) {
-      this.sprite.y += this.speed * normalizedDelta;
-    } else {
-      // Boss has reached its max Y position, stop downward movement
-      // Constrain to maxY
-      this.sprite.y = Math.min(this.sprite.y, this.maxY);
+    // Kamikaze enemies handle their own movement (homing toward player)
+    if (this.type !== 'kamikaze') {
+      if (this.maxY === undefined || this.sprite.y < this.maxY) {
+        this.sprite.y += this.speed * normalizedDelta;
+      } else {
+        // Boss has reached its max Y position, stop downward movement
+        // Constrain to maxY
+        this.sprite.y = Math.min(this.sprite.y, this.maxY);
+      }
     }
 
     // Update movement pattern counter
     this.movePattern += 0.1 * normalizedDelta;
 
-    // Kamikaze specific behavior - pulsing/shaking as it approaches
-    if (this.type === 'kamikaze') {
+    // Kamikaze specific behavior - homing toward player with pulsing/shaking
+    if (this.type === 'kamikaze' && playerX !== undefined && playerY !== undefined) {
       // Pulse the sprite scale to create warning effect
       const pulseSpeed = 5;
       const pulseAmount = 0.15;
@@ -538,9 +541,23 @@ export class Enemy {
       this.sprite.scale.set(scale, scale);
 
       // Add slight shake/vibration
-      const shakeAmount = 2;
       this.sprite.rotation = Math.sin(this.movePattern * 8) * 0.1;
-      this.sprite.x += Math.sin(this.movePattern * 10) * shakeAmount;
+
+      // Home in on player position
+      const dx = playerX - this.sprite.x;
+      const dy = playerY - this.sprite.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance > 0) {
+        // Move toward player with aggressive speed
+        const moveX = (dx / distance) * this.speed * normalizedDelta;
+        const moveY = (dy / distance) * this.speed * normalizedDelta;
+        this.sprite.x += moveX;
+        this.sprite.y += moveY;
+
+        // Point toward player
+        this.sprite.rotation = Math.atan2(dx, -dy);
+      }
     }
 
     // Shooting logic for bosses and stealth enemies
