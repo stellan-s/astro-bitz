@@ -84,7 +84,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
       width: 35,
       height: 35,
     },
-    spawnWeight: 0.15, // 15% chance
+    spawnWeight: 0.08, // 8% chance (reduced from 15%)
     movePattern: 'sine',
     heatEmission: 0.6, // Medium-high heat
   },

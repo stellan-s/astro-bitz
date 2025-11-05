@@ -33,7 +33,7 @@ export class Game {
   private highScoreText: Text;
   private waveText: Text;
   private spawnTimer: number = 0;
-  private spawnInterval: number = 1500; // Start at 1.5 seconds
+  private spawnInterval: number = 1800; // Start at 1.8 seconds (slightly slower)
   private powerUpTimer: number = 0;
   private powerUpInterval: number = 8000; // Power-ups more frequent (8 seconds)
   private audio: AudioManager;
@@ -328,7 +328,7 @@ export class Game {
       this.enemiesKilledThisWave = 0;
       this.enemiesPerWave = 15;
       this.spawnTimer = 0;
-      this.spawnInterval = 1200;
+      this.spawnInterval = 1500; // Slightly slower (increased from 1200)
       this.powerUpTimer = 0;
       this.difficultyMultiplier = 1.0;
       this.shieldCount = 0;
@@ -843,8 +843,8 @@ export class Game {
         const dy = enemy.sprite.y - this.player.sprite.y;
         const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
 
-        // Explode when close to player (60 pixel radius)
-        if (distanceToPlayer < 60) {
+        // Explode when close to player (40 pixel radius - reduced from 60)
+        if (distanceToPlayer < 40) {
           // Create massive explosion
           const config = getEnemyConfig(enemy.type);
           this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, 30);
