@@ -31,6 +31,11 @@ export class Enemy {
   private hitRevealTime: number = 0; // Time when hit, reveals briefly
   private hitRevealDuration: number = 300; // 0.3 seconds reveal on hit
 
+  // Kamikaze-specific properties
+  private kamikazeTargetRotation: number = 0; // Target rotation for smooth turning
+  private kamikazeCurrentRotation: number = 0; // Current rotation
+  private kamikazeApproachSide: number = 0; // Which side to approach from (left=-1, right=1)
+
   constructor(x: number, y: number, type: EnemyType = 'basic', speedMultiplier: number = 1.0, screenWidth: number = 800) {
     this.sprite = new Container();
     this.sprite.x = x;
@@ -84,6 +89,12 @@ export class Enemy {
         break;
       case 'kamikaze':
         this.drawKamikaze();
+        // Randomly choose which side to approach from (left or right)
+        this.kamikazeApproachSide = Math.random() > 0.5 ? 1 : -1;
+        // Initialize rotation to point downward (Math.PI = 180 degrees)
+        this.sprite.rotation = Math.PI;
+        this.kamikazeCurrentRotation = Math.PI;
+        this.kamikazeTargetRotation = Math.PI;
         break;
       case 'boss':
       case 'bossSniper':
@@ -136,25 +147,41 @@ export class Enemy {
     const graphics = new Graphics();
     const config = getEnemyConfig('basic');
 
-    // Main hull - simplified pentagon spaceship shape
-    graphics.moveTo(0, -15);  // Top point
-    graphics.lineTo(15, -5);   // Top right
-    graphics.lineTo(15, 10);   // Bottom right
-    graphics.lineTo(-15, 10);  // Bottom left
-    graphics.lineTo(-15, -5);  // Top left
+    // Main hull - arrow/dart spaceship shape (pointing downward)
+    graphics.moveTo(0, -15);   // Front tip (top, but will point down)
+    graphics.lineTo(12, 5);    // Right body
+    graphics.lineTo(8, 12);    // Right rear
+    graphics.lineTo(-8, 12);   // Left rear
+    graphics.lineTo(-12, 5);   // Left body
     graphics.lineTo(0, -15);   // Close
     graphics.fill(config.color);
 
-    // Side wings (smaller than tank)
-    graphics.rect(-18, -3, 8, 10);  // Left wing
+    // Engine exhausts at rear (bottom)
+    graphics.rect(-6, 10, 4, 5);  // Left engine
     graphics.fill(config.secondaryColor || 0x000000);
 
-    graphics.rect(10, -3, 8, 10);   // Right wing
+    graphics.rect(2, 10, 4, 5);   // Right engine
     graphics.fill(config.secondaryColor || 0x000000);
 
-    // Cockpit window
-    graphics.circle(0, -2, 5);
+    // Cockpit/bridge (near front)
+    graphics.circle(0, -5, 4);
     graphics.fill(config.secondaryColor || 0x000000);
+
+    // Small wing tips
+    graphics.moveTo(-12, 5);
+    graphics.lineTo(-16, 7);
+    graphics.lineTo(-12, 10);
+    graphics.lineTo(-12, 5);
+    graphics.fill(config.color);
+
+    graphics.moveTo(12, 5);
+    graphics.lineTo(16, 7);
+    graphics.lineTo(12, 10);
+    graphics.lineTo(12, 5);
+    graphics.fill(config.color);
+
+    // Rotate the entire sprite 180 degrees to point downward
+    this.sprite.rotation = Math.PI;
 
     this.sprite.addChild(graphics);
   }
@@ -339,35 +366,35 @@ export class Enemy {
     const h = config.size.height / 2;
 
     // Warning symbol inspired design - dangerous and fast
-    // Inverted triangle/arrow pointing downward
-    graphics.moveTo(0, h);
-    graphics.lineTo(-w, -h);
-    graphics.lineTo(w, -h);
-    graphics.lineTo(0, h);
+    // Triangle/arrow (drawn pointing up, will rotate 180° to point down)
+    graphics.moveTo(0, -h);     // Point at top
+    graphics.lineTo(-w, h);     // Bottom left
+    graphics.lineTo(w, h);      // Bottom right
+    graphics.lineTo(0, -h);     // Close
     graphics.fill(config.color);
 
     // Inner warning stripes
-    graphics.moveTo(0, h * 0.6);
-    graphics.lineTo(-w * 0.6, -h * 0.4);
-    graphics.lineTo(w * 0.6, -h * 0.4);
-    graphics.lineTo(0, h * 0.6);
+    graphics.moveTo(0, -h * 0.6);
+    graphics.lineTo(-w * 0.6, h * 0.4);
+    graphics.lineTo(w * 0.6, h * 0.4);
+    graphics.lineTo(0, -h * 0.6);
     graphics.fill(config.secondaryColor);
 
     // Explosive core (pulsing effect will be added in update)
     graphics.circle(0, 0, 5);
     graphics.fill(0xffff00);
 
-    // Speed fins/wings - aggressive angle
-    graphics.moveTo(-w, -h);
-    graphics.lineTo(-w * 1.3, -h * 0.5);
-    graphics.lineTo(-w * 0.8, -h * 0.3);
-    graphics.lineTo(-w, -h);
+    // Speed fins/wings - aggressive angle (at the rear/bottom when upright)
+    graphics.moveTo(-w, h);
+    graphics.lineTo(-w * 1.3, h * 0.5);
+    graphics.lineTo(-w * 0.8, h * 0.3);
+    graphics.lineTo(-w, h);
     graphics.fill(config.color);
 
-    graphics.moveTo(w, -h);
-    graphics.lineTo(w * 1.3, -h * 0.5);
-    graphics.lineTo(w * 0.8, -h * 0.3);
-    graphics.lineTo(w, -h);
+    graphics.moveTo(w, h);
+    graphics.lineTo(w * 1.3, h * 0.5);
+    graphics.lineTo(w * 0.8, h * 0.3);
+    graphics.lineTo(w, h);
     graphics.fill(config.color);
 
     this.sprite.addChild(graphics);
@@ -566,9 +593,14 @@ export class Enemy {
       const scale = 1 + Math.sin(this.movePattern * pulseSpeed) * pulseAmount;
       this.sprite.scale.set(scale, scale);
 
-      // Home in on player position with imperfect aim
-      const dx = playerX - this.sprite.x;
-      const dy = playerY - this.sprite.y;
+      // Calculate offset target position to approach from the side
+      const sideOffset = 150; // How far to the side to aim
+      const targetX = playerX + (this.kamikazeApproachSide * sideOffset);
+      const targetY = playerY;
+
+      // Home in on offset target position (side approach)
+      const dx = targetX - this.sprite.x;
+      const dy = targetY - this.sprite.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance > 0) {
@@ -577,14 +609,29 @@ export class Enemy {
         const randomDriftX = (Math.random() - 0.5) * this.speed * aimError * normalizedDelta;
         const randomDriftY = (Math.random() - 0.5) * this.speed * aimError * normalizedDelta;
 
-        // Move toward player with aggressive speed but imperfect aim
+        // Move toward offset target with aggressive speed but imperfect aim
         const moveX = (dx / distance) * this.speed * normalizedDelta + randomDriftX;
         const moveY = (dy / distance) * this.speed * normalizedDelta + randomDriftY;
         this.sprite.x += moveX;
         this.sprite.y += moveY;
 
-        // Point toward player (fixed orientation - arrow points down toward player)
-        this.sprite.rotation = Math.atan2(dy, dx) + Math.PI / 2;
+        // Calculate target rotation based on movement direction
+        // Add Math.PI since the sprite is drawn pointing up and rotated 180° initially
+        this.kamikazeTargetRotation = Math.atan2(dx, dy) + Math.PI;
+
+        // Smoothly interpolate rotation (slower turn rate)
+        const turnRate = 0.04; // Lower = slower turning (was instant before)
+        let rotationDiff = this.kamikazeTargetRotation - this.kamikazeCurrentRotation;
+
+        // Normalize angle difference to -PI to PI range
+        while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+        while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+
+        // Apply smooth turning
+        this.kamikazeCurrentRotation += rotationDiff * turnRate * normalizedDelta;
+
+        // Apply rotation to sprite
+        this.sprite.rotation = this.kamikazeCurrentRotation;
       }
     }
 
