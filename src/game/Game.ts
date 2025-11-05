@@ -1386,6 +1386,9 @@ export class Game {
     this.audio.stopBackgroundMusic();
     this.audio.stopBossMusic();
 
+    // Play death jingle immediately (like Super Mario)
+    this.audio.playGameOver();
+
     // Store player position before hiding
     const playerX = this.player.sprite.x;
     const playerY = this.player.sprite.y;
@@ -1409,9 +1412,6 @@ export class Game {
 
     // NOW set game over state
     this.gameState = 'gameover';
-
-    // Play game over sound after explosion
-    this.audio.playGameOver();
 
     // Track game over with analytics
     const stats = this.analytics.getCurrentStats();
