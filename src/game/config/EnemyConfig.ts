@@ -61,7 +61,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
   tank: {
     speed: 0.8,
     speedVariation: 0.1,
-    health: 5,
+    health: 3,
     points: 30,
     color: 0x8b008b,
     secondaryColor: 0x696969,

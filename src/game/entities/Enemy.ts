@@ -173,18 +173,32 @@ export class Enemy {
     const graphics = new Graphics();
     const config = getEnemyConfig('tank');
 
-    // Larger, armored shape
-    graphics.rect(-config.size.width / 2, -config.size.height / 2, config.size.width, config.size.height);
+    // Main hull - hexagonal armored body
+    graphics.moveTo(0, -20);  // Top point
+    graphics.lineTo(25, -10);  // Top right
+    graphics.lineTo(25, 10);   // Bottom right
+    graphics.lineTo(0, 20);    // Bottom point
+    graphics.lineTo(-25, 10);  // Bottom left
+    graphics.lineTo(-25, -10); // Top left
+    graphics.lineTo(0, -20);   // Close
     graphics.fill(config.color);
 
-    // Armor plates
-    graphics.rect(-25, -15, 20, 10);
+    // Armored wings (left and right)
+    graphics.rect(-30, -8, 10, 16);  // Left wing
     graphics.fill(config.secondaryColor || 0x696969);
 
-    graphics.rect(5, -15, 20, 10);
+    graphics.rect(20, -8, 10, 16);   // Right wing
     graphics.fill(config.secondaryColor || 0x696969);
 
-    graphics.rect(-10, 5, 20, 10);
+    // Cockpit/bridge area
+    graphics.circle(0, -5, 8);
+    graphics.fill(0x4a0e4e);  // Darker purple for cockpit
+
+    // Armor plating details
+    graphics.rect(-15, -3, 10, 6);
+    graphics.fill(config.secondaryColor || 0x696969);
+
+    graphics.rect(5, -3, 10, 6);
     graphics.fill(config.secondaryColor || 0x696969);
 
     this.sprite.addChild(graphics);
