@@ -452,8 +452,8 @@ export class AudioManager {
 
       // Envelope: quick attack, sustain, then fade
       gainNode.gain.setValueAtTime(0, now + note.start);
-      gainNode.gain.linearRampToValueAtTime(this.masterVolume * 0.3, now + note.start + 0.02);
-      gainNode.gain.setValueAtTime(this.masterVolume * 0.3, now + note.start + note.duration - 0.05);
+      gainNode.gain.linearRampToValueAtTime(this.masterVolume * 0.15, now + note.start + 0.02);
+      gainNode.gain.setValueAtTime(this.masterVolume * 0.15, now + note.start + note.duration - 0.05);
       gainNode.gain.linearRampToValueAtTime(0.01, now + note.start + note.duration);
 
       oscillator.start(now + note.start);
