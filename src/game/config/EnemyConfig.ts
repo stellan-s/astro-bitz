@@ -151,7 +151,25 @@ export const ENEMY_CONFIG: EnemyConfig = {
     spawnWeight: 0.05, // 5% chance - rare but dangerous
     movePattern: 'straight', // Direct approach
     heatEmission: 0.9, // High heat - aggressive engines
-    // No shootInterval or shootPattern - kamikaze crashes into player 
+    // No shootInterval or shootPattern - kamikaze crashes into player
+  },
+  phantom: {
+    speed: 1.0,
+    speedVariation: 0.3,
+    health: 3,
+    points: 60, // Very high points for very rare enemy
+    color: 0x9370db, // Medium purple (base form)
+    secondaryColor: 0x7b68ee, // Medium slate blue (shimmer)
+    tertiaryColor: 0xba55d3, // Medium orchid (glow)
+    size: {
+      width: 42,
+      height: 38,
+    },
+    spawnWeight: 0.03, // 3% chance - very rare!
+    movePattern: 'sine', // Smooth ghostly movement
+    heatEmission: 0.2, // Very low heat - phase-shifted, hard to lock on
+    shootInterval: 2500, // Shoots every 2.5 seconds
+    shootPattern: 'triple', // Fires spread pattern
   },
   boss: {
     speed: 1.5, // Increased from 1.0 - faster movement
@@ -254,6 +272,10 @@ export function selectRandomEnemyType(wave: number = 1): EnemyType {
     }
     if (type === 'tank') {
       weight *= (1 + waveMultiplier * 0.3);
+    }
+    // Rare enemies become more common in later waves
+    if (type === 'phantom' || type === 'stealth') {
+      weight *= (1 + waveMultiplier * 0.8); // Boost rare enemies significantly
     }
     // Basic enemies become less common
     if (type === 'basic') {
