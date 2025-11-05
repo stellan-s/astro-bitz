@@ -587,18 +587,20 @@ export class Game {
   private spawnEnemyBullets(x: number, y: number, pattern: string, playerX?: number, playerY?: number): void {
     switch (pattern) {
       case 'single':
-        // Single bullet aimed at player with slight randomness
-        const randomOffset = (Math.random() - 0.5) * 0.15; // ±0.075 radians (~4 degrees)
+        // Single bullet with more randomness
+        const randomOffset = (Math.random() - 0.5) * 0.4; // ±0.2 radians (~11 degrees) - increased from 0.15
         const singleBullet = new EnemyBullet(x, y, randomOffset);
         this.enemyBullets.push(singleBullet);
         this.gameContainer.addChild(singleBullet.sprite);
         break;
 
       case 'triple':
-        // Three bullets in a spread with slight randomness
+        // Three bullets in a more random spread
         for (let i = -1; i <= 1; i++) {
-          const baseAngle = i * 0.3; // ±0.3 radians spread
-          const randomness = (Math.random() - 0.5) * 0.1; // ±0.05 radians (~3 degrees)
+          // Randomize the base spread more
+          const baseSpread = 0.3 + (Math.random() - 0.5) * 0.3; // 0.15 to 0.45 radians base
+          const baseAngle = i * baseSpread;
+          const randomness = (Math.random() - 0.5) * 0.25; // ±0.125 radians (~7 degrees) - increased from 0.1
           const bullet = new EnemyBullet(x, y, baseAngle + randomness);
           this.enemyBullets.push(bullet);
           this.gameContainer.addChild(bullet.sprite);
@@ -606,10 +608,12 @@ export class Game {
         break;
 
       case 'spread':
-        // Five bullets in a wide spread with slight randomness
+        // Five bullets in a much more chaotic spread
         for (let i = -2; i <= 2; i++) {
-          const baseAngle = i * 0.4; // ±0.8 radians spread
-          const randomness = (Math.random() - 0.5) * 0.1; // ±0.05 radians (~3 degrees)
+          // Randomize the base spread significantly
+          const baseSpread = 0.4 + (Math.random() - 0.5) * 0.4; // 0.2 to 0.6 radians base
+          const baseAngle = i * baseSpread;
+          const randomness = (Math.random() - 0.5) * 0.3; // ±0.15 radians (~9 degrees) - increased from 0.1
           const bullet = new EnemyBullet(x, y, baseAngle + randomness);
           this.enemyBullets.push(bullet);
           this.gameContainer.addChild(bullet.sprite);
@@ -617,12 +621,12 @@ export class Game {
         break;
 
       case 'aimed':
-        // Precisely aimed at player position with tiny randomness
+        // Aimed at player but with more inaccuracy
         if (playerX !== undefined && playerY !== undefined) {
           const dx = playerX - x;
           const dy = playerY - y;
           const angle = Math.atan2(dx, dy);
-          const randomness = (Math.random() - 0.5) * 0.12; // ±0.06 radians (~3.5 degrees)
+          const randomness = (Math.random() - 0.5) * 0.3; // ±0.15 radians (~9 degrees) - increased from 0.12
           const bullet = new EnemyBullet(x, y, angle + randomness);
           this.enemyBullets.push(bullet);
           this.gameContainer.addChild(bullet.sprite);
@@ -832,6 +836,39 @@ export class Game {
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
       enemy.update(deltaTime, currentTime, this.player.sprite.x, this.player.sprite.y);
+
+      // Kamikaze explosion proximity check
+      if (enemy.type === 'kamikaze') {
+        const dx = enemy.sprite.x - this.player.sprite.x;
+        const dy = enemy.sprite.y - this.player.sprite.y;
+        const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
+
+        // Explode when close to player (60 pixel radius)
+        if (distanceToPlayer < 60) {
+          // Create massive explosion
+          const config = getEnemyConfig(enemy.type);
+          this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, 30);
+          this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, 0xffff00, 20);
+
+          // Remove kamikaze
+          this.gameContainer.removeChild(enemy.sprite);
+          this.enemies.splice(i, 1);
+          enemy.destroy();
+
+          // Play explosion sound
+          this.audio.playHit();
+
+          // Kill player if no shield
+          if (this.shieldCount > 0) {
+            // Shield absorbs kamikaze explosion
+            this.handleShieldBreak(); // Remove ALL shields
+          } else {
+            this.gameOver();
+            return;
+          }
+          continue;
+        }
+      }
 
       // Check if enemy reached bottom
       if (enemy.sprite.y > this.app.screen.height) {

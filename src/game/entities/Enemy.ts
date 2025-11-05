@@ -136,15 +136,24 @@ export class Enemy {
     const graphics = new Graphics();
     const config = getEnemyConfig('basic');
 
-    // Main body
-    graphics.rect(-config.size.width / 2, -config.size.height / 2, config.size.width, config.size.height);
+    // Main hull - simplified pentagon spaceship shape
+    graphics.moveTo(0, -15);  // Top point
+    graphics.lineTo(15, -5);   // Top right
+    graphics.lineTo(15, 10);   // Bottom right
+    graphics.lineTo(-15, 10);  // Bottom left
+    graphics.lineTo(-15, -5);  // Top left
+    graphics.lineTo(0, -15);   // Close
     graphics.fill(config.color);
 
-    // Eyes/details
-    graphics.circle(-8, -5, 3);
+    // Side wings (smaller than tank)
+    graphics.rect(-18, -3, 8, 10);  // Left wing
     graphics.fill(config.secondaryColor || 0x000000);
 
-    graphics.circle(8, -5, 3);
+    graphics.rect(10, -3, 8, 10);   // Right wing
+    graphics.fill(config.secondaryColor || 0x000000);
+
+    // Cockpit window
+    graphics.circle(0, -2, 5);
     graphics.fill(config.secondaryColor || 0x000000);
 
     this.sprite.addChild(graphics);
@@ -445,33 +454,50 @@ export class Enemy {
         break;
 
       case 'bossTank':
-        // Tank Boss - Heavy fortress
-        graphics.rect(-w, -h * 0.8, w * 2, h * 1.6);
+        // Tank Boss - Heavy armored battleship (scaled up tank design)
+        // Main hull - large hexagonal armored body
+        graphics.moveTo(0, -h * 0.8);      // Top point
+        graphics.lineTo(w * 0.7, -h * 0.4);  // Top right
+        graphics.lineTo(w * 0.7, h * 0.4);   // Bottom right
+        graphics.lineTo(0, h * 0.8);         // Bottom point
+        graphics.lineTo(-w * 0.7, h * 0.4);  // Bottom left
+        graphics.lineTo(-w * 0.7, -h * 0.4); // Top left
+        graphics.lineTo(0, -h * 0.8);        // Close
         graphics.fill(config.color);
 
-        // Heavy armor layers
-        graphics.rect(-w * 0.9, -h * 0.6, w * 1.8, h * 0.3);
+        // Large armored wings
+        graphics.rect(-w * 0.85, -h * 0.3, w * 0.25, h * 0.6);  // Left wing
         graphics.fill(config.secondaryColor || 0x483d8b);
-        graphics.rect(-w * 0.9, -h * 0.1, w * 1.8, h * 0.3);
-        graphics.fill(config.secondaryColor || 0x483d8b);
-        graphics.rect(-w * 0.9, h * 0.4, w * 1.8, h * 0.3);
+        graphics.rect(w * 0.6, -h * 0.3, w * 0.25, h * 0.6);    // Right wing
         graphics.fill(config.secondaryColor || 0x483d8b);
 
-        // Gun turrets
-        graphics.circle(-w * 0.6, -h * 0.3, 12);
+        // Bridge/command center
+        graphics.circle(0, -h * 0.2, 18);
+        graphics.fill(0x2a0845);  // Very dark purple for bridge
+
+        // Heavy armor plating - multiple sections
+        graphics.rect(-w * 0.5, -h * 0.15, w * 0.3, h * 0.25);  // Left armor
+        graphics.fill(config.secondaryColor || 0x483d8b);
+        graphics.rect(w * 0.2, -h * 0.15, w * 0.3, h * 0.25);   // Right armor
+        graphics.fill(config.secondaryColor || 0x483d8b);
+        graphics.rect(-w * 0.2, h * 0.2, w * 0.4, h * 0.2);     // Bottom armor
+        graphics.fill(config.secondaryColor || 0x483d8b);
+
+        // Gun turrets (gray weapon mounts)
+        graphics.circle(-w * 0.5, -h * 0.5, 10);
         graphics.fill(config.tertiaryColor || 0x696969);
-        graphics.circle(w * 0.6, -h * 0.3, 12);
+        graphics.circle(w * 0.5, -h * 0.5, 10);
         graphics.fill(config.tertiaryColor || 0x696969);
-        graphics.circle(-w * 0.6, h * 0.3, 12);
+        graphics.circle(-w * 0.4, h * 0.3, 10);
         graphics.fill(config.tertiaryColor || 0x696969);
-        graphics.circle(w * 0.6, h * 0.3, 12);
-        graphics.fill(config.tertiaryColor || 0x696969);
-        graphics.circle(0, 0, 15);
+        graphics.circle(w * 0.4, h * 0.3, 10);
         graphics.fill(config.tertiaryColor || 0x696969);
 
-        // Main cannon barrel
-        graphics.rect(-6, -h - 15, 12, 20);
-        graphics.fill(0x808080);
+        // Additional armor detail stripes
+        graphics.rect(-w * 0.6, -h * 0.05, w * 0.15, h * 0.1);
+        graphics.fill(config.tertiaryColor || 0x696969);
+        graphics.rect(w * 0.45, -h * 0.05, w * 0.15, h * 0.1);
+        graphics.fill(config.tertiaryColor || 0x696969);
         break;
 
       case 'bossSwarm':
@@ -540,23 +566,25 @@ export class Enemy {
       const scale = 1 + Math.sin(this.movePattern * pulseSpeed) * pulseAmount;
       this.sprite.scale.set(scale, scale);
 
-      // Add slight shake/vibration
-      this.sprite.rotation = Math.sin(this.movePattern * 8) * 0.1;
-
-      // Home in on player position
+      // Home in on player position with imperfect aim
       const dx = playerX - this.sprite.x;
       const dy = playerY - this.sprite.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance > 0) {
-        // Move toward player with aggressive speed
-        const moveX = (dx / distance) * this.speed * normalizedDelta;
-        const moveY = (dy / distance) * this.speed * normalizedDelta;
+        // Add random drift to make aim worse (±30% targeting error)
+        const aimError = 0.3;
+        const randomDriftX = (Math.random() - 0.5) * this.speed * aimError * normalizedDelta;
+        const randomDriftY = (Math.random() - 0.5) * this.speed * aimError * normalizedDelta;
+
+        // Move toward player with aggressive speed but imperfect aim
+        const moveX = (dx / distance) * this.speed * normalizedDelta + randomDriftX;
+        const moveY = (dy / distance) * this.speed * normalizedDelta + randomDriftY;
         this.sprite.x += moveX;
         this.sprite.y += moveY;
 
-        // Point toward player
-        this.sprite.rotation = Math.atan2(dx, -dy);
+        // Point toward player (fixed orientation - arrow points down toward player)
+        this.sprite.rotation = Math.atan2(dy, dx) + Math.PI / 2;
       }
     }
 
