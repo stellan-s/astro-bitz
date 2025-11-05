@@ -423,21 +423,21 @@ export class AudioManager {
 
   // Game over sound - descending tone
   public playGameOver(): void {
-    // Death jingle inspired by Super Mario - a short melodic sequence
+    // Death jingle inspired by Super Mario - a short melodic sequence (raised one octave)
     const now = this.audioContext.currentTime;
 
-    // Notes for the death jingle (in Hz): B, F#, D#, A, C#, E, C, E, C
-    // This creates a descending melodic pattern
+    // Notes for the death jingle (in Hz): B5, F#5, D#5, A4, C#5, E4, C4, E4, C4
+    // Raised one octave by multiplying frequencies by 2
     const notes = [
-      { freq: 493.88, start: 0.00, duration: 0.15 },    // B4
-      { freq: 369.99, start: 0.15, duration: 0.15 },    // F#4
-      { freq: 311.13, start: 0.30, duration: 0.15 },    // D#4
-      { freq: 220.00, start: 0.45, duration: 0.15 },    // A3
-      { freq: 277.18, start: 0.60, duration: 0.15 },    // C#4
-      { freq: 164.81, start: 0.75, duration: 0.20 },    // E3
-      { freq: 130.81, start: 0.95, duration: 0.20 },    // C3
-      { freq: 164.81, start: 1.15, duration: 0.20 },    // E3
-      { freq: 130.81, start: 1.35, duration: 0.40 },    // C3 (held longer)
+      { freq: 987.77, start: 0.00, duration: 0.15 },    // B5
+      { freq: 739.99, start: 0.15, duration: 0.15 },    // F#5
+      { freq: 622.25, start: 0.30, duration: 0.15 },    // D#5
+      { freq: 440.00, start: 0.45, duration: 0.15 },    // A4
+      { freq: 554.37, start: 0.60, duration: 0.15 },    // C#5
+      { freq: 329.63, start: 0.75, duration: 0.20 },    // E4
+      { freq: 261.63, start: 0.95, duration: 0.20 },    // C4
+      { freq: 329.63, start: 1.15, duration: 0.20 },    // E4
+      { freq: 261.63, start: 1.35, duration: 0.40 },    // C4 (held longer)
     ];
 
     notes.forEach(note => {
@@ -450,10 +450,10 @@ export class AudioManager {
       oscillator.type = 'square'; // Square wave for retro sound
       oscillator.frequency.setValueAtTime(note.freq, now + note.start);
 
-      // Envelope: quick attack, sustain, then fade
+      // Envelope: quick attack, sustain, then fade (reduced volume to 10%)
       gainNode.gain.setValueAtTime(0, now + note.start);
-      gainNode.gain.linearRampToValueAtTime(this.masterVolume * 0.15, now + note.start + 0.02);
-      gainNode.gain.setValueAtTime(this.masterVolume * 0.15, now + note.start + note.duration - 0.05);
+      gainNode.gain.linearRampToValueAtTime(this.masterVolume * 0.10, now + note.start + 0.02);
+      gainNode.gain.setValueAtTime(this.masterVolume * 0.10, now + note.start + note.duration - 0.05);
       gainNode.gain.linearRampToValueAtTime(0.01, now + note.start + note.duration);
 
       oscillator.start(now + note.start);
