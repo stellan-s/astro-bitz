@@ -423,21 +423,42 @@ export class AudioManager {
 
   // Game over sound - descending tone
   public playGameOver(): void {
-    const oscillator = this.audioContext.createOscillator();
-    const gainNode = this.audioContext.createGain();
+    // Death jingle inspired by Super Mario - a short melodic sequence
+    const now = this.audioContext.currentTime;
 
-    oscillator.connect(gainNode);
-    gainNode.connect(this.audioContext.destination);
+    // Notes for the death jingle (in Hz): B, F#, D#, A, C#, E, C, E, C
+    // This creates a descending melodic pattern
+    const notes = [
+      { freq: 493.88, start: 0.00, duration: 0.15 },    // B4
+      { freq: 369.99, start: 0.15, duration: 0.15 },    // F#4
+      { freq: 311.13, start: 0.30, duration: 0.15 },    // D#4
+      { freq: 220.00, start: 0.45, duration: 0.15 },    // A3
+      { freq: 277.18, start: 0.60, duration: 0.15 },    // C#4
+      { freq: 164.81, start: 0.75, duration: 0.20 },    // E3
+      { freq: 130.81, start: 0.95, duration: 0.20 },    // C3
+      { freq: 164.81, start: 1.15, duration: 0.20 },    // E3
+      { freq: 130.81, start: 1.35, duration: 0.40 },    // C3 (held longer)
+    ];
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(400, this.audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.5);
+    notes.forEach(note => {
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
 
-    gainNode.gain.setValueAtTime(this.masterVolume * 0.5, this.audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
 
-    oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.5);
+      oscillator.type = 'square'; // Square wave for retro sound
+      oscillator.frequency.setValueAtTime(note.freq, now + note.start);
+
+      // Envelope: quick attack, sustain, then fade
+      gainNode.gain.setValueAtTime(0, now + note.start);
+      gainNode.gain.linearRampToValueAtTime(this.masterVolume * 0.3, now + note.start + 0.02);
+      gainNode.gain.setValueAtTime(this.masterVolume * 0.3, now + note.start + note.duration - 0.05);
+      gainNode.gain.linearRampToValueAtTime(0.01, now + note.start + note.duration);
+
+      oscillator.start(now + note.start);
+      oscillator.stop(now + note.start + note.duration);
+    });
   }
 
   // Shield break sound - sharp crack with descending tone
