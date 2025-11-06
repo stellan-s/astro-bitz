@@ -1,3 +1,5 @@
+import { filterProfanity } from '../utils/profanityFilter';
+
 export interface LeaderboardEntry {
   id?: string;
   player_name: string;
@@ -28,6 +30,9 @@ export class LeaderboardManager {
    */
   public async submitScore(entry: LeaderboardEntry): Promise<boolean> {
     try {
+      // Filter profanity from player name
+      const filteredPlayerName = filterProfanity(entry.player_name);
+
       const response = await fetch(
         `${this.config.supabaseUrl}/rest/v1/${this.tableName}`,
         {
@@ -39,7 +44,7 @@ export class LeaderboardManager {
             'Prefer': 'return=minimal'
           },
           body: JSON.stringify({
-            player_name: entry.player_name,
+            player_name: filteredPlayerName,
             score: entry.score,
             wave: entry.wave,
             rank: entry.rank,
@@ -76,7 +81,7 @@ export class LeaderboardManager {
       }
 
       const data = await response.json();
-      return data;
+      return this.filterLeaderboardEntries(data);
     } catch (error) {
       console.error('Failed to fetch leaderboard:', error);
       return [];
@@ -107,7 +112,7 @@ export class LeaderboardManager {
       }
 
       const data = await response.json();
-      return data;
+      return this.filterLeaderboardEntries(data);
     } catch (error) {
       console.error('Failed to fetch today\'s leaderboard:', error);
       return [];
@@ -139,7 +144,7 @@ export class LeaderboardManager {
       }
 
       const data = await response.json();
-      return data;
+      return this.filterLeaderboardEntries(data);
     } catch (error) {
       console.error('Failed to fetch week\'s leaderboard:', error);
       return [];
@@ -195,11 +200,21 @@ export class LeaderboardManager {
       }
 
       const data = await response.json();
-      return data;
+      return this.filterLeaderboardEntries(data);
     } catch (error) {
       console.error('Failed to fetch personal bests:', error);
       return [];
     }
+  }
+
+  /**
+   * Filter profanity from leaderboard entries
+   */
+  private filterLeaderboardEntries(entries: LeaderboardEntry[]): LeaderboardEntry[] {
+    return entries.map(entry => ({
+      ...entry,
+      player_name: filterProfanity(entry.player_name)
+    }));
   }
 
   /**
