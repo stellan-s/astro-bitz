@@ -290,9 +290,9 @@ export class Game {
           The stars are calling
         </p>
         <div style="font-size: 18px; color: #ffffff; margin-bottom: 40px; line-height: 1.8;">
-          <p style="margin-bottom: 15px;">⬅️ ➡️ or A/D - Move</p>
+          <p style="margin-bottom: 15px;">🖱️ Drag or Touch to Move</p>
           <p style="margin-bottom: 15px;">X - Launch Missile</p>
-          <p style="margin-bottom: 15px; color: #00ffff;">📱 Touch: Drag to steer, swipe up for missiles</p>
+          <p style="margin-bottom: 15px; color: #00ffff;">Swipe up for missiles</p>
         </div>
         <div style="font-size: 28px; color: #ff4500; font-weight: bold;
                     animation: pulse 2s infinite; cursor: pointer;">
