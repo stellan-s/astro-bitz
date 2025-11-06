@@ -106,8 +106,8 @@ export class Enemy {
       this.createExhaustFlames();
     }
 
-    // Apply rotation AFTER flames are added for basic enemy
-    if (type === 'basic') {
+    // Apply rotation AFTER flames are added for basic and phantom enemies
+    if (type === 'basic' || type === 'phantom') {
       this.sprite.rotation = Math.PI;
     }
   }
@@ -120,10 +120,10 @@ export class Enemy {
     // More particles for hotter enemies
     const flameCount = Math.max(2, Math.floor(heat * 5)); // 2-5 particles based on heat
 
-    // Check if this enemy type is rotated 180° (basic and kamikaze)
+    // Check if this enemy type is rotated 180° (basic, kamikaze, and phantom)
     // For these, the ship graphic points UP but sprite is rotated to point DOWN
     // So in local coordinates, flames should be at POSITIVE Y (bottom of upward-pointing graphic)
-    const isRotated = this.type === 'basic' || this.type === 'kamikaze';
+    const isRotated = this.type === 'basic' || this.type === 'kamikaze' || this.type === 'phantom';
 
     for (let i = 0; i < flameCount; i++) {
       const flame = new Graphics();
