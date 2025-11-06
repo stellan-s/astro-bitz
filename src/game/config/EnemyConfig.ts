@@ -284,6 +284,9 @@ export function selectRandomEnemyType(wave: number = 1): EnemyType {
   let totalWeight = 0;
 
   for (const [type, config] of Object.entries(ENEMY_CONFIG)) {
+    // Skip bosses (they have spawnWeight 0)
+    if (config.spawnWeight === 0) continue;
+
     let weight = config.spawnWeight;
 
     // Harder enemies become more common as waves progress
