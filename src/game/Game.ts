@@ -232,6 +232,9 @@ export class Game {
     this.missileText.y = 45;
     this.app.stage.addChild(this.missileText);
 
+    // Create pause button
+    this.createPauseButton();
+
     // Setup input
     this.setupInput();
 
@@ -2028,6 +2031,58 @@ export class Game {
       document.body.removeChild(this.pauseOverlay);
       this.pauseOverlay = null;
     }
+  }
+
+  private createPauseButton(): void {
+    const button = document.createElement('button');
+    button.innerHTML = '⏸';
+    button.style.position = 'fixed';
+    button.style.top = '10px';
+    button.style.right = '10px';
+    button.style.width = '50px';
+    button.style.height = '50px';
+    button.style.backgroundColor = 'rgba(0, 255, 255, 0.3)';
+    button.style.border = '2px solid #00ffff';
+    button.style.borderRadius = '8px';
+    button.style.color = '#00ffff';
+    button.style.fontSize = '24px';
+    button.style.cursor = 'pointer';
+    button.style.zIndex = '100';
+    button.style.fontFamily = 'Arial, sans-serif';
+    button.style.display = 'flex';
+    button.style.alignItems = 'center';
+    button.style.justifyContent = 'center';
+    button.style.padding = '0';
+    button.style.boxShadow = '0 0 10px rgba(0, 255, 255, 0.5)';
+    button.style.transition = 'all 0.2s';
+
+    // Hover effect
+    button.addEventListener('mouseenter', () => {
+      button.style.backgroundColor = 'rgba(0, 255, 255, 0.5)';
+      button.style.transform = 'scale(1.1)';
+    });
+
+    button.addEventListener('mouseleave', () => {
+      button.style.backgroundColor = 'rgba(0, 255, 255, 0.3)';
+      button.style.transform = 'scale(1)';
+    });
+
+    // Click handler
+    button.addEventListener('click', () => {
+      if (this.gameState === 'playing') {
+        this.togglePause();
+      }
+    });
+
+    // Touch handler for mobile
+    button.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (this.gameState === 'playing') {
+        this.togglePause();
+      }
+    });
+
+    document.body.appendChild(button);
   }
 
   public start(): void {
