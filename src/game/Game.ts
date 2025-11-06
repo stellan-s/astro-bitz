@@ -287,7 +287,7 @@ export class Game {
           ASTRO BLITZ Δ
         </h1>
         <p style="font-size: 24px; color: #ffaa00; margin-bottom: 40px;">
-          The stars are calling
+          Light speed chaos awaits
         </p>
         <div style="font-size: 18px; color: #ffffff; margin-bottom: 40px; line-height: 1.8;">
           <p style="margin-bottom: 15px;">🖱️ Drag or Touch to Move</p>
