@@ -233,10 +233,8 @@ export class Game {
     // Setup input
     this.setupInput();
 
-    // Enable auto-fire for mobile devices
-    if (this.isMobileDevice()) {
-      this.autoFireEnabled = true;
-    }
+    // Enable auto-fire for all devices
+    this.autoFireEnabled = true;
 
     // Show start screen instead of starting immediately
     this.showStartScreen();
