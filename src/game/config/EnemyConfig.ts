@@ -148,7 +148,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
       width: 30,
       height: 30,
     },
-    spawnWeight: 0.15, // 15% chance - increased from 12%
+    spawnWeight: 0.05, // 5% chance - rare and dangerous
     movePattern: 'straight', // Direct approach
     heatEmission: 0.9, // High heat - aggressive engines
     // No shootInterval or shootPattern - kamikaze crashes into player
@@ -165,7 +165,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
       width: 42,
       height: 38,
     },
-    spawnWeight: 0.12, // 12% chance - increased from 8%
+    spawnWeight: 0.04, // 4% chance - very rare
     movePattern: 'sine', // Smooth ghostly movement
     heatEmission: 0.2, // Very low heat - phase-shifted, hard to lock on
     shootInterval: 2500, // Shoots every 2.5 seconds
