@@ -82,6 +82,7 @@ export class Game {
   private hasUsedPause: boolean = false;
   private startScreenContainer: HTMLDivElement | null = null;
   private pauseOverlay: HTMLDivElement | null = null;
+  private pauseCounterText: HTMLDivElement | null = null;
 
   // Analytics
   private analytics: AnalyticsManager;
@@ -346,6 +347,9 @@ export class Game {
       this.isBossWave = false;
       this.bossSpawned = false;
       this.hasUsedPause = false; // Reset pause usage for new game
+      if (this.pauseCounterText) {
+        this.pauseCounterText.textContent = '1x'; // Reset pause counter text
+      }
 
       // Update UI
       this.scoreText.text = `Score: ${this.score}`;
@@ -1979,6 +1983,10 @@ export class Game {
     if (this.isPaused) {
       // Mark that pause has been used
       this.hasUsedPause = true;
+      // Update counter text to 0x
+      if (this.pauseCounterText) {
+        this.pauseCounterText.textContent = '0x';
+      }
       // Show pause overlay
       this.showPauseOverlay();
       // Pause background music
@@ -2103,6 +2111,23 @@ export class Game {
     });
 
     document.body.appendChild(button);
+
+    // Create pause counter text
+    const counterText = document.createElement('div');
+    counterText.textContent = '1x';
+    counterText.style.position = 'fixed';
+    counterText.style.top = '105px';
+    counterText.style.right = '65px';
+    counterText.style.color = '#00ffff';
+    counterText.style.fontSize = '18px';
+    counterText.style.fontWeight = 'bold';
+    counterText.style.fontFamily = 'Orbitron, Arial, sans-serif';
+    counterText.style.textShadow = '0 0 10px rgba(0, 255, 255, 0.8)';
+    counterText.style.zIndex = '100';
+    counterText.style.pointerEvents = 'none';
+
+    document.body.appendChild(counterText);
+    this.pauseCounterText = counterText;
   }
 
   public start(): void {
