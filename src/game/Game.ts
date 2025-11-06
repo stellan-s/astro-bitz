@@ -2016,12 +2016,23 @@ export class Game {
     const instructions = document.createElement('div');
     instructions.innerHTML = `
       <p style="color: #ffffff; font-size: 24px; margin: 10px;">Press ESC or P to Resume</p>
-      <p style="color: #00ffff; font-size: 20px; margin: 10px;">Or tap the ⏸ button</p>
+      <p style="color: #00ffff; font-size: 20px; margin: 10px;">Or tap anywhere to continue</p>
     `;
     instructions.style.textAlign = 'center';
 
     overlay.appendChild(title);
     overlay.appendChild(instructions);
+
+    // Make overlay clickable to resume
+    overlay.addEventListener('click', () => {
+      this.togglePause();
+    });
+
+    overlay.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      this.togglePause();
+    });
+
     document.body.appendChild(overlay);
 
     this.pauseOverlay = overlay;
