@@ -79,6 +79,7 @@ export class Game {
   // Game state
   private gameState: 'start' | 'playing' | 'dying' | 'gameover' = 'start';
   private isPaused: boolean = false;
+  private hasUsedPause: boolean = false;
   private startScreenContainer: HTMLDivElement | null = null;
   private pauseOverlay: HTMLDivElement | null = null;
 
@@ -344,6 +345,7 @@ export class Game {
       this.invincibilityTimer = 0;
       this.isBossWave = false;
       this.bossSpawned = false;
+      this.hasUsedPause = false; // Reset pause usage for new game
 
       // Update UI
       this.scoreText.text = `Score: ${this.score}`;
@@ -1967,9 +1969,16 @@ export class Game {
   }
 
   private togglePause(): void {
+    // Only allow pausing once per game
+    if (!this.isPaused && this.hasUsedPause) {
+      return;
+    }
+
     this.isPaused = !this.isPaused;
 
     if (this.isPaused) {
+      // Mark that pause has been used
+      this.hasUsedPause = true;
       // Show pause overlay
       this.showPauseOverlay();
       // Pause background music
@@ -2049,7 +2058,7 @@ export class Game {
     const button = document.createElement('button');
     button.innerHTML = '⏸';
     button.style.position = 'fixed';
-    button.style.top = '10px';
+    button.style.top = '100px';
     button.style.right = '10px';
     button.style.width = '50px';
     button.style.height = '50px';
