@@ -745,7 +745,14 @@ export class Game {
 
       // Spawn boss in the center of the screen
       const x = this.app.screen.width / 2;
-      const boss = new Enemy(x, -100, 'boss', this.difficultyMultiplier, this.app.screen.width);
+      const bossType = selectRandomBossType(this.currentWave);
+      const boss = new Enemy(x, -100, bossType, this.difficultyMultiplier, this.app.screen.width);
+
+      // Set up boss shooting callback
+      boss.onShoot = (bx: number, by: number, pattern: string, playerX?: number, playerY?: number) => {
+        this.spawnEnemyBullets(bx, by, pattern, playerX, playerY);
+      };
+
       this.enemies.push(boss);
       this.gameContainer.addChild(boss.sprite);
       this.bossSpawned = true;
@@ -791,8 +798,8 @@ export class Game {
     // Create enemy with current difficulty multiplier and screen width for boundaries
     const enemy = new Enemy(x, -50, type, this.difficultyMultiplier, this.app.screen.width);
 
-    // Set up shooting callback for stealth enemies
-    if (type === 'stealth') {
+    // Set up shooting callback for stealth and phantom enemies
+    if (type === 'stealth' || type === 'phantom') {
       enemy.onShoot = (bx: number, by: number, pattern: string, playerX?: number, playerY?: number) => {
         this.spawnEnemyBullets(bx, by, pattern, playerX, playerY);
       };
