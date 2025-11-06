@@ -2056,7 +2056,8 @@ export class Game {
 
   private createPauseButton(): void {
     const button = document.createElement('button');
-    button.innerHTML = '⏸';
+    // Lucide Pause icon SVG
+    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
     button.style.position = 'fixed';
     button.style.top = '100px';
     button.style.right = '10px';
@@ -2066,10 +2067,8 @@ export class Game {
     button.style.border = '2px solid #00ffff';
     button.style.borderRadius = '8px';
     button.style.color = '#00ffff';
-    button.style.fontSize = '24px';
     button.style.cursor = 'pointer';
     button.style.zIndex = '100';
-    button.style.fontFamily = 'Arial, sans-serif';
     button.style.display = 'flex';
     button.style.alignItems = 'center';
     button.style.justifyContent = 'center';
