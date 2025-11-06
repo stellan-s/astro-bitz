@@ -294,7 +294,7 @@ export function selectRandomEnemyType(wave: number = 1): EnemyType {
       weight *= (1 + waveMultiplier * 0.3);
     }
     // Rare enemies become more common in later waves
-    if (type === 'phantom' || type === 'stealth') {
+    if (type === 'phantom' || type === 'stealth' || type === 'kamikaze') {
       weight *= (1 + waveMultiplier * 0.8); // Boost rare enemies significantly
     }
     // Basic enemies become less common

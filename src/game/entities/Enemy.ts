@@ -212,10 +212,12 @@ export class Enemy {
     const halfSize = config.size.height / 2;
 
     // Smaller, triangular shape
-    graphics.moveTo(0, -halfSize);
-    graphics.lineTo(-halfSize, halfSize);
-    graphics.lineTo(halfSize, halfSize);
-    graphics.lineTo(0, -halfSize);
+    graphics.poly([
+      0, -halfSize,
+      -halfSize, halfSize,
+      halfSize, halfSize,
+      0, -halfSize
+    ]);
     graphics.fill(config.color);
 
     // Speed lines
