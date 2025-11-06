@@ -78,7 +78,9 @@ export class Game {
 
   // Game state
   private gameState: 'start' | 'playing' | 'dying' | 'gameover' = 'start';
+  private isPaused: boolean = false;
   private startScreenContainer: HTMLDivElement | null = null;
+  private pauseOverlay: HTMLDivElement | null = null;
 
   // Analytics
   private analytics: AnalyticsManager;
@@ -411,6 +413,12 @@ export class Game {
         musicStarted = true;
       }
 
+      // Toggle pause with ESC or P key
+      if ((e.key === 'Escape' || e.key === 'p' || e.key === 'P') && this.gameState === 'playing') {
+        this.togglePause();
+        return;
+      }
+
       // Toggle music with M key
       if (e.key === 'm' || e.key === 'M') {
         this.musicEnabled = !this.musicEnabled;
@@ -425,7 +433,7 @@ export class Game {
       }
 
       // Shoot on spacebar (with fire rate limiting)
-      if (e.key === ' ' && this.gameState === 'playing') {
+      if (e.key === ' ' && this.gameState === 'playing' && !this.isPaused) {
         const currentTime = Date.now();
         const currentFireRate = this.rapidFireActive ? 100 : this.fireRate;
         if (currentTime - this.lastShotTime >= currentFireRate) {
@@ -435,7 +443,7 @@ export class Game {
       }
 
       // Fire missile on X key
-      if ((e.key === 'x' || e.key === 'X') && this.gameState === 'playing') {
+      if ((e.key === 'x' || e.key === 'X') && this.gameState === 'playing' && !this.isPaused) {
         const currentTime = Date.now();
         if (currentTime - this.lastMissileTime >= this.missileFireRate) {
           this.fireMissile();
@@ -1955,12 +1963,82 @@ export class Game {
     return div.innerHTML;
   }
 
+  private togglePause(): void {
+    this.isPaused = !this.isPaused;
+
+    if (this.isPaused) {
+      // Show pause overlay
+      this.showPauseOverlay();
+      // Pause background music
+      this.audio.stopBackgroundMusic();
+      this.audio.stopBossMusic();
+    } else {
+      // Hide pause overlay
+      this.hidePauseOverlay();
+      // Resume background music if enabled
+      if (this.musicEnabled) {
+        if (this.isBossWave) {
+          this.audio.startBossMusic();
+        } else {
+          this.audio.startBackgroundMusic();
+        }
+      }
+    }
+  }
+
+  private showPauseOverlay(): void {
+    if (this.pauseOverlay) return; // Already showing
+
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    overlay.style.zIndex = '1000';
+    overlay.style.fontFamily = 'Arial, sans-serif';
+
+    const title = document.createElement('h1');
+    title.textContent = 'PAUSED';
+    title.style.color = '#00ffff';
+    title.style.fontSize = '64px';
+    title.style.marginBottom = '30px';
+    title.style.textShadow = '0 0 20px #00ffff';
+
+    const instructions = document.createElement('div');
+    instructions.innerHTML = `
+      <p style="color: #ffffff; font-size: 24px; margin: 10px;">Press ESC or P to Resume</p>
+    `;
+    instructions.style.textAlign = 'center';
+
+    overlay.appendChild(title);
+    overlay.appendChild(instructions);
+    document.body.appendChild(overlay);
+
+    this.pauseOverlay = overlay;
+  }
+
+  private hidePauseOverlay(): void {
+    if (this.pauseOverlay && document.body.contains(this.pauseOverlay)) {
+      document.body.removeChild(this.pauseOverlay);
+      this.pauseOverlay = null;
+    }
+  }
+
   public start(): void {
     let lastTime = Date.now();
 
     this.app.ticker.add(() => {
       // Skip if not playing or dying
       if (this.gameState !== 'playing' && this.gameState !== 'dying') return;
+
+      // Skip if paused
+      if (this.isPaused) return;
 
       const currentTime = Date.now();
       const deltaTime = currentTime - lastTime;
@@ -2031,7 +2109,7 @@ export class Game {
       }
 
       // Auto-fire for mobile devices
-      if (this.autoFireEnabled && this.gameState === 'playing') {
+      if (this.autoFireEnabled && this.gameState === 'playing' && !this.isPaused) {
         const currentFireRate = this.rapidFireActive ? 100 : this.fireRate;
         if (currentTime - this.lastShotTime >= currentFireRate) {
           this.shoot();
