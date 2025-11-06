@@ -2016,6 +2016,7 @@ export class Game {
     const instructions = document.createElement('div');
     instructions.innerHTML = `
       <p style="color: #ffffff; font-size: 24px; margin: 10px;">Press ESC or P to Resume</p>
+      <p style="color: #00ffff; font-size: 20px; margin: 10px;">Or tap the ⏸ button</p>
     `;
     instructions.style.textAlign = 'center';
 
