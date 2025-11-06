@@ -689,15 +689,12 @@ export class Enemy {
     const normalizedDelta = deltaTime / 16.67; // 16.67ms = 60 FPS
 
     // Move enemy downward, but respect maxY for bosses
-    // Kamikaze enemies handle their own movement (homing toward player)
-    if (this.type !== 'kamikaze') {
-      if (this.maxY === undefined || this.sprite.y < this.maxY) {
-        this.sprite.y += this.speed * normalizedDelta;
-      } else {
-        // Boss has reached its max Y position, stop downward movement
-        // Constrain to maxY
-        this.sprite.y = Math.min(this.sprite.y, this.maxY);
-      }
+    if (this.maxY === undefined || this.sprite.y < this.maxY) {
+      this.sprite.y += this.speed * normalizedDelta;
+    } else {
+      // Boss has reached its max Y position, stop downward movement
+      // Constrain to maxY
+      this.sprite.y = Math.min(this.sprite.y, this.maxY);
     }
 
     // Update movement pattern counter
