@@ -389,17 +389,21 @@ export class Enemy {
 
     // Warning symbol inspired design - dangerous and fast
     // Triangle/arrow (drawn pointing up, will rotate 180° to point down)
-    graphics.moveTo(0, -h);     // Point at top
-    graphics.lineTo(-w, h);     // Bottom left
-    graphics.lineTo(w, h);      // Bottom right
-    graphics.lineTo(0, -h);     // Close
+    graphics.poly([
+      0, -h,     // Point at top
+      -w, h,     // Bottom left
+      w, h,      // Bottom right
+      0, -h      // Close
+    ]);
     graphics.fill(config.color);
 
     // Inner warning stripes
-    graphics.moveTo(0, -h * 0.6);
-    graphics.lineTo(-w * 0.6, h * 0.4);
-    graphics.lineTo(w * 0.6, h * 0.4);
-    graphics.lineTo(0, -h * 0.6);
+    graphics.poly([
+      0, -h * 0.6,
+      -w * 0.6, h * 0.4,
+      w * 0.6, h * 0.4,
+      0, -h * 0.6
+    ]);
     graphics.fill(config.secondaryColor);
 
     // Explosive core (pulsing effect will be added in update)
@@ -407,16 +411,20 @@ export class Enemy {
     graphics.fill(0xffff00);
 
     // Speed fins/wings - aggressive angle (at the rear/bottom when upright)
-    graphics.moveTo(-w, h);
-    graphics.lineTo(-w * 1.3, h * 0.5);
-    graphics.lineTo(-w * 0.8, h * 0.3);
-    graphics.lineTo(-w, h);
+    graphics.poly([
+      -w, h,
+      -w * 1.3, h * 0.5,
+      -w * 0.8, h * 0.3,
+      -w, h
+    ]);
     graphics.fill(config.color);
 
-    graphics.moveTo(w, h);
-    graphics.lineTo(w * 1.3, h * 0.5);
-    graphics.lineTo(w * 0.8, h * 0.3);
-    graphics.lineTo(w, h);
+    graphics.poly([
+      w, h,
+      w * 1.3, h * 0.5,
+      w * 0.8, h * 0.3,
+      w, h
+    ]);
     graphics.fill(config.color);
 
     this.sprite.addChild(graphics);
