@@ -713,8 +713,8 @@ export class Enemy {
     if (this.type === 'phantom') {
       // Slow ethereal pulse
       const pulseSpeed = 2;
-      const alphaVariation = 0.2;
-      const baseAlpha = 0.85;
+      const alphaVariation = 0.15;
+      const baseAlpha = 0.5;
       this.sprite.alpha = baseAlpha + Math.sin(this.movePattern * pulseSpeed) * alphaVariation;
     }
 
