@@ -251,6 +251,26 @@ export const ENEMY_CONFIG: EnemyConfig = {
     shootPattern: 'single', // Single shots but rapid fire
     maxY: 280,
   },
+  bossTriple: {
+    speed: 1.2, // Medium speed
+    speedVariation: 0.0,
+    health: 90, // Distributed across three ships (30 each)
+    points: 1300,
+    color: 0xff4500, // Orange-red
+    secondaryColor: 0xffa500, // Orange
+    tertiaryColor: 0xffd700, // Gold
+    size: {
+      width: 110, // Total formation width
+      height: 85,
+    },
+    spawnWeight: 0,
+    movePattern: 'sine', // Formation moves in wave pattern
+    heatEmission: 1.0,
+    isBoss: true,
+    shootInterval: 1200, // All three ships shoot
+    shootPattern: 'triple', // Each ship fires
+    maxY: 260,
+  },
 };
 
 // Helper function to select a random enemy type based on spawn weights
@@ -313,7 +333,7 @@ export function getEnemyConfig(type: EnemyType): EnemyTypeConfig {
 
 // Helper function to select a random boss type
 export function selectRandomBossType(wave: number = 1): EnemyType {
-  const bossTypes: EnemyType[] = ['boss', 'bossSniper', 'bossTank', 'bossSwarm'];
+  const bossTypes: EnemyType[] = ['boss', 'bossSniper', 'bossTank', 'bossSwarm', 'bossTriple'];
 
   // For first boss wave, always use standard boss
   if (wave <= 3) {

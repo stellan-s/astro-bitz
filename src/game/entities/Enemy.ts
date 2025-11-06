@@ -1,7 +1,7 @@
 import { Graphics, Container } from 'pixi.js';
 import { getEnemyConfig, type MovePattern } from '../config/EnemyConfig';
 
-export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'stealth' | 'kamikaze' | 'phantom' | 'boss' | 'bossSniper' | 'bossTank' | 'bossSwarm';
+export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'stealth' | 'kamikaze' | 'phantom' | 'boss' | 'bossSniper' | 'bossTank' | 'bossSwarm' | 'bossTriple';
 
 export class Enemy {
   public sprite: Container;
@@ -581,9 +581,55 @@ export class Enemy {
         graphics.circle(0, 0, h * 0.3);
         graphics.fill(0xffff00);
         break;
+
+      case 'bossTriple':
+        // Triple Boss - Three small ships in formation
+        // Ship size (each ship is smaller than the main boss)
+        const shipW = w * 0.25;
+        const shipH = h * 0.4;
+        const spacing = w * 0.7;
+
+        // Draw three ships in a V formation
+        // Left ship
+        this.drawSmallShip(graphics, -spacing, h * 0.3, shipW, shipH, config.color, config.secondaryColor);
+
+        // Center ship (lead ship, slightly forward)
+        this.drawSmallShip(graphics, 0, -h * 0.2, shipW * 1.2, shipH * 1.2, config.color, config.tertiaryColor);
+
+        // Right ship
+        this.drawSmallShip(graphics, spacing, h * 0.3, shipW, shipH, config.color, config.secondaryColor);
+
+        // Connection lines showing they're linked
+        graphics.moveTo(-spacing * 0.5, h * 0.1);
+        graphics.lineTo(-spacing * 0.3, -h * 0.1);
+        graphics.stroke({ width: 2, color: config.secondaryColor || 0xffa500, alpha: 0.5 });
+
+        graphics.moveTo(spacing * 0.5, h * 0.1);
+        graphics.lineTo(spacing * 0.3, -h * 0.1);
+        graphics.stroke({ width: 2, color: config.secondaryColor || 0xffa500, alpha: 0.5 });
+        break;
     }
 
     this.sprite.addChild(graphics);
+  }
+
+  private drawSmallShip(graphics: Graphics, x: number, y: number, w: number, h: number, mainColor: number, accentColor?: number): void {
+    // Small fighter ship design
+    graphics.moveTo(x, y - h);
+    graphics.lineTo(x + w * 0.5, y);
+    graphics.lineTo(x + w * 0.3, y + h);
+    graphics.lineTo(x - w * 0.3, y + h);
+    graphics.lineTo(x - w * 0.5, y);
+    graphics.lineTo(x, y - h);
+    graphics.fill(mainColor);
+
+    // Cockpit
+    graphics.circle(x, y - h * 0.3, w * 0.3);
+    graphics.fill(accentColor || 0xffa500);
+
+    // Engine glow
+    graphics.circle(x, y + h * 0.7, w * 0.2);
+    graphics.fill(0xffd700);
   }
 
   public update(deltaTime: number, currentTime?: number, playerX?: number, playerY?: number): void {
