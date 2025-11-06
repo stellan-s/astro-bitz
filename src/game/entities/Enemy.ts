@@ -31,13 +31,6 @@ export class Enemy {
   private hitRevealTime: number = 0; // Time when hit, reveals briefly
   private hitRevealDuration: number = 300; // 0.3 seconds reveal on hit
 
-  // Kamikaze-specific properties
-  private kamikazeTargetRotation: number = 0; // Target rotation for smooth turning
-  private kamikazeCurrentRotation: number = 0; // Current rotation
-  private kamikazeApproachSide: number = 0; // Which side to approach from (left=-1, right=1)
-  private kamikazeTargetX: number = 0; // Fixed target X position (doesn't update)
-  private kamikazeTargetY: number = 0; // Fixed target Y position (doesn't update)
-  private kamikazeHasLockedTarget: boolean = false; // Whether target has been locked
 
   constructor(x: number, y: number, type: EnemyType = 'basic', speedMultiplier: number = 1.0, screenWidth: number = 800) {
     this.sprite = new Container();
@@ -93,12 +86,8 @@ export class Enemy {
         break;
       case 'kamikaze':
         this.drawKamikaze();
-        // Randomly choose which side to approach from (left or right)
-        this.kamikazeApproachSide = Math.random() > 0.5 ? 1 : -1;
         // Initialize rotation to point downward (Math.PI = 180 degrees)
         this.sprite.rotation = Math.PI;
-        this.kamikazeCurrentRotation = Math.PI;
-        this.kamikazeTargetRotation = Math.PI;
         break;
       case 'boss':
       case 'bossSniper':
@@ -654,61 +643,13 @@ export class Enemy {
     // Update movement pattern counter
     this.movePattern += 0.1 * normalizedDelta;
 
-    // Kamikaze specific behavior - homing toward player with pulsing/shaking
-    if (this.type === 'kamikaze' && playerX !== undefined && playerY !== undefined) {
+    // Kamikaze specific behavior - just moves straight down like basic
+    if (this.type === 'kamikaze') {
       // Pulse the sprite scale to create warning effect
       const pulseSpeed = 5;
       const pulseAmount = 0.15;
       const scale = 1 + Math.sin(this.movePattern * pulseSpeed) * pulseAmount;
       this.sprite.scale.set(scale, scale);
-
-      // Lock onto target position only once (when close enough to player)
-      if (!this.kamikazeHasLockedTarget && this.sprite.y > 50) {
-        // Calculate offset target position to approach from the side
-        const sideOffset = 150; // How far to the side to aim
-        this.kamikazeTargetX = playerX + (this.kamikazeApproachSide * sideOffset);
-        // Aim for a point past the player (below them on screen)
-        this.kamikazeTargetY = playerY + 200; // Fly past player by 200 pixels
-        this.kamikazeHasLockedTarget = true;
-      }
-
-      // Continue toward FIXED target position (doesn't update with player movement)
-      if (this.kamikazeHasLockedTarget) {
-        const dx = this.kamikazeTargetX - this.sprite.x;
-        const dy = this.kamikazeTargetY - this.sprite.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance > 0) {
-          // Add random drift to make aim worse (±30% targeting error)
-          const aimError = 0.3;
-          const randomDriftX = (Math.random() - 0.5) * this.speed * aimError * normalizedDelta;
-          const randomDriftY = (Math.random() - 0.5) * this.speed * aimError * normalizedDelta;
-
-          // Move toward fixed target with aggressive speed but imperfect aim
-          const moveX = (dx / distance) * this.speed * normalizedDelta + randomDriftX;
-          const moveY = (dy / distance) * this.speed * normalizedDelta + randomDriftY;
-          this.sprite.x += moveX;
-          this.sprite.y += moveY;
-
-          // Calculate target rotation based on movement direction
-          // Add Math.PI since the sprite is drawn pointing up and rotated 180° initially
-          this.kamikazeTargetRotation = Math.atan2(dx, dy) + Math.PI;
-
-          // Smoothly interpolate rotation (slower turn rate)
-          const turnRate = 0.04; // Lower = slower turning
-          let rotationDiff = this.kamikazeTargetRotation - this.kamikazeCurrentRotation;
-
-          // Normalize angle difference to -PI to PI range
-          while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
-          while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
-
-          // Apply smooth turning
-          this.kamikazeCurrentRotation += rotationDiff * turnRate * normalizedDelta;
-
-          // Apply rotation to sprite
-          this.sprite.rotation = this.kamikazeCurrentRotation;
-        }
-      }
     }
 
     // Shooting logic for bosses and stealth enemies
