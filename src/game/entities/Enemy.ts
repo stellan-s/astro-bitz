@@ -600,15 +600,6 @@ export class Enemy {
 
         // Right ship
         this.drawSmallShip(graphics, spacing, h * 0.3, shipW, shipH, config.color, config.secondaryColor);
-
-        // Connection lines showing they're linked
-        graphics.moveTo(-spacing * 0.5, h * 0.1);
-        graphics.lineTo(-spacing * 0.3, -h * 0.1);
-        graphics.stroke({ width: 2, color: config.secondaryColor || 0xffa500, alpha: 0.5 });
-
-        graphics.moveTo(spacing * 0.5, h * 0.1);
-        graphics.lineTo(spacing * 0.3, -h * 0.1);
-        graphics.stroke({ width: 2, color: config.secondaryColor || 0xffa500, alpha: 0.5 });
         break;
     }
 
