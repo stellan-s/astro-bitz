@@ -2117,7 +2117,7 @@ export class Game {
     counterText.textContent = '1x';
     counterText.style.position = 'fixed';
     counterText.style.top = '105px';
-    counterText.style.right = '65px';
+    counterText.style.right = '70px';
     counterText.style.color = '#00ffff';
     counterText.style.fontSize = '18px';
     counterText.style.fontWeight = 'bold';
