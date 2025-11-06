@@ -89,6 +89,9 @@ export class Enemy {
         // Initialize rotation to point downward (Math.PI = 180 degrees)
         this.sprite.rotation = Math.PI;
         break;
+      case 'phantom':
+        this.drawPhantom();
+        break;
       case 'boss':
       case 'bossSniper':
       case 'bossTank':
@@ -419,6 +422,63 @@ export class Enemy {
     this.sprite.addChild(graphics);
   }
 
+  private drawPhantom(): void {
+    const graphics = new Graphics();
+    const config = getEnemyConfig('phantom');
+
+    const w = config.size.width / 2;
+    const h = config.size.height / 2;
+
+    // Ghostly ethereal ship with flowing, organic shape
+    // Main body - smooth crescent/wave shape
+    graphics.poly([
+      0, -h * 0.8,           // Top center point
+      -w * 0.6, -h * 0.3,    // Upper left curve
+      -w * 0.9, h * 0.2,     // Mid left
+      -w * 0.5, h * 0.8,     // Lower left
+      0, h * 0.5,            // Bottom center
+      w * 0.5, h * 0.8,      // Lower right
+      w * 0.9, h * 0.2,      // Mid right
+      w * 0.6, -h * 0.3,     // Upper right curve
+      0, -h * 0.8            // Close
+    ]);
+    graphics.fill(config.color);
+
+    // Inner shimmer layer - offset shape
+    graphics.poly([
+      0, -h * 0.5,
+      -w * 0.4, -h * 0.1,
+      -w * 0.6, h * 0.3,
+      0, h * 0.3,
+      w * 0.6, h * 0.3,
+      w * 0.4, -h * 0.1,
+      0, -h * 0.5
+    ]);
+    graphics.fill(config.secondaryColor);
+
+    // Glowing energy core
+    graphics.circle(0, 0, 6);
+    graphics.fill(config.tertiaryColor);
+
+    // Spectral trails/tendrils - ethereal wisps
+    for (let i = 0; i < 3; i++) {
+      const offset = (i - 1) * w * 0.4;
+      graphics.poly([
+        offset, h * 0.6,
+        offset - w * 0.15, h * 0.9,
+        offset, h * 0.8,
+        offset + w * 0.15, h * 0.9,
+        offset, h * 0.6
+      ]);
+      graphics.fill({ color: config.tertiaryColor, alpha: 0.4 });
+    }
+
+    // Add semi-transparency to whole sprite for ghostly effect
+    graphics.alpha = 0.85;
+
+    this.sprite.addChild(graphics);
+  }
+
   private drawBoss(): void {
     const graphics = new Graphics();
     const config = getEnemyConfig(this.type);
@@ -650,6 +710,15 @@ export class Enemy {
       const pulseAmount = 0.15;
       const scale = 1 + Math.sin(this.movePattern * pulseSpeed) * pulseAmount;
       this.sprite.scale.set(scale, scale);
+    }
+
+    // Phantom specific behavior - ghostly pulsing glow
+    if (this.type === 'phantom') {
+      // Slow ethereal pulse
+      const pulseSpeed = 2;
+      const alphaVariation = 0.2;
+      const baseAlpha = 0.85;
+      this.sprite.alpha = baseAlpha + Math.sin(this.movePattern * pulseSpeed) * alphaVariation;
     }
 
     // Shooting logic for bosses and stealth enemies
