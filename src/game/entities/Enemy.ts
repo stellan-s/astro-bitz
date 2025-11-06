@@ -614,13 +614,15 @@ export class Enemy {
   }
 
   private drawSmallShip(graphics: Graphics, x: number, y: number, w: number, h: number, mainColor: number, accentColor?: number): void {
-    // Small fighter ship design
-    graphics.moveTo(x, y - h);
-    graphics.lineTo(x + w * 0.5, y);
-    graphics.lineTo(x + w * 0.3, y + h);
-    graphics.lineTo(x - w * 0.3, y + h);
-    graphics.lineTo(x - w * 0.5, y);
-    graphics.lineTo(x, y - h);
+    // Small fighter ship design - hull
+    graphics.poly([
+      x, y - h,
+      x + w * 0.5, y,
+      x + w * 0.3, y + h,
+      x - w * 0.3, y + h,
+      x - w * 0.5, y,
+      x, y - h
+    ]);
     graphics.fill(mainColor);
 
     // Cockpit
