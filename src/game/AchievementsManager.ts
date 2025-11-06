@@ -11,7 +11,7 @@ export interface Achievement {
 
 export class AchievementsManager {
   private achievements: Map<string, Achievement> = new Map();
-  private storageKey: string = 'astro-ace-achievements';
+  private storageKey: string = 'astro-blitz-achievements';
 
   constructor() {
     this.initializeAchievements();
@@ -56,8 +56,8 @@ export class AchievementsManager {
       },
       {
         id: 'ace_pilot',
-        name: 'Astro Ace',
-        description: 'Reach the Astro Ace rank',
+        name: 'Astro Blitz',
+        description: 'Reach the Astro Blitz rank',
         icon: '⭐',
         unlocked: false,
       },
@@ -327,7 +327,7 @@ export class AchievementsManager {
   public trackRankReached(rank: string): Achievement[] {
     const newAchievements: Achievement[] = [];
 
-    if (rank === 'Astro Ace') {
+    if (rank === 'Astro Blitz') {
       const achievement = this.unlockAchievement('ace_pilot');
       if (achievement) newAchievements.push(achievement);
     }

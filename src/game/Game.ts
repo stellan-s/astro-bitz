@@ -284,7 +284,7 @@ export class Game {
                    -webkit-text-fill-color: transparent;
                    background-clip: text;
                    text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);">
-          ASTRO ACE
+          ASTRO BLITZ Δ
         </h1>
         <p style="font-size: 24px; color: #ffaa00; margin-bottom: 40px;">
           The stars are calling
@@ -1422,7 +1422,7 @@ export class Game {
       { name: 'Nebula Sovereign', threshold: 20000, color: '#ff1493' },
       { name: 'Galactic Champion', threshold: 24000, color: '#ff69b4' },
       { name: 'Celestial Master', threshold: 28000, color: '#ffb6c1' },
-      { name: 'Astro Ace', threshold: 35000, color: '#ffd700' },
+      { name: 'Astro Blitz', threshold: 35000, color: '#ffd700' },
     ];
 
     let currentRank = ranks[0];
@@ -1525,7 +1525,7 @@ export class Game {
     const titleColor = isNewHighScore ? '#ffd700' : '#ff0000';
     const glowColor = isNewHighScore ? 'rgba(255, 215, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
 
-    const progressToNext = rankInfo.rank === 'Astro Ace' ? 100 :
+    const progressToNext = rankInfo.rank === 'Astro Blitz' ? 100 :
       Math.min(100, Math.round((this.score / rankInfo.nextThreshold) * 100));
 
     container.innerHTML = `
@@ -1552,7 +1552,7 @@ export class Game {
                       text-shadow: 0 0 15px ${rankInfo.color}; margin-bottom: 15px;">
             ${rankInfo.rank}
           </div>
-          ${rankInfo.rank !== 'Astro Ace' ? `
+          ${rankInfo.rank !== 'Astro Blitz' ? `
             <div style="font-size: 14px; color: #888; margin-bottom: 8px;">
               Next: ${rankInfo.nextRank} (${rankInfo.nextThreshold} pts)
             </div>
