@@ -64,13 +64,18 @@ export class Particle {
 export class ParticleSystem {
   public particles: Particle[] = [];
   private container: Container;
+  private isMobile: boolean;
 
-  constructor(container: Container) {
+  constructor(container: Container, isMobile: boolean = false) {
     this.container = container;
+    this.isMobile = isMobile;
   }
 
   public createExplosion(x: number, y: number, color: number = 0xffa500, count: number = 15, slowMo: boolean = false): void {
-    for (let i = 0; i < count; i++) {
+    // Reduce particle count by 50% on mobile to save battery
+    const actualCount = this.isMobile ? Math.ceil(count * 0.5) : count;
+
+    for (let i = 0; i < actualCount; i++) {
       const particle = new Particle(x, y, color, slowMo);
       this.particles.push(particle);
       this.container.addChild(particle.sprite);

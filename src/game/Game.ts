@@ -128,7 +128,7 @@ export class Game {
     // Add parallax behind everything but after the static background
     this.gameContainer.addChildAt(this.parallaxBackground.getContainer(), 1);
 
-    this.particleSystem = new ParticleSystem(this.gameContainer);
+    this.particleSystem = new ParticleSystem(this.gameContainer, this.isMobileDevice());
 
     // Create player
     this.player = new Player(
@@ -2138,6 +2138,10 @@ export class Game {
 
   public start(): void {
     let lastTime = Date.now();
+    let lastFrameTime = Date.now();
+
+    // Target 30 FPS on mobile (33.33ms per frame) to save battery
+    const mobileFrameInterval = this.isMobileDevice() ? 33.33 : 0;
 
     this.app.ticker.add(() => {
       // Skip if not playing or dying
@@ -2147,6 +2151,13 @@ export class Game {
       if (this.isPaused) return;
 
       const currentTime = Date.now();
+
+      // Throttle frame rate on mobile devices
+      if (mobileFrameInterval > 0 && (currentTime - lastFrameTime) < mobileFrameInterval) {
+        return;
+      }
+      lastFrameTime = currentTime;
+
       const deltaTime = currentTime - lastTime;
       lastTime = currentTime;
 

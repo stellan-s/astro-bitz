@@ -13,27 +13,72 @@ export class AudioManager {
   private drumsGainNode: GainNode | null = null;
   private drumsEnabled: boolean = false;
 
+  // Audio node pooling for battery optimization
+  private gainPool: GainNode[] = [];
+  private poolSize: number = 20; // Reuse up to 20 nodes
+
   constructor() {
     this.audioContext = new AudioContext();
+    this.initializePool();
+  }
+
+  // Initialize pools of reusable audio nodes
+  private initializePool(): void {
+    for (let i = 0; i < this.poolSize; i++) {
+      this.gainPool.push(this.audioContext.createGain());
+    }
+  }
+
+  // Get oscillator and gain from pool or create new ones
+  private getAudioNodes(): { oscillator: OscillatorNode; gain: GainNode } {
+    const gain = this.gainPool.pop() || this.audioContext.createGain();
+    const oscillator = this.audioContext.createOscillator();
+
+    // Reset gain values
+    gain.gain.cancelScheduledValues(0);
+    gain.gain.value = 0;
+
+    return { oscillator, gain };
+  }
+
+  // Return gain node to pool after use
+  private returnGainToPool(gain: GainNode, delay: number): void {
+    setTimeout(() => {
+      // Disconnect and reset
+      try {
+        gain.disconnect();
+        gain.gain.cancelScheduledValues(0);
+        gain.gain.value = 0;
+
+        // Only return to pool if not at capacity
+        if (this.gainPool.length < this.poolSize) {
+          this.gainPool.push(gain);
+        }
+      } catch (e) {
+        // Ignore errors if already disconnected
+      }
+    }, delay * 1000);
   }
 
   // Shooting sound - pew pew laser
   public playShoot(): void {
-    const oscillator = this.audioContext.createOscillator();
-    const gainNode = this.audioContext.createGain();
+    const { oscillator, gain } = this.getAudioNodes();
 
-    oscillator.connect(gainNode);
-    gainNode.connect(this.audioContext.destination);
+    oscillator.connect(gain);
+    gain.connect(this.audioContext.destination);
 
     oscillator.type = 'square';
     oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(200, this.audioContext.currentTime + 0.1);
 
-    gainNode.gain.setValueAtTime(this.masterVolume * 0.3, this.audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+    gain.gain.setValueAtTime(this.masterVolume * 0.3, this.audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
 
     oscillator.start(this.audioContext.currentTime);
     oscillator.stop(this.audioContext.currentTime + 0.1);
+
+    // Return gain to pool after sound completes
+    this.returnGainToPool(gain, 0.15);
   }
 
   // Missile launch sound - powerful whoosh with ignition
@@ -41,8 +86,7 @@ export class AudioManager {
     const now = this.audioContext.currentTime;
 
     // Ignition sound - quick rising tone
-    const ignition = this.audioContext.createOscillator();
-    const ignitionGain = this.audioContext.createGain();
+    const { oscillator: ignition, gain: ignitionGain } = this.getAudioNodes();
 
     ignition.connect(ignitionGain);
     ignitionGain.connect(this.audioContext.destination);
@@ -56,10 +100,10 @@ export class AudioManager {
 
     ignition.start(now);
     ignition.stop(now + 0.15);
+    this.returnGainToPool(ignitionGain, 0.2);
 
     // Rocket whoosh - sustained mid-tone with modulation
-    const whoosh = this.audioContext.createOscillator();
-    const whooshGain = this.audioContext.createGain();
+    const { oscillator: whoosh, gain: whooshGain } = this.getAudioNodes();
     const whooshFilter = this.audioContext.createBiquadFilter();
 
     whoosh.connect(whooshFilter);
@@ -80,10 +124,10 @@ export class AudioManager {
 
     whoosh.start(now + 0.1);
     whoosh.stop(now + 0.5);
+    this.returnGainToPool(whooshGain, 0.6);
 
     // High-frequency sizzle for rocket exhaust
-    const sizzle = this.audioContext.createOscillator();
-    const sizzleGain = this.audioContext.createGain();
+    const { oscillator: sizzle, gain: sizzleGain } = this.getAudioNodes();
 
     sizzle.connect(sizzleGain);
     sizzleGain.connect(this.audioContext.destination);
@@ -97,6 +141,7 @@ export class AudioManager {
 
     sizzle.start(now + 0.05);
     sizzle.stop(now + 0.4);
+    this.returnGainToPool(sizzleGain, 0.5);
   }
 
   // Hit sound - explosion with enemy-specific variations
