@@ -34,15 +34,24 @@ async function init() {
     availableWidth = window.innerWidth - containerPadding;
   }
 
-  // On mobile, use full available dimensions
-  // On desktop, use fixed aspect ratio
+  // Calculate canvas dimensions
   let canvasWidth: number;
   let canvasHeight: number;
 
   if (isMobile) {
-    // Mobile: use available width and maximize height
-    canvasWidth = Math.floor(availableWidth - 4); // Small padding
-    canvasHeight = Math.floor(availableHeight - 4);
+    // Mobile: calculate dimensions to match available space aspect ratio
+    // This prevents stretching by matching the container's aspect ratio
+    const availableAspect = availableWidth / availableHeight;
+
+    // Portrait orientation (most mobile devices)
+    if (availableAspect < 1) {
+      canvasWidth = Math.floor(availableWidth);
+      canvasHeight = Math.floor(availableHeight);
+    } else {
+      // Landscape: maintain reasonable aspect ratio
+      canvasWidth = Math.floor(availableWidth);
+      canvasHeight = Math.floor(availableHeight);
+    }
   } else {
     // Desktop: use fixed dimensions with aspect ratio
     canvasWidth = 800;
