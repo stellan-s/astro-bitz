@@ -41,7 +41,7 @@ async function init() {
     width: canvasWidth,
     height: canvasHeight,
     backgroundColor: 0x1a1a2e,
-    antialias: true,
+    antialias: !isMobile, // Disable on mobile to save 30-50% GPU usage
   });
 
   if (gameContainer) {

@@ -2139,21 +2139,48 @@ export class Game {
   public start(): void {
     let lastTime = Date.now();
     let lastFrameTime = Date.now();
+    let animationFrameId: number | null = null;
 
     // Target 30 FPS on mobile (33.33ms per frame) to save battery
     const mobileFrameInterval = this.isMobileDevice() ? 33.33 : 0;
 
-    this.app.ticker.add(() => {
+    // Pause game when tab is inactive to save battery
+    const handleVisibilityChange = () => {
+      if (document.hidden && (this.gameState === 'playing' || this.gameState === 'dying')) {
+        // Tab became hidden - pause updates but don't show pause UI
+        if (animationFrameId !== null) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+      } else if (!document.hidden && (this.gameState === 'playing' || this.gameState === 'dying')) {
+        // Tab became visible - resume updates
+        lastTime = Date.now(); // Reset time to prevent huge deltaTime
+        lastFrameTime = Date.now();
+        if (animationFrameId === null) {
+          gameLoop();
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const gameLoop = () => {
       // Skip if not playing or dying
-      if (this.gameState !== 'playing' && this.gameState !== 'dying') return;
+      if (this.gameState !== 'playing' && this.gameState !== 'dying') {
+        animationFrameId = requestAnimationFrame(gameLoop);
+        return;
+      }
 
       // Skip if paused
-      if (this.isPaused) return;
+      if (this.isPaused) {
+        animationFrameId = requestAnimationFrame(gameLoop);
+        return;
+      }
 
       const currentTime = Date.now();
 
       // Throttle frame rate on mobile devices
       if (mobileFrameInterval > 0 && (currentTime - lastFrameTime) < mobileFrameInterval) {
+        animationFrameId = requestAnimationFrame(gameLoop);
         return;
       }
       lastFrameTime = currentTime;
@@ -2250,6 +2277,12 @@ export class Game {
 
       // Update music intensity based on enemy count
       this.audio.updateMusicIntensity(this.enemies.length);
-    });
+
+      // Continue the loop
+      animationFrameId = requestAnimationFrame(gameLoop);
+    };
+
+    // Start the game loop
+    gameLoop();
   }
 }
