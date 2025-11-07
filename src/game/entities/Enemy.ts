@@ -1,4 +1,4 @@
-import { Graphics, Container } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import { getEnemyConfig, type MovePattern } from '../config/EnemyConfig';
 
 export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'stealth' | 'kamikaze' | 'phantom' | 'boss' | 'bossSniper' | 'bossTank' | 'bossSwarm' | 'bossTriple';
@@ -714,7 +714,7 @@ export class Enemy {
       // Slow ethereal pulse
       const pulseSpeed = 2;
       const alphaVariation = 0.15;
-      const baseAlpha = 0.5;
+      const baseAlpha = 0.2;
       this.sprite.alpha = baseAlpha + Math.sin(this.movePattern * pulseSpeed) * alphaVariation;
     }
 
