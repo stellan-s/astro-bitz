@@ -16,10 +16,12 @@ async function init() {
 
   // Get actual game container dimensions after CSS layout
   const gameContainer = document.getElementById('game-container');
+  let availableWidth = window.innerWidth;
   let availableHeight = window.innerHeight;
 
   if (gameContainer) {
     const rect = gameContainer.getBoundingClientRect();
+    availableWidth = rect.width;
     availableHeight = rect.height;
   } else {
     // Fallback calculation if container not ready
@@ -29,13 +31,25 @@ async function init() {
     const containerPadding = isMobile ? 4 : 10; // 2px or 5px per side
     const totalOverhead = (adHeight + adPadding + adBorders) * 2 + containerPadding;
     availableHeight = window.innerHeight - totalOverhead;
+    availableWidth = window.innerWidth - containerPadding;
   }
 
-  // Use most of the available height for a larger play area
-  const canvasWidth = 800;
-  const canvasHeight = Math.max(700, Math.min(availableHeight - 20, 1400)); // -20px for padding
+  // On mobile, use full available dimensions
+  // On desktop, use fixed aspect ratio
+  let canvasWidth: number;
+  let canvasHeight: number;
 
-  console.log(`Viewport: ${window.innerHeight}px, Container: ${availableHeight}px, Canvas: ${canvasHeight}px`);
+  if (isMobile) {
+    // Mobile: use available width and maximize height
+    canvasWidth = Math.floor(availableWidth - 4); // Small padding
+    canvasHeight = Math.floor(availableHeight - 4);
+  } else {
+    // Desktop: use fixed dimensions with aspect ratio
+    canvasWidth = 800;
+    canvasHeight = Math.max(700, Math.min(availableHeight - 20, 1400));
+  }
+
+  console.log(`Viewport: ${window.innerWidth}x${window.innerHeight}px, Container: ${availableWidth}x${availableHeight}px, Canvas: ${canvasWidth}x${canvasHeight}px`);
 
   await app.init({
     width: canvasWidth,

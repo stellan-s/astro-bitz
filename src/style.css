@@ -112,11 +112,8 @@ body {
 
 canvas {
   display: block;
-  width: 100% !important;
-  height: 100% !important;
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain; /* Preserve aspect ratio so the game is not distorted */
   /* Prevent canvas from being dragged on mobile */
   touch-action: none;
   /* Crisp pixel rendering */
@@ -124,10 +121,21 @@ canvas {
   image-rendering: crisp-edges;
 }
 
+/* Mobile: fill container completely */
+@media (max-width: 768px) {
+  canvas {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: fill; /* Fill entire space on mobile */
+  }
+}
+
 /* Desktop: maintain aspect ratio */
 @media (min-width: 769px) {
   canvas {
-    object-fit: contain;
+    width: 100%;
+    height: auto;
+    object-fit: contain; /* Preserve aspect ratio on desktop */
   }
 }
 
