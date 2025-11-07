@@ -2140,6 +2140,7 @@ export class Game {
     let lastTime = Date.now();
     let lastFrameTime = Date.now();
     let animationFrameId: number | null = null;
+    let isLoopRunning = false; // Prevent multiple concurrent loops
 
     // Target 30 FPS on mobile (33.33ms per frame) to save battery
     const mobileFrameInterval = this.isMobileDevice() ? 33.33 : 0;
@@ -2156,7 +2157,7 @@ export class Game {
         // Tab became visible - resume updates
         lastTime = Date.now(); // Reset time to prevent huge deltaTime
         lastFrameTime = Date.now();
-        if (animationFrameId === null) {
+        if (animationFrameId === null && !isLoopRunning) {
           gameLoop();
         }
       }
@@ -2164,14 +2165,23 @@ export class Game {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const gameLoop = () => {
+      // Prevent multiple concurrent loops - but always schedule next frame
+      if (isLoopRunning) {
+        animationFrameId = requestAnimationFrame(gameLoop);
+        return;
+      }
+      isLoopRunning = true;
+
       // Skip if not playing or dying
       if (this.gameState !== 'playing' && this.gameState !== 'dying') {
+        isLoopRunning = false;
         animationFrameId = requestAnimationFrame(gameLoop);
         return;
       }
 
       // Skip if paused
       if (this.isPaused) {
+        isLoopRunning = false;
         animationFrameId = requestAnimationFrame(gameLoop);
         return;
       }
@@ -2180,19 +2190,26 @@ export class Game {
 
       // Throttle frame rate on mobile devices
       if (mobileFrameInterval > 0 && (currentTime - lastFrameTime) < mobileFrameInterval) {
+        isLoopRunning = false;
         animationFrameId = requestAnimationFrame(gameLoop);
         return;
       }
       lastFrameTime = currentTime;
 
-      const deltaTime = currentTime - lastTime;
+      let deltaTime = currentTime - lastTime;
       lastTime = currentTime;
+
+      // Cap deltaTime to prevent huge jumps (e.g., after tab switching or freeze)
+      // Max 100ms (10 FPS) to prevent physics from going crazy
+      deltaTime = Math.min(deltaTime, 100);
 
       // If dying, only update particles and background
       if (this.gameState === 'dying') {
         this.background.update(deltaTime);
         this.parallaxBackground.update(deltaTime);
         this.particleSystem.update(deltaTime);
+        isLoopRunning = false;
+        animationFrameId = requestAnimationFrame(gameLoop);
         return;
       }
 
@@ -2279,6 +2296,7 @@ export class Game {
       this.audio.updateMusicIntensity(this.enemies.length);
 
       // Continue the loop
+      isLoopRunning = false;
       animationFrameId = requestAnimationFrame(gameLoop);
     };
 
