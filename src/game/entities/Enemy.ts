@@ -96,6 +96,7 @@ export class Enemy {
       case 'bossSniper':
       case 'bossTank':
       case 'bossSwarm':
+      case 'bossTriple':
         this.drawBoss();
         break;
     }
@@ -716,7 +717,7 @@ export class Enemy {
       const alphaVariation = 0.15;
       const baseAlpha = 0.2;
       this.sprite.alpha = baseAlpha + Math.sin(this.movePattern * pulseSpeed) * alphaVariation;
-    }
+      }
 
     // Shooting logic for bosses and stealth enemies
     if (currentTime !== undefined && this.onShoot) {
