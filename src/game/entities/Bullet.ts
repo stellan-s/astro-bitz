@@ -5,16 +5,30 @@ export class Bullet {
   private speed: number = 8;
   private travelDistance: number = 0;
   public canCollide: boolean = false; // Bullets need to travel a bit before they can hit
+  public damage: number = 1; // Damage dealt to enemies
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, isSuperFire: boolean = false) {
     this.sprite = new Container();
     this.sprite.x = x;
     this.sprite.y = y;
 
     // Draw bullet
     const graphics = new Graphics();
-    graphics.circle(0, 0, 4);
-    graphics.fill(0xffff00);
+
+    if (isSuperFire) {
+      // Purple superfire bullet - larger and more powerful looking
+      this.damage = 3; // 3x damage
+      graphics.circle(0, 0, 6); // Slightly larger
+      graphics.fill(0x8b00ff); // Purple
+      // Add glow effect
+      graphics.circle(0, 0, 8);
+      graphics.fill({ color: 0xff00ff, alpha: 0.3 }); // Purple glow
+    } else {
+      // Normal yellow bullet
+      this.damage = 1;
+      graphics.circle(0, 0, 4);
+      graphics.fill(0xffff00);
+    }
 
     this.sprite.addChild(graphics);
   }

@@ -44,6 +44,9 @@ export class Game {
   private rapidFireSpawnBoost: boolean = false;
   private rapidFireSpawnTimer: number = 0;
   private rapidFireSpawnDuration: number = 5000; // 5 seconds of faster spawns
+  private superFireActive: boolean = false;
+  private superFireTimer: number = 0;
+  private superFireDuration: number = 7000; // 7 seconds of 3x damage
   private shieldCount: number = 0; // Number of shields (can stack)
   private fireRate: number = 300; // milliseconds between shots
   private lastShotTime: number = 0;
@@ -340,6 +343,8 @@ export class Game {
       this.rapidFireTimer = 0;
       this.rapidFireSpawnBoost = false;
       this.rapidFireSpawnTimer = 0;
+      this.superFireActive = false;
+      this.superFireTimer = 0;
       this.missileAmmo = 3;
       this.isInvincible = false;
       this.invincibilityTimer = 0;
@@ -573,7 +578,7 @@ export class Game {
   }
 
   private shoot(): void {
-    const bullet = new Bullet(this.player.sprite.x, this.player.sprite.y - 30);
+    const bullet = new Bullet(this.player.sprite.x, this.player.sprite.y - 30, this.superFireActive);
     this.bullets.push(bullet);
     this.gameContainer.addChild(bullet.sprite);
     this.audio.playShoot();
@@ -813,9 +818,18 @@ export class Game {
     const edgePadding = 40;
     const x = edgePadding + Math.random() * (this.app.screen.width - edgePadding * 2);
 
-    // Random power-up type
-    const types: PowerUpType[] = ['rapidfire', 'shield', 'bomb', 'missiles'];
-    const type = types[Math.floor(Math.random() * types.length)];
+    // Random power-up type with weighted probabilities
+    // Superfire is rare (5% chance)
+    const rand = Math.random();
+    let type: PowerUpType;
+
+    if (rand < 0.05) {
+      type = 'superfire'; // 5% chance - rare!
+    } else {
+      // 95% chance for regular power-ups
+      const types: PowerUpType[] = ['rapidfire', 'shield', 'bomb', 'missiles'];
+      type = types[Math.floor(Math.random() * types.length)];
+    }
 
     const powerUp = new PowerUp(x, -50, type);
     this.powerUps.push(powerUp);
@@ -993,6 +1007,12 @@ export class Game {
           this.missileText.text = `Missiles: ${this.missileAmmo}`;
         }
         break;
+      case 'superfire':
+        particleColor = 0x8b00ff; // Purple
+        particleCount = 50; // Extra sparkly for rare powerup
+        this.superFireActive = true;
+        this.superFireTimer = this.superFireDuration; // 7 seconds
+        break;
     }
 
     // Create sparkle particle effect at powerup collection location
@@ -1140,8 +1160,13 @@ export class Game {
           this.bullets.splice(i, 1);
           bullet.destroy();
 
-          // Damage enemy
-          const isDead = enemy.takeDamage();
+          // Damage enemy based on bullet damage (1 for normal, 3 for superfire)
+          let isDead = false;
+          for (let dmg = 0; dmg < bullet.damage; dmg++) {
+            isDead = enemy.takeDamage();
+            if (isDead) break; // Stop if enemy dies before all damage is applied
+          }
+
           if (isDead) {
             // Get enemy config for color and points
             const config = getEnemyConfig(enemy.type);
@@ -2245,6 +2270,14 @@ export class Game {
         this.rapidFireTimer -= deltaTime;
         if (this.rapidFireTimer <= 0) {
           this.rapidFireActive = false;
+        }
+      }
+
+      // Update superfire timer
+      if (this.superFireActive) {
+        this.superFireTimer -= deltaTime;
+        if (this.superFireTimer <= 0) {
+          this.superFireActive = false;
         }
       }
 

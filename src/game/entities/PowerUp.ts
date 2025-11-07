@@ -1,6 +1,6 @@
 import { Graphics, Container, Text } from 'pixi.js';
 
-export type PowerUpType = 'rapidfire' | 'shield' | 'bomb' | 'missiles';
+export type PowerUpType = 'rapidfire' | 'shield' | 'bomb' | 'missiles' | 'superfire';
 
 export class PowerUp {
   public sprite: Container;
@@ -51,11 +51,21 @@ export class PowerUp {
         graphics.lineTo(5, -15);
         graphics.fill(0xff6347);
         break;
+
+      case 'superfire':
+        // Purple lightning bolt with glow
+        graphics.circle(0, 0, 18);
+        graphics.fill({ color: 0x9400d3, alpha: 0.3 }); // Purple glow
+        graphics.rect(-15, -15, 30, 30);
+        graphics.fill(0x8b00ff);
+        graphics.star(0, 0, 6, 12, 6); // More points for super
+        graphics.fill(0xff00ff);
+        break;
     }
 
     // Add label
     const label = new Text({
-      text: type === 'rapidfire' ? 'RF' : type === 'shield' ? 'SH' : type === 'bomb' ? 'BM' : 'MS',
+      text: type === 'rapidfire' ? 'RF' : type === 'shield' ? 'SH' : type === 'bomb' ? 'BM' : type === 'missiles' ? 'MS' : 'SF',
       style: {
         fontFamily: 'Arial',
         fontSize: 10,
