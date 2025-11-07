@@ -35,26 +35,18 @@ async function init() {
   }
 
   // Calculate canvas dimensions
-  let canvasWidth: number;
+  // Always use fixed logical dimensions for consistent game world
+  // CSS will scale to fit the screen
+  const canvasWidth = 800;
+
   let canvasHeight: number;
-
   if (isMobile) {
-    // Mobile: calculate dimensions to match available space aspect ratio
-    // This prevents stretching by matching the container's aspect ratio
+    // Mobile: calculate height to match screen aspect ratio
+    // This prevents black bars while keeping 800px logical width
     const availableAspect = availableWidth / availableHeight;
-
-    // Portrait orientation (most mobile devices)
-    if (availableAspect < 1) {
-      canvasWidth = Math.floor(availableWidth);
-      canvasHeight = Math.floor(availableHeight);
-    } else {
-      // Landscape: maintain reasonable aspect ratio
-      canvasWidth = Math.floor(availableWidth);
-      canvasHeight = Math.floor(availableHeight);
-    }
+    canvasHeight = Math.floor(canvasWidth / availableAspect);
   } else {
-    // Desktop: use fixed dimensions with aspect ratio
-    canvasWidth = 800;
+    // Desktop: use flexible height based on available space
     canvasHeight = Math.max(700, Math.min(availableHeight - 20, 1400));
   }
 
