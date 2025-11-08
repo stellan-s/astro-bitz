@@ -1,19 +1,19 @@
 import { Application, Container, Text } from 'pixi.js';
-import { Player } from './entities/Player';
-import { Enemy } from './entities/Enemy';
-import { Bullet } from './entities/Bullet';
-import { Missile } from './entities/Missile';
-import { PowerUp, type PowerUpType } from './entities/PowerUp';
-import { ParticleSystem } from './entities/Particle';
-import { AudioManager } from './AudioManager';
-import { HighScoreManager } from './HighScoreManager';
-import { selectRandomEnemyType, getEnemyConfig, selectRandomBossType } from './config/EnemyConfig';
-import { EnemyBullet } from './entities/EnemyBullet';
-import { Background } from './entities/Background';
-import { ParallaxBackground } from './ParallaxBackground';
-import { AnalyticsManager } from './AnalyticsManager';
 import { AchievementsManager, type Achievement } from './AchievementsManager';
+import { AnalyticsManager } from './AnalyticsManager';
+import { AudioManager } from './AudioManager';
+import { getEnemyConfig, selectRandomBossType, selectRandomEnemyType } from './config/EnemyConfig';
+import { Background } from './entities/Background';
+import { Bullet } from './entities/Bullet';
+import { Enemy } from './entities/Enemy';
+import { EnemyBullet } from './entities/EnemyBullet';
+import { Missile } from './entities/Missile';
+import { ParticleSystem } from './entities/Particle';
+import { Player } from './entities/Player';
+import { PowerUp, type PowerUpType } from './entities/PowerUp';
+import { HighScoreManager } from './HighScoreManager';
 import { LeaderboardManager } from './LeaderboardManager';
+import { ParallaxBackground } from './ParallaxBackground';
 
 export class Game {
   private app: Application;
@@ -46,7 +46,7 @@ export class Game {
   private rapidFireSpawnDuration: number = 5000; // 5 seconds of faster spawns
   private superFireActive: boolean = false;
   private superFireTimer: number = 0;
-  private superFireDuration: number = 7000; // 7 seconds of 3x damage
+  private superFireDuration: number = 10000; // 7 seconds of 3x damage
   private shieldCount: number = 0; // Number of shields (can stack)
   private fireRate: number = 300; // milliseconds between shots
   private lastShotTime: number = 0;
@@ -2165,7 +2165,6 @@ export class Game {
     let lastTime = Date.now();
     let lastFrameTime = Date.now();
     let animationFrameId: number | null = null;
-    let isLoopRunning = false; // Prevent multiple concurrent loops
 
     // Target 30 FPS on mobile (33.33ms per frame) to save battery
     const mobileFrameInterval = this.isMobileDevice() ? 33.33 : 0;
@@ -2182,31 +2181,22 @@ export class Game {
         // Tab became visible - resume updates
         lastTime = Date.now(); // Reset time to prevent huge deltaTime
         lastFrameTime = Date.now();
-        if (animationFrameId === null && !isLoopRunning) {
-          gameLoop();
+        if (animationFrameId === null) {
+          animationFrameId = requestAnimationFrame(gameLoop);
         }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const gameLoop = () => {
-      // Prevent multiple concurrent loops - but always schedule next frame
-      if (isLoopRunning) {
-        animationFrameId = requestAnimationFrame(gameLoop);
-        return;
-      }
-      isLoopRunning = true;
-
       // Skip if not playing or dying
       if (this.gameState !== 'playing' && this.gameState !== 'dying') {
-        isLoopRunning = false;
         animationFrameId = requestAnimationFrame(gameLoop);
         return;
       }
 
       // Skip if paused
       if (this.isPaused) {
-        isLoopRunning = false;
         animationFrameId = requestAnimationFrame(gameLoop);
         return;
       }
@@ -2215,7 +2205,6 @@ export class Game {
 
       // Throttle frame rate on mobile devices
       if (mobileFrameInterval > 0 && (currentTime - lastFrameTime) < mobileFrameInterval) {
-        isLoopRunning = false;
         animationFrameId = requestAnimationFrame(gameLoop);
         return;
       }
@@ -2233,7 +2222,6 @@ export class Game {
         this.background.update(deltaTime);
         this.parallaxBackground.update(deltaTime);
         this.particleSystem.update(deltaTime);
-        isLoopRunning = false;
         animationFrameId = requestAnimationFrame(gameLoop);
         return;
       }
@@ -2329,7 +2317,6 @@ export class Game {
       this.audio.updateMusicIntensity(this.enemies.length);
 
       // Continue the loop
-      isLoopRunning = false;
       animationFrameId = requestAnimationFrame(gameLoop);
     };
 
