@@ -1116,6 +1116,12 @@ export class Game {
     this.enemiesKilledThisWave++;
     this.checkWaveComplete();
 
+    // Check if sprite still exists before animating
+    if (!enemy.sprite || !enemy.sprite.scale) {
+      console.warn('Enemy sprite destroyed before animation could start');
+      return;
+    }
+
     // Animate the enemy shrinking/exploding
     const startTime = Date.now();
     const startScale = { x: enemy.sprite.scale.x, y: enemy.sprite.scale.y };
@@ -1123,7 +1129,7 @@ export class Game {
     const animate = () => {
       // Check if enemy still exists and hasn't been removed
       const currentIndex = this.enemies.indexOf(enemy);
-      if (currentIndex === -1) {
+      if (currentIndex === -1 || !enemy.sprite || !enemy.sprite.scale) {
         // Enemy was removed externally (e.g., boss wave cleanup), stop animation
         return;
       }
@@ -1150,7 +1156,7 @@ export class Game {
       } else {
         // Animation complete - remove enemy
         const finalIndex = this.enemies.indexOf(enemy);
-        if (finalIndex !== -1) {
+        if (finalIndex !== -1 && enemy.sprite) {
           this.gameContainer.removeChild(enemy.sprite);
           this.enemies.splice(finalIndex, 1);
           enemy.destroy();
@@ -1162,6 +1168,10 @@ export class Game {
   }
 
   private startScreenShake(duration: number, intensity: number): void {
+    if (!this.gameContainer) {
+      console.warn('Cannot start screen shake: gameContainer is undefined');
+      return;
+    }
     this.screenShakeActive = true;
     this.screenShakeTimer = 0;
     this.screenShakeDuration = duration;
