@@ -56,8 +56,8 @@ export class AchievementsManager {
       },
       {
         id: 'ace_pilot',
-        name: 'Astro Blitz',
-        description: 'Reach the Astro Blitz rank',
+        name: 'Astro Bitz',
+        description: 'Reach the Astro Bitz rank',
         icon: '⭐',
         unlocked: false,
       },
@@ -327,7 +327,7 @@ export class AchievementsManager {
   public trackRankReached(rank: string): Achievement[] {
     const newAchievements: Achievement[] = [];
 
-    if (rank === 'Astro Blitz') {
+    if (rank === 'Astro Bitz') {
       const achievement = this.unlockAchievement('ace_pilot');
       if (achievement) newAchievements.push(achievement);
     }

@@ -596,6 +596,84 @@ export class AudioManager {
     sparkle.stop(now + 0.25);
   }
 
+  // Boss explosion - massive, dramatic explosion sound
+  public playBossExplosion(): void {
+    const now = this.audioContext.currentTime;
+
+    // Deep rumble bass explosion
+    const bass = this.audioContext.createOscillator();
+    const bassGain = this.audioContext.createGain();
+
+    bass.connect(bassGain);
+    bassGain.connect(this.audioContext.destination);
+
+    bass.type = 'sawtooth';
+    // Random variation in starting frequency (80-120 Hz)
+    const bassStart = 80 + Math.random() * 40;
+    bass.frequency.setValueAtTime(bassStart, now);
+    bass.frequency.exponentialRampToValueAtTime(30, now + 0.8);
+
+    bassGain.gain.setValueAtTime(this.masterVolume * 0.8, now);
+    bassGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+
+    bass.start(now);
+    bass.stop(now + 0.8);
+
+    // Mid-range explosion with slight randomness
+    const mid = this.audioContext.createOscillator();
+    const midGain = this.audioContext.createGain();
+
+    mid.connect(midGain);
+    midGain.connect(this.audioContext.destination);
+
+    mid.type = 'square';
+    const midStart = 200 + Math.random() * 100; // 200-300 Hz
+    mid.frequency.setValueAtTime(midStart, now);
+    mid.frequency.exponentialRampToValueAtTime(60, now + 0.6);
+
+    midGain.gain.setValueAtTime(this.masterVolume * 0.6, now);
+    midGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+
+    mid.start(now);
+    mid.stop(now + 0.6);
+
+    // High-frequency debris/shrapnel with randomness
+    const debris = this.audioContext.createOscillator();
+    const debrisGain = this.audioContext.createGain();
+
+    debris.connect(debrisGain);
+    debrisGain.connect(this.audioContext.destination);
+
+    debris.type = 'square';
+    const debrisStart = 2000 + Math.random() * 1000; // 2000-3000 Hz
+    debris.frequency.setValueAtTime(debrisStart, now + 0.1);
+    debris.frequency.exponentialRampToValueAtTime(400, now + 0.7);
+
+    debrisGain.gain.setValueAtTime(this.masterVolume * 0.4, now + 0.1);
+    debrisGain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+
+    debris.start(now + 0.1);
+    debris.stop(now + 0.7);
+
+    // Secondary explosion (smaller, delayed)
+    const secondary = this.audioContext.createOscillator();
+    const secondaryGain = this.audioContext.createGain();
+
+    secondary.connect(secondaryGain);
+    secondaryGain.connect(this.audioContext.destination);
+
+    secondary.type = 'sawtooth';
+    const secondaryStart = 150 + Math.random() * 50; // 150-200 Hz
+    secondary.frequency.setValueAtTime(secondaryStart, now + 0.3);
+    secondary.frequency.exponentialRampToValueAtTime(40, now + 0.9);
+
+    secondaryGain.gain.setValueAtTime(this.masterVolume * 0.5, now + 0.3);
+    secondaryGain.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
+
+    secondary.start(now + 0.3);
+    secondary.stop(now + 0.9);
+  }
+
   // Background music with melody and bass
   public startBackgroundMusic(waveNumber: number = 1): void {
     if (this.musicPlaying) return;

@@ -36,7 +36,7 @@ body {
   touch-action: manipulation;
 }
 
-/* Ad Container Styling - Styled to match Astro Blitz aesthetic */
+/* Ad Container Styling - Styled to match Astro Bitz aesthetic */
 .ad-container {
   background: rgba(0, 0, 0, 0.4);
   display: flex;

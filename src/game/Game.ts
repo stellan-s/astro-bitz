@@ -97,6 +97,12 @@ export class Game {
   private achievementsManager: AchievementsManager;
   private newAchievements: Achievement[] = []; // Queue of newly unlocked achievements
 
+  // Screen shake
+  private screenShakeActive: boolean = false;
+  private screenShakeTimer: number = 0;
+  private screenShakeDuration: number = 0;
+  private screenShakeIntensity: number = 0;
+
   // Leaderboard (initialized but not yet integrated into UI)
   private leaderboardManager: LeaderboardManager | null = null;
 
@@ -287,7 +293,7 @@ export class Game {
                    -webkit-text-fill-color: transparent;
                    background-clip: text;
                    text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);">
-          ASTRO BLITZ Δ
+          ASTRO BITZ
         </h1>
         <p style="font-size: 24px; color: #ffaa00; margin-bottom: 40px;">
           Light speed chaos awaits
@@ -1063,8 +1069,20 @@ export class Game {
   }
 
   private playEnemyDeathAnimation(enemy: Enemy, _enemyIndex: number, config: any, particleCount: number = 12, wasMissile: boolean = false): void {
+    // Boss-specific enhancements
+    const isBoss = enemy.isBoss;
+    const bossParticleCount = isBoss ? particleCount * 4 : particleCount; // 4x particles for bosses
+    const animationDuration = isBoss ? 1500 : 150; // 1.5 seconds for bosses, 150ms for regular enemies
+
     // Create explosion particles immediately
-    this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, particleCount);
+    this.particleSystem.createExplosion(enemy.sprite.x, enemy.sprite.y, config.color, bossParticleCount);
+
+    // Play boss explosion sound for bosses
+    if (isBoss) {
+      this.audio.playBossExplosion();
+      // Add screen shake effect
+      this.startScreenShake(1500, 8); // 1.5 seconds, 8px intensity
+    }
 
     // Award points immediately
     this.score += config.points;
@@ -1099,7 +1117,6 @@ export class Game {
     (enemy as any).isBeingDestroyed = true;
 
     // Animate the enemy shrinking/exploding
-    const animationDuration = 150; // milliseconds
     const startTime = Date.now();
     const startScale = { x: enemy.sprite.scale.x, y: enemy.sprite.scale.y };
 
@@ -1122,8 +1139,8 @@ export class Game {
 
         enemy.sprite.scale.set(startScale.x * scale, startScale.y * scale);
 
-        // Rotate for more dynamic death
-        enemy.sprite.rotation += 0.2;
+        // Rotate for more dynamic death (slower for bosses)
+        enemy.sprite.rotation += isBoss ? 0.05 : 0.2;
 
         // Fade out
         enemy.sprite.alpha = 1 - progress;
@@ -1142,6 +1159,41 @@ export class Game {
     };
 
     animate();
+  }
+
+  private startScreenShake(duration: number, intensity: number): void {
+    this.screenShakeActive = true;
+    this.screenShakeTimer = 0;
+    this.screenShakeDuration = duration;
+    this.screenShakeIntensity = intensity;
+  }
+
+  private updateScreenShake(deltaTime: number): void {
+    if (!this.screenShakeActive) {
+      return;
+    }
+
+    this.screenShakeTimer += deltaTime;
+
+    if (this.screenShakeTimer >= this.screenShakeDuration) {
+      // Reset screen position
+      this.gameContainer.x = 0;
+      this.gameContainer.y = 0;
+      this.screenShakeActive = false;
+      return;
+    }
+
+    // Calculate shake intensity with decay over time
+    const progress = this.screenShakeTimer / this.screenShakeDuration;
+    const decay = 1 - progress; // Gradually reduce shake
+    const currentIntensity = this.screenShakeIntensity * decay;
+
+    // Random offset
+    const offsetX = (Math.random() - 0.5) * 2 * currentIntensity;
+    const offsetY = (Math.random() - 0.5) * 2 * currentIntensity;
+
+    this.gameContainer.x = offsetX;
+    this.gameContainer.y = offsetY;
   }
 
   private checkCollisions(): void {
@@ -1456,7 +1508,7 @@ export class Game {
       { name: 'Nebula Sovereign', threshold: 20000, color: '#ff1493' },
       { name: 'Galactic Champion', threshold: 24000, color: '#ff69b4' },
       { name: 'Celestial Master', threshold: 28000, color: '#ffb6c1' },
-      { name: 'Astro Blitz', threshold: 35000, color: '#ffd700' },
+      { name: 'Astro Bitz', threshold: 35000, color: '#ffd700' },
     ];
 
     let currentRank = ranks[0];
@@ -1559,7 +1611,7 @@ export class Game {
     const titleColor = isNewHighScore ? '#ffd700' : '#ff0000';
     const glowColor = isNewHighScore ? 'rgba(255, 215, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
 
-    const progressToNext = rankInfo.rank === 'Astro Blitz' ? 100 :
+    const progressToNext = rankInfo.rank === 'Astro Bitz' ? 100 :
       Math.min(100, Math.round((this.score / rankInfo.nextThreshold) * 100));
 
     container.innerHTML = `
@@ -1586,7 +1638,7 @@ export class Game {
                       text-shadow: 0 0 15px ${rankInfo.color}; margin-bottom: 15px;">
             ${rankInfo.rank}
           </div>
-          ${rankInfo.rank !== 'Astro Blitz' ? `
+          ${rankInfo.rank !== 'Astro Bitz' ? `
             <div style="font-size: 14px; color: #888; margin-bottom: 8px;">
               Next: ${rankInfo.nextRank} (${rankInfo.nextThreshold} pts)
             </div>
@@ -2318,6 +2370,7 @@ export class Game {
       this.updateEnemyBullets(deltaTime);
       this.updatePowerUps(deltaTime);
       this.particleSystem.update(deltaTime);
+      this.updateScreenShake(deltaTime); // Update screen shake effect
       this.player.updateShield(deltaTime, this.shieldCount); // Animate shield with count
       this.checkCollisions();
       this.checkShieldCollisions(); // Check for shield-enemy collisions
