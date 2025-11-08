@@ -54,7 +54,7 @@ export class Missile {
     this.updateTarget(enemies);
 
     // If we have a target, steer towards it
-    if (this.target && this.target.sprite) {
+    if (this.target && this.target.sprite && !this.target.sprite.destroyed) {
       const dx = this.target.sprite.x - this.sprite.x;
       const dy = this.target.sprite.y - this.sprite.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
@@ -94,8 +94,8 @@ export class Missile {
   }
 
   private updateTarget(enemies: Enemy[]): void {
-    // If current target is dead or destroyed, find new target
-    if (!this.target || !this.target.sprite || this.target.health <= 0) {
+    // If current target is dead, destroyed, or sprite is invalid, find new target
+    if (!this.target || !this.target.sprite || this.target.health <= 0 || this.target.sprite.destroyed) {
       this.target = this.findBestTarget(enemies);
     }
   }

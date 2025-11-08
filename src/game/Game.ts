@@ -136,7 +136,7 @@ export class Game {
     // Create player
     this.player = new Player(
       this.app.screen.width / 2,
-      this.app.screen.height - 100
+      this.app.screen.height - 150 // Moved up from -100 to -150
     );
     this.gameContainer.addChild(this.player.sprite);
 
@@ -853,7 +853,17 @@ export class Game {
   private updateMissiles(deltaTime: number): void {
     for (let i = this.missiles.length - 1; i >= 0; i--) {
       const missile = this.missiles[i];
-      missile.update(deltaTime, this.enemies);
+
+      try {
+        missile.update(deltaTime, this.enemies);
+      } catch (error) {
+        // If missile update fails (e.g., destroyed target), remove missile safely
+        console.warn('Missile update error:', error);
+        this.gameContainer.removeChild(missile.sprite);
+        this.missiles.splice(i, 1);
+        missile.destroy();
+        continue;
+      }
 
       // Remove missiles that are off screen or inactive
       if (missile.sprite.x < -50 || missile.sprite.x > this.app.screen.width + 50 ||
@@ -1797,7 +1807,7 @@ export class Game {
 
       // Reset player position and make visible
       this.player.sprite.x = this.app.screen.width / 2;
-      this.player.sprite.y = this.app.screen.height - 80;
+      this.player.sprite.y = this.app.screen.height - 150;
       this.player.sprite.visible = true;
       this.player.sprite.alpha = 1.0;
 
