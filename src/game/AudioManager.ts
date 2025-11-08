@@ -81,6 +81,45 @@ export class AudioManager {
     this.returnGainToPool(gain, 0.15);
   }
 
+  // Superfire shooting sound - deeper, more powerful laser
+  public playSuperFireShoot(): void {
+    const now = this.audioContext.currentTime;
+
+    // Main powerful laser beam
+    const { oscillator: main, gain: mainGain } = this.getAudioNodes();
+    main.connect(mainGain);
+    mainGain.connect(this.audioContext.destination);
+
+    main.type = 'sawtooth'; // Richer, more aggressive tone
+    main.frequency.setValueAtTime(600, now); // Lower starting frequency
+    main.frequency.exponentialRampToValueAtTime(150, now + 0.15); // Longer, deeper sweep
+
+    mainGain.gain.setValueAtTime(this.masterVolume * 0.4, now);
+    mainGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+    main.start(now);
+    main.stop(now + 0.15);
+
+    // Harmonic overtone for richness
+    const { oscillator: harmonic, gain: harmonicGain } = this.getAudioNodes();
+    harmonic.connect(harmonicGain);
+    harmonicGain.connect(this.audioContext.destination);
+
+    harmonic.type = 'square';
+    harmonic.frequency.setValueAtTime(1200, now); // Octave higher
+    harmonic.frequency.exponentialRampToValueAtTime(300, now + 0.12);
+
+    harmonicGain.gain.setValueAtTime(this.masterVolume * 0.2, now);
+    harmonicGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+    harmonic.start(now);
+    harmonic.stop(now + 0.12);
+
+    // Return gains to pool
+    this.returnGainToPool(mainGain, 0.2);
+    this.returnGainToPool(harmonicGain, 0.17);
+  }
+
   // Missile launch sound - powerful whoosh with ignition
   public playMissileLaunch(): void {
     const now = this.audioContext.currentTime;

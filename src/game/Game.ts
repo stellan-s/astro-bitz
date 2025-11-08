@@ -587,7 +587,14 @@ export class Game {
     const bullet = new Bullet(this.player.sprite.x, this.player.sprite.y - 30, this.superFireActive);
     this.bullets.push(bullet);
     this.gameContainer.addChild(bullet.sprite);
-    this.audio.playShoot();
+
+    // Play different sound based on superfire status
+    if (this.superFireActive) {
+      this.audio.playSuperFireShoot();
+    } else {
+      this.audio.playShoot();
+    }
+
     this.analytics.trackBulletShot();
   }
 
