@@ -142,7 +142,7 @@ export class Game {
     // Create player
     this.player = new Player(
       this.app.screen.width / 2,
-      this.app.screen.height - 150 // Moved up from -100 to -150
+      this.app.screen.height - 200 // Moved up from -150 to -200
     );
     this.gameContainer.addChild(this.player.sprite);
 
@@ -511,12 +511,13 @@ export class Game {
         const scaleX = this.app.screen.width / rect.width;
         this.player.sprite.x = x * scaleX;
 
-        // Keep player in bounds
-        if (this.player.sprite.x < this.player.sprite.width / 2) {
-          this.player.sprite.x = this.player.sprite.width / 2;
+        // Keep player in bounds - allow closer to edges
+        const edgePadding = 5; // Small padding to prevent clipping
+        if (this.player.sprite.x < edgePadding) {
+          this.player.sprite.x = edgePadding;
         }
-        if (this.player.sprite.x > this.app.screen.width - this.player.sprite.width / 2) {
-          this.player.sprite.x = this.app.screen.width - this.player.sprite.width / 2;
+        if (this.player.sprite.x > this.app.screen.width - edgePadding) {
+          this.player.sprite.x = this.app.screen.width - edgePadding;
         }
 
         // Detect swipe up gesture for missile firing
@@ -572,12 +573,13 @@ export class Game {
           }
         }
 
-        // Keep player in bounds
-        if (this.player.sprite.x < this.player.sprite.width / 2) {
-          this.player.sprite.x = this.player.sprite.width / 2;
+        // Keep player in bounds - allow closer to edges
+        const edgePadding = 5; // Small padding to prevent clipping
+        if (this.player.sprite.x < edgePadding) {
+          this.player.sprite.x = edgePadding;
         }
-        if (this.player.sprite.x > this.app.screen.width - this.player.sprite.width / 2) {
-          this.player.sprite.x = this.app.screen.width - this.player.sprite.width / 2;
+        if (this.player.sprite.x > this.app.screen.width - edgePadding) {
+          this.player.sprite.x = this.app.screen.width - edgePadding;
         }
       }
     });
@@ -1876,7 +1878,7 @@ export class Game {
 
       // Reset player position and make visible
       this.player.sprite.x = this.app.screen.width / 2;
-      this.player.sprite.y = this.app.screen.height - 150;
+      this.player.sprite.y = this.app.screen.height - 200;
       this.player.sprite.visible = true;
       this.player.sprite.alpha = 1.0;
 

@@ -157,7 +157,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
     speed: 1.0,
     speedVariation: 0.3,
     health: 3,
-    points: 60, // Very high points for very rare enemy
+    points: 100, // Increased from 60 - very high points for ultra rare enemy
     color: 0x9370db, // Medium purple (base form)
     secondaryColor: 0x7b68ee, // Medium slate blue (shimmer)
     tertiaryColor: 0xba55d3, // Medium orchid (glow)
@@ -165,7 +165,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
       width: 42,
       height: 38,
     },
-    spawnWeight: 0.04, // 4% chance - very rare
+    spawnWeight: 0.02, // Reduced from 0.04 (4%) to 0.02 (2%) - ultra rare
     movePattern: 'sine', // Smooth ghostly movement
     heatEmission: 0.2, // Very low heat - phase-shifted, hard to lock on
     shootInterval: 2500, // Shoots every 2.5 seconds
