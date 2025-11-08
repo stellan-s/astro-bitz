@@ -1069,6 +1069,13 @@ export class Game {
   }
 
   private playEnemyDeathAnimation(enemy: Enemy, _enemyIndex: number, config: any, particleCount: number = 12, wasMissile: boolean = false): void {
+    // Mark enemy as being destroyed to prevent concurrent animations - CHECK THIS FIRST!
+    const isBeingDestroyed = (enemy as any).isBeingDestroyed;
+    if (isBeingDestroyed) {
+      return; // Already being destroyed, don't award points or start another animation
+    }
+    (enemy as any).isBeingDestroyed = true;
+
     // Boss-specific enhancements
     const isBoss = enemy.isBoss;
     const bossParticleCount = isBoss ? particleCount * 4 : particleCount; // 4x particles for bosses
@@ -1108,13 +1115,6 @@ export class Game {
     // Track wave progress
     this.enemiesKilledThisWave++;
     this.checkWaveComplete();
-
-    // Mark enemy as being destroyed to prevent concurrent animations
-    const isBeingDestroyed = (enemy as any).isBeingDestroyed;
-    if (isBeingDestroyed) {
-      return; // Already being destroyed, don't start another animation
-    }
-    (enemy as any).isBeingDestroyed = true;
 
     // Animate the enemy shrinking/exploding
     const startTime = Date.now();
