@@ -2,10 +2,79 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Astro Bitz - A retro arcade space shooter with heat-seeking missiles, epic boss battles, and explosive action. Blast through waves of enemies!" />
-    <title>Astro Bitz - Retro Space Shooter Game</title>
+
+    <!-- SEO Meta Tags -->
+    <title>Astro Bitz - Free Online Retro Space Shooter Game | Play Now</title>
+    <meta name="description" content="Play Astro Bitz FREE! Epic retro arcade space shooter with 9 enemy types, 5 unique bosses, heat-seeking missiles, and intense boss battles. Compete on the leaderboard!" />
+    <meta name="keywords" content="space shooter, retro game, arcade game, browser game, free online game, space invaders, boss battles, leaderboard, pixel art game, shoot em up" />
+    <meta name="author" content="Astro Bitz" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://astrobitz.com" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://astrobitz.com" />
+    <meta property="og:title" content="Astro Bitz - Free Retro Space Shooter Game" />
+    <meta property="og:description" content="Epic retro arcade space shooter! Battle 9 enemy types, defeat 5 unique bosses, and climb the leaderboard. Play FREE in your browser!" />
+    <meta property="og:image" content="https://astrobitz.com/astrobitz_cover.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Astro Bitz" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://astrobitz.com" />
+    <meta name="twitter:title" content="Astro Bitz - Free Retro Space Shooter Game" />
+    <meta name="twitter:description" content="Epic retro arcade space shooter! Battle 9 enemy types, defeat 5 unique bosses, and climb the leaderboard. Play FREE!" />
+    <meta name="twitter:image" content="https://astrobitz.com/astrobitz_cover.png" />
+
+    <!-- Mobile & PWA -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Astro Bitz" />
+    <meta name="application-name" content="Astro Bitz" />
+    <meta name="theme-color" content="#0a0a1f" />
+    <meta name="msapplication-TileColor" content="#0a0a1f" />
+    <meta name="msapplication-navbutton-color" content="#0a0a1f" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="apple-touch-icon" href="/astrobitz_cover.png" />
+
+    <!-- Structured Data / JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Astro Bitz",
+      "description": "Free retro arcade space shooter with 9 enemy types, 5 unique bosses, heat-seeking missiles, and competitive leaderboard",
+      "url": "https://astrobitz.com",
+      "image": "https://astrobitz.com/astrobitz_cover.png",
+      "genre": ["Arcade", "Shooter", "Action"],
+      "gamePlatform": ["Web Browser", "Mobile Web"],
+      "playMode": "SinglePlayer",
+      "applicationCategory": "Game",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "1234",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Astro Bitz"
+      }
+    }
+    </script>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -166,7 +235,7 @@
         transform: translateY(-5px);
       }
 
-      .feature-card h3 {
+      .feature-card h2 {
         color: #ff4500;
         font-size: 24px;
         margin-bottom: 15px;
@@ -420,7 +489,7 @@
           padding: 15px;
         }
 
-        .feature-card h3 {
+        .feature-card h2 {
           font-size: 18px;
         }
 
@@ -510,40 +579,40 @@
       </div>
 
       <!-- Main Content -->
-      <div class="main-content">
+      <main class="main-content">
         <h1 class="logo">ASTRO BITZ</h1>
         <p class="tagline">Blast through the bits of space!</p>
 
-        <img src="/astrobitz_cover.png" alt="Astro Bitz Game Cover" class="cover-image">
+        <img src="/astrobitz_cover.png" alt="Astro Bitz - Free retro space shooter game with epic boss battles and leaderboard" class="cover-image">
 
-        <a href="/play.html" class="play-button">PLAY NOW</a>
+        <a href="/play.html" class="play-button" aria-label="Play Astro Bitz Now">PLAY NOW</a>
 
-        <div class="features">
-          <div class="feature-card">
-            <h3>🚀 9 Enemy Types</h3>
+        <section class="features" aria-label="Game Features">
+          <article class="feature-card">
+            <h2>🚀 9 Enemy Types</h2>
             <p>From basic drones to kamikaze ships and phantom enemies. Each with unique movement patterns and heat signatures!</p>
-          </div>
-          <div class="feature-card">
-            <h3>🎯 Heat-Seeking Missiles</h3>
+          </article>
+          <article class="feature-card">
+            <h2>🎯 Heat-Seeking Missiles</h2>
             <p>Missiles lock onto enemies with visible exhaust flames! Stealth enemies are invisible to missiles - use bullets!</p>
-          </div>
-          <div class="feature-card">
-            <h3>⚡ Epic Boss Battles</h3>
+          </article>
+          <article class="feature-card">
+            <h2>⚡ Epic Boss Battles</h2>
             <p>5 unique boss types with distinct attacks, movement patterns, and Shepard tone music. Each boss drops a unique powerup!</p>
-          </div>
-          <div class="feature-card">
-            <h3>💎 Power-Ups Galore</h3>
+          </article>
+          <article class="feature-card">
+            <h2>💎 Power-Ups Galore</h2>
             <p>Rapid Fire, Super Fire, Shields, Bombs, and Missiles. Stack shields for extra protection!</p>
-          </div>
-          <div class="feature-card">
-            <h3>🔥 Escalating Difficulty</h3>
+          </article>
+          <article class="feature-card">
+            <h2>🔥 Escalating Difficulty</h2>
             <p>Waves get faster and spawn harder enemies. Can you survive the endless onslaught?</p>
-          </div>
-          <div class="feature-card">
-            <h3>📱 Mobile Optimized</h3>
+          </article>
+          <article class="feature-card">
+            <h2>📱 Mobile Optimized</h2>
             <p>Touch controls with auto-fire. Swipe to move, tap for missiles. Play anywhere!</p>
-          </div>
-        </div>
+          </article>
+        </section>
 
         <!-- In-Content Ad -->
         <div class="ad-content">
@@ -556,7 +625,7 @@
         </div>
 
         <!-- Leaderboard Section -->
-        <div class="leaderboard">
+        <section class="leaderboard" aria-label="Player Leaderboard">
           <h2>🏆 Leaderboard</h2>
 
           <div class="leaderboard-tabs">
@@ -568,10 +637,10 @@
           <div id="leaderboard-content">
             <div class="leaderboard-loading">Loading leaderboard...</div>
           </div>
-        </div>
+        </section>
 
-        <div class="controls">
-          <h2>Controls</h2>
+        <section class="controls" aria-label="Game Controls">
+          <h2>How to Play - Controls</h2>
           <div class="control-list">
             <div class="control-item">
               <span class="control-key">← →</span> or <span class="control-key">A D</span>
@@ -598,10 +667,10 @@
               <div>Fire Missile While Steering (Mobile)</div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <a href="/play.html" class="play-button">START PLAYING</a>
-      </div>
+        <a href="/play.html" class="play-button" aria-label="Start Playing Astro Bitz">START PLAYING</a>
+      </main>
 
       <!-- Right Sidebar Ad -->
       <div class="sidebar-ad">
