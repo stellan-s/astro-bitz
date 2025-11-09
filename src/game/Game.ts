@@ -854,30 +854,96 @@ export class Game {
   private spawnBossReward(x: number, y: number, bossType: string): void {
     // Each boss type drops a unique powerup reward
     let type: PowerUpType;
+    let rewardName: string;
 
     switch (bossType) {
       case 'boss':
-        type = 'superfire'; // Standard boss - powerful superfire
+        type = 'superfire';
+        rewardName = 'SUPER FIRE!';
         break;
       case 'bossSniper':
-        type = 'missiles'; // Sniper boss - precision missiles
+        type = 'missiles';
+        rewardName = 'MISSILES!';
         break;
       case 'bossTank':
-        type = 'shield'; // Tank boss - defensive shield
+        type = 'shield';
+        rewardName = 'SHIELD!';
         break;
       case 'bossSwarm':
-        type = 'bomb'; // Swarm boss - area-clearing bomb
+        type = 'bomb';
+        rewardName = 'BOMB!';
         break;
       case 'bossTriple':
-        type = 'rapidfire'; // Triple boss - rapid fire for multiple targets
+        type = 'rapidfire';
+        rewardName = 'RAPID FIRE!';
         break;
       default:
-        type = 'superfire'; // Fallback
+        type = 'superfire';
+        rewardName = 'SUPER FIRE!';
     }
 
     const powerUp = new PowerUp(x, y, type);
     this.powerUps.push(powerUp);
     this.gameContainer.addChild(powerUp.sprite);
+
+    // Show reward notification text
+    this.showBossRewardText(x, y, rewardName);
+  }
+
+  private showBossRewardText(x: number, y: number, rewardName: string): void {
+    const rewardText = new Text({
+      text: `Boss Reward: ${rewardName}`,
+      style: {
+        fontFamily: 'Orbitron',
+        fontSize: 24,
+        fontWeight: 'bold',
+        fill: 0xffd700, // Gold color
+        stroke: { color: 0x000000, width: 4 },
+        align: 'center',
+      }
+    });
+
+    rewardText.x = x;
+    rewardText.y = y - 40; // Position above the powerup
+    rewardText.anchor.set(0.5);
+    rewardText.alpha = 0;
+
+    this.gameContainer.addChild(rewardText);
+
+    // Animate the text: fade in, float up, then fade out
+    const startTime = Date.now();
+    const duration = 2500; // 2.5 seconds
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = elapsed / duration;
+
+      if (progress < 1) {
+        // Fade in quickly, then fade out
+        if (progress < 0.2) {
+          rewardText.alpha = progress / 0.2; // Fade in over first 20%
+        } else if (progress > 0.7) {
+          rewardText.alpha = 1 - ((progress - 0.7) / 0.3); // Fade out over last 30%
+        } else {
+          rewardText.alpha = 1; // Full opacity in middle
+        }
+
+        // Float upward
+        rewardText.y = y - 40 - (progress * 60); // Float up 60 pixels
+
+        // Slight scale pulse
+        const scale = 1 + Math.sin(progress * Math.PI * 3) * 0.1;
+        rewardText.scale.set(scale);
+
+        requestAnimationFrame(animate);
+      } else {
+        // Remove text after animation
+        this.gameContainer.removeChild(rewardText);
+        rewardText.destroy();
+      }
+    };
+
+    animate();
   }
 
   private updateBullets(deltaTime: number): void {
