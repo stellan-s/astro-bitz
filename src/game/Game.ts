@@ -1287,90 +1287,129 @@ export class Game {
   }
 
   private triggerKamikazeBlast(origin: Enemy): void {
-    if (!origin.sprite) {
-      return;
-    }
-
-    const kamikazeConfig = getEnemyConfig('kamikaze');
-    const normalBlastRadius = kamikazeConfig.deathExplosionRadius ?? 90;
-
-    // 100% chance for MEGA EXPLOSION that destroys entire screen (testing)
-    const isMegaExplosion = true; // Math.random() < 0.25;
-    const blastRadius = isMegaExplosion ? 999999 : normalBlastRadius * 1.5; // 50% bigger normal blast
-
-    // Play massive explosion sound effect
-    this.audio.playKamikazeExplosion();
-
-    if (isMegaExplosion) {
-      // MEGA EXPLOSION - longer shake, more intense
-      this.startScreenShake(800, 15); // 800ms duration, intensity 15
-    } else {
-      // Normal bigger explosion
-      this.startScreenShake(500, 10); // 500ms duration, intensity 10
-    }
-
-    // Create multiple layered particle explosions for dramatic effect
-    // Keep particle counts reasonable to prevent crash
-    const particleMultiplier = isMegaExplosion ? 1.5 : 1.5; // Same particles, but different radius
-
-    // Central massive fireball
-    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffff00, 40 * particleMultiplier); // Bright yellow core
-    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffa500, 35 * particleMultiplier); // Orange middle layer
-    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff4500, 30 * particleMultiplier); // Orange-red outer layer
-
-    // Add shockwave ring effect with slightly delayed particles
-    setTimeout(() => {
-      this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff8800, 25 * particleMultiplier);
-    }, 50);
-
-    if (isMegaExplosion) {
-      // Extra mega explosion layers - spread out over time to reduce load
-      setTimeout(() => {
-        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff0000, 40); // Red wave
-      }, 100);
-      setTimeout(() => {
-        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, 35); // White flash
-      }, 150);
-    }
-
-    // Check for enemies in blast radius
-    // Collect targets first to avoid modifying array during iteration
-    const targets: Enemy[] = [];
-    for (let i = this.enemies.length - 1; i >= 0; i--) {
-      const target = this.enemies[i];
-      if (!target || target === origin || !target.sprite || target.isBoss) {
-        continue;
+    try {
+      if (!origin?.sprite) {
+        console.warn('Kamikaze blast: origin or sprite missing');
+        return;
       }
 
-      const dx = target.sprite.x - origin.sprite.x;
-      const dy = target.sprite.y - origin.sprite.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const kamikazeConfig = getEnemyConfig('kamikaze');
+      const normalBlastRadius = kamikazeConfig.deathExplosionRadius ?? 90;
 
-      if (distance <= blastRadius) {
-        targets.push(target);
+      // 100% chance for MEGA EXPLOSION that destroys entire screen (testing)
+      const isMegaExplosion = true; // Math.random() < 0.25;
+      const blastRadius = isMegaExplosion ? 999999 : normalBlastRadius * 1.5; // 50% bigger normal blast
+
+      console.log(`Kamikaze blast: ${isMegaExplosion ? 'MEGA' : 'Normal'}, enemies: ${this.enemies.length}`);
+
+      // Play massive explosion sound effect
+      this.audio.playKamikazeExplosion();
+
+      if (isMegaExplosion) {
+        // MEGA EXPLOSION - longer shake, more intense
+        this.startScreenShake(800, 15); // 800ms duration, intensity 15
+      } else {
+        // Normal bigger explosion
+        this.startScreenShake(500, 10); // 500ms duration, intensity 10
       }
-    }
 
-    // Destroy collected targets
-    let enemiesDestroyed = 0;
-    for (const target of targets) {
-      const targetIndex = this.enemies.indexOf(target);
-      if (targetIndex !== -1 && target.sprite) {
-        enemiesDestroyed++;
-        const targetConfig = getEnemyConfig(target.type);
-        // Reduce particles for mega explosion to prevent crash
-        const particleCount = isMegaExplosion ? 5 : 10;
-        this.playEnemyDeathAnimation(target, targetIndex, targetConfig, particleCount, false, false);
-      }
-    }
+      // Create multiple layered particle explosions for dramatic effect
+      // Keep particle counts reasonable to prevent crash
+      const particleMultiplier = isMegaExplosion ? 1.5 : 1.5; // Same particles, but different radius
 
-    // Visual feedback: if we destroyed enemies, add extra explosion particles
-    if (enemiesDestroyed > 0) {
+      // Central massive fireball
+      this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffff00, 40 * particleMultiplier); // Bright yellow core
+      this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffa500, 35 * particleMultiplier); // Orange middle layer
+      this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff4500, 30 * particleMultiplier); // Orange-red outer layer
+
+      // Add shockwave ring effect with slightly delayed particles
       setTimeout(() => {
-        // Cap particles to prevent crash
-        const feedbackParticles = Math.min(15 * particleMultiplier, 30);
-        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, feedbackParticles);
-      }, 100);
+        try {
+          this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff8800, 25 * particleMultiplier);
+        } catch (e) {
+          console.error('Kamikaze shockwave error:', e);
+        }
+      }, 50);
+
+      if (isMegaExplosion) {
+        // Extra mega explosion layers - spread out over time to reduce load
+        setTimeout(() => {
+          try {
+            this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff0000, 40); // Red wave
+          } catch (e) {
+            console.error('Kamikaze red wave error:', e);
+          }
+        }, 100);
+        setTimeout(() => {
+          try {
+            this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, 35); // White flash
+          } catch (e) {
+            console.error('Kamikaze white flash error:', e);
+          }
+        }, 150);
+      }
+
+      // Check for enemies in blast radius
+      // Collect targets first to avoid modifying array during iteration
+      const targets: Enemy[] = [];
+      for (let i = this.enemies.length - 1; i >= 0; i--) {
+        const target = this.enemies[i];
+        if (!target || target === origin || !target.sprite || target.isBoss) {
+          continue;
+        }
+
+        const dx = target.sprite.x - origin.sprite.x;
+        const dy = target.sprite.y - origin.sprite.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance <= blastRadius) {
+          targets.push(target);
+        }
+      }
+
+      console.log(`Kamikaze targets: ${targets.length}`);
+
+      // Destroy collected targets with a delay to spread out the load
+      let enemiesDestroyed = 0;
+      const destroyDelay = isMegaExplosion ? 20 : 0; // Small delay between each enemy for mega explosion
+
+      for (let i = 0; i < targets.length; i++) {
+        setTimeout(() => {
+          try {
+            const target = targets[i];
+            if (!target || !target.sprite) return;
+
+            const targetIndex = this.enemies.indexOf(target);
+            if (targetIndex !== -1) {
+              const targetConfig = getEnemyConfig(target.type);
+              // Reduce particles for mega explosion to prevent crash
+              const particleCount = isMegaExplosion ? 3 : 10; // Even fewer particles
+              this.playEnemyDeathAnimation(target, targetIndex, targetConfig, particleCount, false, false);
+            }
+          } catch (e) {
+            console.error('Kamikaze target destroy error:', e);
+          }
+        }, i * destroyDelay);
+      }
+
+      enemiesDestroyed = targets.length;
+
+      // Visual feedback: if we destroyed enemies, add extra explosion particles
+      if (enemiesDestroyed > 0) {
+        setTimeout(() => {
+          try {
+            // Cap particles to prevent crash
+            const feedbackParticles = Math.min(15 * particleMultiplier, 25);
+            this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, feedbackParticles);
+          } catch (e) {
+            console.error('Kamikaze feedback error:', e);
+          }
+        }, 200);
+      }
+
+      console.log(`Kamikaze complete: ${enemiesDestroyed} enemies destroyed`);
+    } catch (error) {
+      console.error('Kamikaze blast error:', error);
     }
   }
 
