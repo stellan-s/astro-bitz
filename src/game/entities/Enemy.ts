@@ -200,8 +200,8 @@ export class Enemy {
 
         // Position at rear of each small ship
         flame.x = pos.x + (Math.random() - 0.5) * 6;
-        // Ships point downward, flames at bottom (positive Y from ship center)
-        flame.y = pos.y + h * 0.4 + 8 + i * 8;
+        // Ships point downward, flames should be BEHIND (negative Y, trailing upward)
+        flame.y = pos.y - h * 0.4 - 8 - i * 8;
 
         this.exhaustFlames.push(flame);
         this.sprite.addChild(flame);
