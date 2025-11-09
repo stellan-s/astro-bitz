@@ -1292,24 +1292,43 @@ export class Game {
     }
 
     const kamikazeConfig = getEnemyConfig('kamikaze');
-    const blastRadius = kamikazeConfig.deathExplosionRadius ?? 90;
+    const normalBlastRadius = kamikazeConfig.deathExplosionRadius ?? 90;
+
+    // 25% chance for MEGA EXPLOSION that destroys entire screen
+    const isMegaExplosion = Math.random() < 0.25;
+    const blastRadius = isMegaExplosion ? 999999 : normalBlastRadius * 1.5; // 50% bigger normal blast
 
     // Play massive explosion sound effect
     this.audio.playKamikazeExplosion();
 
-    // Add screen shake for impact
-    this.startScreenShake(400, 8); // 400ms duration, intensity 8
+    if (isMegaExplosion) {
+      // MEGA EXPLOSION - longer shake, more intense
+      this.startScreenShake(800, 15); // 800ms duration, intensity 15
+    } else {
+      // Normal bigger explosion
+      this.startScreenShake(500, 10); // 500ms duration, intensity 10
+    }
 
     // Create multiple layered particle explosions for dramatic effect
+    const particleMultiplier = isMegaExplosion ? 2 : 1.5; // 2x or 1.5x particles
+
     // Central massive fireball
-    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffff00, 40); // Bright yellow core
-    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffa500, 35); // Orange middle layer
-    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff4500, 30); // Orange-red outer layer
+    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffff00, 40 * particleMultiplier); // Bright yellow core
+    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffa500, 35 * particleMultiplier); // Orange middle layer
+    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff4500, 30 * particleMultiplier); // Orange-red outer layer
 
     // Add shockwave ring effect with slightly delayed particles
     setTimeout(() => {
-      this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff8800, 25);
+      this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff8800, 25 * particleMultiplier);
     }, 50);
+
+    if (isMegaExplosion) {
+      // Extra mega explosion layers
+      setTimeout(() => {
+        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff0000, 50); // Red wave
+        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, 40); // White flash
+      }, 100);
+    }
 
     // Check for enemies in blast radius
     let enemiesDestroyed = 0;
@@ -1333,7 +1352,7 @@ export class Game {
     // Visual feedback: if we destroyed enemies, add extra explosion particles
     if (enemiesDestroyed > 0) {
       setTimeout(() => {
-        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, 15);
+        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, 15 * particleMultiplier);
       }, 100);
     }
   }

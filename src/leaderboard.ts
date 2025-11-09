@@ -40,9 +40,6 @@ async function fetchLeaderboard(type = 'all-time', limit = 10) {
 }
 
 function getRankMedal(rank: number): string {
-  if (rank === 1) return '🥇';
-  if (rank === 2) return '🥈';
-  if (rank === 3) return '🥉';
   return `#${rank}`;
 }
 
