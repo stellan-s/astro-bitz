@@ -21,6 +21,7 @@ export interface EnemyTypeConfig {
   shootInterval?: number; // How often boss shoots (ms), undefined = doesn't shoot
   shootPattern?: 'single' | 'triple' | 'spread' | 'aimed'; // Shooting pattern for bosses
   maxY?: number; // Maximum Y position (for bosses that shouldn't go below a certain point)
+  deathExplosionRadius?: number; // Optional radius for on-death explosions
 }
 
 export interface EnemyConfig {
@@ -151,6 +152,7 @@ export const ENEMY_CONFIG: EnemyConfig = {
     spawnWeight: 0.05, // 5% chance - rare and dangerous
     movePattern: 'straight', // Direct approach
     heatEmission: 0.9, // High heat - aggressive engines
+    deathExplosionRadius: 90, // Chain reaction range when destroyed by the player
     // No shootInterval or shootPattern - kamikaze crashes into player
   },
   phantom: {

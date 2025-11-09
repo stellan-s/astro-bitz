@@ -1077,13 +1077,25 @@ export class Game {
     this.achievementsManager.trackDamageTaken();
   }
 
-  private playEnemyDeathAnimation(enemy: Enemy, _enemyIndex: number, config: any, particleCount: number = 12, wasMissile: boolean = false): void {
+  private playEnemyDeathAnimation(
+    enemy: Enemy,
+    _enemyIndex: number,
+    config: any,
+    particleCount: number = 12,
+    wasMissile: boolean = false,
+    allowKamikazeBlast: boolean = true,
+  ): void {
     // Mark enemy as being destroyed to prevent concurrent animations - CHECK THIS FIRST!
     const isBeingDestroyed = (enemy as any).isBeingDestroyed;
     if (isBeingDestroyed) {
       return; // Already being destroyed, don't award points or start another animation
     }
     (enemy as any).isBeingDestroyed = true;
+
+    // Trigger kamikaze chain reaction only when killed directly by the player
+    if (allowKamikazeBlast && enemy.type === 'kamikaze') {
+      this.triggerKamikazeBlast(enemy);
+    }
 
     // Boss-specific enhancements
     const isBoss = enemy.isBoss;
@@ -1174,6 +1186,35 @@ export class Game {
     };
 
     animate();
+  }
+
+  private triggerKamikazeBlast(origin: Enemy): void {
+    if (!origin.sprite) {
+      return;
+    }
+
+    const kamikazeConfig = getEnemyConfig('kamikaze');
+    const blastRadius = kamikazeConfig.deathExplosionRadius ?? 90;
+
+    // Add a distinct secondary blast so the player sees the extra effect
+    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xfff1a1, 25);
+    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff7700, 18);
+
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const target = this.enemies[i];
+      if (!target || target === origin || !target.sprite || target.isBoss) {
+        continue;
+      }
+
+      const dx = target.sprite.x - origin.sprite.x;
+      const dy = target.sprite.y - origin.sprite.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance <= blastRadius) {
+        const targetConfig = getEnemyConfig(target.type);
+        this.playEnemyDeathAnimation(target, i, targetConfig, 10, false, false);
+      }
+    }
   }
 
   private startScreenShake(duration: number, intensity: number): void {
