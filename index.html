@@ -23,12 +23,19 @@
         box-sizing: border-box;
       }
 
+      html {
+        overflow-x: hidden;
+        width: 100%;
+      }
+
       body {
         font-family: 'Orbitron', sans-serif;
         background: linear-gradient(180deg, #0a0a1f 0%, #1a1a3f 100%);
         color: #ffffff;
         min-height: 100vh;
         overflow-x: hidden;
+        width: 100%;
+        max-width: 100vw;
       }
 
       /* Top Ad Banner */
@@ -43,11 +50,13 @@
       /* Main Container */
       .container {
         max-width: 1400px;
+        width: 100%;
         margin: 0 auto;
         padding: 40px 20px;
         display: grid;
         grid-template-columns: 300px 1fr 300px;
         gap: 30px;
+        box-sizing: border-box;
       }
 
       /* Sidebar Ads */
@@ -65,6 +74,9 @@
       /* Main Content */
       .main-content {
         text-align: center;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
       }
 
       .logo {
@@ -82,6 +94,7 @@
       .cover-image {
         max-width: 600px;
         width: 100%;
+        max-width: 100%;
         height: auto;
         border-radius: 15px;
         border: 3px solid rgba(0, 255, 255, 0.5);
@@ -89,6 +102,7 @@
         margin: 30px auto 40px;
         display: block;
         transition: all 0.3s ease;
+        box-sizing: border-box;
       }
 
       .cover-image:hover {
@@ -202,6 +216,10 @@
         border: 2px solid rgba(255, 215, 0, 0.3);
         border-radius: 10px;
         margin-bottom: 40px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        box-sizing: border-box;
       }
 
       .leaderboard h2 {
@@ -242,6 +260,7 @@
       .leaderboard-table {
         width: 100%;
         border-collapse: collapse;
+        table-layout: auto;
       }
 
       .leaderboard-table thead {
@@ -258,6 +277,9 @@
       .leaderboard-table td {
         padding: 12px 15px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .leaderboard-table tr:hover {
@@ -365,17 +387,29 @@
       }
 
       @media (max-width: 480px) {
+        .container {
+          padding: 15px 10px;
+        }
+
         .logo {
-          font-size: 36px;
+          font-size: 32px;
+          margin-bottom: 15px;
         }
 
         .tagline {
-          font-size: 16px;
+          font-size: 14px;
+          margin-bottom: 20px;
+        }
+
+        .cover-image {
+          margin: 20px auto 30px;
+          border-width: 2px;
         }
 
         .play-button {
           padding: 12px 30px;
           font-size: 18px;
+          margin-bottom: 40px;
         }
 
         .features {
@@ -386,39 +420,68 @@
           padding: 15px;
         }
 
+        .feature-card h3 {
+          font-size: 18px;
+        }
+
+        .controls, .leaderboard {
+          padding: 15px 10px;
+        }
+
         .leaderboard h2 {
-          font-size: 22px;
+          font-size: 20px;
+          margin-bottom: 15px;
         }
 
         .leaderboard-table {
-          font-size: 12px;
+          font-size: 11px;
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+
+        .leaderboard-table thead,
+        .leaderboard-table tbody,
+        .leaderboard-table tr {
+          display: table;
+          width: 100%;
+          table-layout: fixed;
         }
 
         .leaderboard-table th,
         .leaderboard-table td {
-          padding: 8px 5px;
+          padding: 6px 4px;
+          font-size: 11px;
+        }
+
+        .leaderboard-table th:first-child,
+        .leaderboard-table td:first-child {
+          width: 50px;
+        }
+
+        .leaderboard-table th:nth-child(2),
+        .leaderboard-table td:nth-child(2) {
+          width: auto;
+          max-width: 80px;
         }
 
         .leaderboard-tabs {
           gap: 5px;
+          flex-wrap: wrap;
         }
 
         .leaderboard-tab {
-          padding: 6px 12px;
-          font-size: 12px;
+          padding: 6px 10px;
+          font-size: 11px;
         }
 
         .rank-medal {
-          font-size: 16px;
+          font-size: 14px;
         }
 
-        /* Make table scrollable on very small screens */
-        .leaderboard {
-          overflow-x: auto;
-        }
-
-        .leaderboard-table {
-          min-width: 100%;
+        .ad-top-banner,
+        .ad-bottom-banner {
+          padding: 10px 5px;
         }
       }
     </style>
