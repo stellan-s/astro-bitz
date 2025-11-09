@@ -1294,8 +1294,8 @@ export class Game {
     const kamikazeConfig = getEnemyConfig('kamikaze');
     const normalBlastRadius = kamikazeConfig.deathExplosionRadius ?? 90;
 
-    // 25% chance for MEGA EXPLOSION that destroys entire screen
-    const isMegaExplosion = Math.random() < 0.25;
+    // 100% chance for MEGA EXPLOSION that destroys entire screen (testing)
+    const isMegaExplosion = true; // Math.random() < 0.25;
     const blastRadius = isMegaExplosion ? 999999 : normalBlastRadius * 1.5; // 50% bigger normal blast
 
     // Play massive explosion sound effect
@@ -1310,7 +1310,8 @@ export class Game {
     }
 
     // Create multiple layered particle explosions for dramatic effect
-    const particleMultiplier = isMegaExplosion ? 2 : 1.5; // 2x or 1.5x particles
+    // Keep particle counts reasonable to prevent crash
+    const particleMultiplier = isMegaExplosion ? 1.5 : 1.5; // Same particles, but different radius
 
     // Central massive fireball
     this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffff00, 40 * particleMultiplier); // Bright yellow core
@@ -1323,15 +1324,18 @@ export class Game {
     }, 50);
 
     if (isMegaExplosion) {
-      // Extra mega explosion layers
+      // Extra mega explosion layers - spread out over time to reduce load
       setTimeout(() => {
-        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff0000, 50); // Red wave
-        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, 40); // White flash
+        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff0000, 40); // Red wave
       }, 100);
+      setTimeout(() => {
+        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, 35); // White flash
+      }, 150);
     }
 
     // Check for enemies in blast radius
-    let enemiesDestroyed = 0;
+    // Collect targets first to avoid modifying array during iteration
+    const targets: Enemy[] = [];
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const target = this.enemies[i];
       if (!target || target === origin || !target.sprite || target.isBoss) {
@@ -1343,16 +1347,29 @@ export class Game {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance <= blastRadius) {
+        targets.push(target);
+      }
+    }
+
+    // Destroy collected targets
+    let enemiesDestroyed = 0;
+    for (const target of targets) {
+      const targetIndex = this.enemies.indexOf(target);
+      if (targetIndex !== -1 && target.sprite) {
         enemiesDestroyed++;
         const targetConfig = getEnemyConfig(target.type);
-        this.playEnemyDeathAnimation(target, i, targetConfig, 10, false, false);
+        // Reduce particles for mega explosion to prevent crash
+        const particleCount = isMegaExplosion ? 5 : 10;
+        this.playEnemyDeathAnimation(target, targetIndex, targetConfig, particleCount, false, false);
       }
     }
 
     // Visual feedback: if we destroyed enemies, add extra explosion particles
     if (enemiesDestroyed > 0) {
       setTimeout(() => {
-        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, 15 * particleMultiplier);
+        // Cap particles to prevent crash
+        const feedbackParticles = Math.min(15 * particleMultiplier, 30);
+        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, feedbackParticles);
       }, 100);
     }
   }
