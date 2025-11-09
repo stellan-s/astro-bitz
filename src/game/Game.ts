@@ -1196,10 +1196,25 @@ export class Game {
     const kamikazeConfig = getEnemyConfig('kamikaze');
     const blastRadius = kamikazeConfig.deathExplosionRadius ?? 90;
 
-    // Add a distinct secondary blast so the player sees the extra effect
-    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xfff1a1, 25);
-    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff7700, 18);
+    // Play massive explosion sound effect
+    this.audio.playKamikazeExplosion();
 
+    // Add screen shake for impact
+    this.startScreenShake(400, 8); // 400ms duration, intensity 8
+
+    // Create multiple layered particle explosions for dramatic effect
+    // Central massive fireball
+    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffff00, 40); // Bright yellow core
+    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffa500, 35); // Orange middle layer
+    this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff4500, 30); // Orange-red outer layer
+
+    // Add shockwave ring effect with slightly delayed particles
+    setTimeout(() => {
+      this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xff8800, 25);
+    }, 50);
+
+    // Check for enemies in blast radius
+    let enemiesDestroyed = 0;
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const target = this.enemies[i];
       if (!target || target === origin || !target.sprite || target.isBoss) {
@@ -1211,9 +1226,17 @@ export class Game {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance <= blastRadius) {
+        enemiesDestroyed++;
         const targetConfig = getEnemyConfig(target.type);
         this.playEnemyDeathAnimation(target, i, targetConfig, 10, false, false);
       }
+    }
+
+    // Visual feedback: if we destroyed enemies, add extra explosion particles
+    if (enemiesDestroyed > 0) {
+      setTimeout(() => {
+        this.particleSystem.createExplosion(origin.sprite.x, origin.sprite.y, 0xffffff, 15);
+      }, 100);
     }
   }
 

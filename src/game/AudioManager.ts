@@ -635,6 +635,62 @@ export class AudioManager {
     sparkle.stop(now + 0.25);
   }
 
+  // Kamikaze chain reaction - massive fiery explosion
+  public playKamikazeExplosion(): void {
+    const now = this.audioContext.currentTime;
+
+    // Massive initial blast
+    const blast = this.audioContext.createOscillator();
+    const blastGain = this.audioContext.createGain();
+
+    blast.connect(blastGain);
+    blastGain.connect(this.audioContext.destination);
+
+    blast.type = 'sawtooth';
+    blast.frequency.setValueAtTime(180, now);
+    blast.frequency.exponentialRampToValueAtTime(40, now + 0.4);
+
+    blastGain.gain.setValueAtTime(this.masterVolume * 0.7, now);
+    blastGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+    blast.start(now);
+    blast.stop(now + 0.4);
+
+    // High-pitched shockwave
+    const shockwave = this.audioContext.createOscillator();
+    const shockwaveGain = this.audioContext.createGain();
+
+    shockwave.connect(shockwaveGain);
+    shockwaveGain.connect(this.audioContext.destination);
+
+    shockwave.type = 'square';
+    shockwave.frequency.setValueAtTime(3000, now);
+    shockwave.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+
+    shockwaveGain.gain.setValueAtTime(this.masterVolume * 0.4, now);
+    shockwaveGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+    shockwave.start(now);
+    shockwave.stop(now + 0.2);
+
+    // Fiery crackle effect
+    const crackle = this.audioContext.createOscillator();
+    const crackleGain = this.audioContext.createGain();
+
+    crackle.connect(crackleGain);
+    crackleGain.connect(this.audioContext.destination);
+
+    crackle.type = 'square';
+    crackle.frequency.setValueAtTime(2200, now + 0.1);
+    crackle.frequency.exponentialRampToValueAtTime(600, now + 0.5);
+
+    crackleGain.gain.setValueAtTime(this.masterVolume * 0.35, now + 0.1);
+    crackleGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+    crackle.start(now + 0.1);
+    crackle.stop(now + 0.5);
+  }
+
   // Boss explosion - massive, dramatic explosion sound
   public playBossExplosion(): void {
     const now = this.audioContext.currentTime;
