@@ -3,59 +3,683 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>Astro Bitz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Astro Bitz - A retro arcade space shooter with heat-seeking missiles, epic boss battles, and explosive action. Blast through waves of enemies!" />
+    <title>Astro Bitz - Retro Space Shooter Game</title>
 
-    <!-- Google Fonts - Retro Gaming & ANSI Fonts -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 
     <!-- Google AdSense - Replace with your publisher ID -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
             crossorigin="anonymous"></script>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Orbitron', sans-serif;
+        background: linear-gradient(180deg, #0a0a1f 0%, #1a1a3f 100%);
+        color: #ffffff;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* Top Ad Banner */
+      .ad-top-banner {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 10px;
+        text-align: center;
+        border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+      }
+
+      /* Main Container */
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        display: grid;
+        grid-template-columns: 300px 1fr 300px;
+        gap: 30px;
+      }
+
+      /* Sidebar Ads */
+      .sidebar-ad {
+        position: sticky;
+        top: 20px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        border: 2px solid rgba(0, 255, 255, 0.3);
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        height: fit-content;
+      }
+
+      /* Main Content */
+      .main-content {
+        text-align: center;
+      }
+
+      .logo {
+        font-size: 72px;
+        font-weight: 900;
+        background: linear-gradient(45deg, #00ffff, #ff00ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        margin-bottom: 20px;
+        animation: glow 2s ease-in-out infinite alternate;
+      }
+
+      .cover-image {
+        max-width: 600px;
+        width: 100%;
+        height: auto;
+        border-radius: 15px;
+        border: 3px solid rgba(0, 255, 255, 0.5);
+        box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
+        margin: 30px auto 40px;
+        display: block;
+        transition: all 0.3s ease;
+      }
+
+      .cover-image:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 60px rgba(255, 0, 255, 0.5);
+        border-color: rgba(255, 0, 255, 0.5);
+      }
+
+      @keyframes glow {
+        from { filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5)); }
+        to { filter: drop-shadow(0 0 30px rgba(255, 0, 255, 0.8)); }
+      }
+
+      .tagline {
+        font-size: 24px;
+        color: #00ffff;
+        margin-bottom: 40px;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+      }
+
+      .play-button {
+        display: inline-block;
+        padding: 20px 60px;
+        font-size: 28px;
+        font-weight: 900;
+        color: #ffffff;
+        background: linear-gradient(45deg, #ff4500, #ff6347);
+        border: 3px solid #ff6347;
+        border-radius: 10px;
+        text-decoration: none;
+        box-shadow: 0 0 30px rgba(255, 69, 0, 0.5);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-bottom: 60px;
+      }
+
+      .play-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 50px rgba(255, 69, 0, 0.8);
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 30px;
+        margin-bottom: 60px;
+      }
+
+      .feature-card {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 30px;
+        border: 2px solid rgba(0, 255, 255, 0.3);
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .feature-card:hover {
+        border-color: rgba(255, 0, 255, 0.5);
+        box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
+        transform: translateY(-5px);
+      }
+
+      .feature-card h3 {
+        color: #ff4500;
+        font-size: 24px;
+        margin-bottom: 15px;
+      }
+
+      .feature-card p {
+        color: #aaaaaa;
+        line-height: 1.6;
+      }
+
+      .controls {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 30px;
+        border: 2px solid rgba(255, 255, 0, 0.3);
+        border-radius: 10px;
+        margin-bottom: 40px;
+      }
+
+      .controls h2 {
+        color: #ffff00;
+        margin-bottom: 20px;
+      }
+
+      .control-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        text-align: left;
+      }
+
+      .control-item {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 5px;
+      }
+
+      .control-key {
+        color: #00ffff;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+
+      /* Leaderboard Styles */
+      .leaderboard {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 30px;
+        border: 2px solid rgba(255, 215, 0, 0.3);
+        border-radius: 10px;
+        margin-bottom: 40px;
+      }
+
+      .leaderboard h2 {
+        color: #ffd700;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 32px;
+      }
+
+      .leaderboard-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .leaderboard-tab {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(0, 255, 255, 0.3);
+        border-radius: 5px;
+        color: #00ffff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .leaderboard-tab:hover {
+        background: rgba(0, 255, 255, 0.1);
+        border-color: rgba(0, 255, 255, 0.5);
+      }
+
+      .leaderboard-tab.active {
+        background: rgba(255, 215, 0, 0.2);
+        border-color: #ffd700;
+        color: #ffd700;
+      }
+
+      .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .leaderboard-table thead {
+        background: rgba(255, 215, 0, 0.1);
+      }
+
+      .leaderboard-table th {
+        padding: 15px;
+        color: #ffd700;
+        text-align: left;
+        border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+      }
+
+      .leaderboard-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .leaderboard-table tr:hover {
+        background: rgba(255, 215, 0, 0.05);
+      }
+
+      .rank-medal {
+        font-size: 20px;
+        margin-right: 5px;
+      }
+
+      .leaderboard-loading {
+        text-align: center;
+        padding: 40px;
+        color: #00ffff;
+      }
+
+      .leaderboard-error {
+        text-align: center;
+        padding: 40px;
+        color: #ff4444;
+      }
+
+      .rank-1 { color: #ffd700; } /* Gold */
+      .rank-2 { color: #c0c0c0; } /* Silver */
+      .rank-3 { color: #cd7f32; } /* Bronze */
+
+      /* In-content Ad */
+      .ad-content {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        border: 2px solid rgba(0, 255, 255, 0.2);
+        border-radius: 10px;
+        margin: 40px 0;
+        text-align: center;
+      }
+
+      /* Bottom Ad Banner */
+      .ad-bottom-banner {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        text-align: center;
+        border-top: 2px solid rgba(0, 255, 255, 0.3);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        margin-top: 60px;
+      }
+
+      /* Mobile Responsive */
+      @media (max-width: 1024px) {
+        .container {
+          grid-template-columns: 1fr;
+          padding: 20px 15px;
+        }
+
+        .sidebar-ad {
+          display: none;
+        }
+
+        .logo {
+          font-size: 48px;
+        }
+
+        .tagline {
+          font-size: 18px;
+        }
+
+        .play-button {
+          padding: 15px 40px;
+          font-size: 22px;
+        }
+
+        .feature-card {
+          padding: 20px;
+        }
+
+        .feature-card h3 {
+          font-size: 20px;
+        }
+
+        .controls, .leaderboard {
+          padding: 20px 15px;
+        }
+
+        .leaderboard h2 {
+          font-size: 26px;
+        }
+
+        .leaderboard-table {
+          font-size: 14px;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+          padding: 10px 8px;
+        }
+
+        .leaderboard-tab {
+          padding: 8px 15px;
+          font-size: 14px;
+        }
+
+        .control-list {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .logo {
+          font-size: 36px;
+        }
+
+        .tagline {
+          font-size: 16px;
+        }
+
+        .play-button {
+          padding: 12px 30px;
+          font-size: 18px;
+        }
+
+        .features {
+          gap: 15px;
+        }
+
+        .feature-card {
+          padding: 15px;
+        }
+
+        .leaderboard h2 {
+          font-size: 22px;
+        }
+
+        .leaderboard-table {
+          font-size: 12px;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+          padding: 8px 5px;
+        }
+
+        .leaderboard-tabs {
+          gap: 5px;
+        }
+
+        .leaderboard-tab {
+          padding: 6px 12px;
+          font-size: 12px;
+        }
+
+        .rank-medal {
+          font-size: 16px;
+        }
+
+        /* Make table scrollable on very small screens */
+        .leaderboard {
+          overflow-x: auto;
+        }
+
+        .leaderboard-table {
+          min-width: 100%;
+        }
+      }
+    </style>
   </head>
   <body>
-    <!-- Top Banner Ad - Discreet horizontal banner -->
-    <div class="ad-container ad-top">
-      <!-- Fake ad placeholder -->
-      <div class="fake-ad fake-ad-horizontal">
-        <span>Advertisement</span>
-      </div>
+    <!-- Top Banner Ad -->
+    <div class="ad-top-banner">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="1111111111"
+           data-ad-format="horizontal"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
-    <div id="game-wrapper">
-      <!-- Left Sidebar Ad (Desktop only) -->
-      <div class="ad-container ad-sidebar ad-left">
-        <!-- Fake ad placeholder -->
-        <div class="fake-ad fake-ad-vertical">
-          <span>Ad</span>
+    <div class="container">
+      <!-- Left Sidebar Ad -->
+      <div class="sidebar-ad">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-slot="2222222222"
+             data-ad-format="vertical"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <h1 class="logo">ASTRO BITZ</h1>
+        <p class="tagline">Blast through the bits of space!</p>
+
+        <img src="/astrobitz_cover.png" alt="Astro Bitz Game Cover" class="cover-image">
+
+        <a href="/play.html" class="play-button">PLAY NOW</a>
+
+        <div class="features">
+          <div class="feature-card">
+            <h3>🚀 9 Enemy Types</h3>
+            <p>From basic drones to kamikaze ships and phantom enemies. Each with unique movement patterns and heat signatures!</p>
+          </div>
+          <div class="feature-card">
+            <h3>🎯 Heat-Seeking Missiles</h3>
+            <p>Missiles lock onto enemies with visible exhaust flames! Stealth enemies are invisible to missiles - use bullets!</p>
+          </div>
+          <div class="feature-card">
+            <h3>⚡ Epic Boss Battles</h3>
+            <p>5 unique boss types with distinct attacks, movement patterns, and Shepard tone music. Each boss drops a unique powerup!</p>
+          </div>
+          <div class="feature-card">
+            <h3>💎 Power-Ups Galore</h3>
+            <p>Rapid Fire, Super Fire, Shields, Bombs, and Missiles. Stack shields for extra protection!</p>
+          </div>
+          <div class="feature-card">
+            <h3>🔥 Escalating Difficulty</h3>
+            <p>Waves get faster and spawn harder enemies. Can you survive the endless onslaught?</p>
+          </div>
+          <div class="feature-card">
+            <h3>📱 Mobile Optimized</h3>
+            <p>Touch controls with auto-fire. Swipe to move, tap for missiles. Play anywhere!</p>
+          </div>
         </div>
-      </div>
 
-      <!-- Game Container -->
-      <div id="game-container"></div>
-
-      <!-- Right Sidebar Ad (Desktop only) -->
-      <div class="ad-container ad-sidebar ad-right">
-        <!-- Fake ad placeholder -->
-        <div class="fake-ad fake-ad-vertical">
-          <span>Ad</span>
+        <!-- In-Content Ad -->
+        <div class="ad-content">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+               data-ad-slot="3333333333"
+               data-ad-format="rectangle"></ins>
+          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
         </div>
+
+        <!-- Leaderboard Section -->
+        <div class="leaderboard">
+          <h2>🏆 Leaderboard</h2>
+
+          <div class="leaderboard-tabs">
+            <button class="leaderboard-tab active" data-tab="all-time">All Time</button>
+            <button class="leaderboard-tab" data-tab="today">Today</button>
+            <button class="leaderboard-tab" data-tab="week">This Week</button>
+          </div>
+
+          <div id="leaderboard-content">
+            <div class="leaderboard-loading">Loading leaderboard...</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <h2>Controls</h2>
+          <div class="control-list">
+            <div class="control-item">
+              <span class="control-key">← →</span> or <span class="control-key">A D</span>
+              <div>Move Ship</div>
+            </div>
+            <div class="control-item">
+              <span class="control-key">SPACE</span>
+              <div>Fire Bullets</div>
+            </div>
+            <div class="control-item">
+              <span class="control-key">X</span>
+              <div>Fire Missile</div>
+            </div>
+            <div class="control-item">
+              <span class="control-key">M</span>
+              <div>Toggle Music</div>
+            </div>
+            <div class="control-item">
+              <span class="control-key">DRAG</span>
+              <div>Left/Right to Steer (Mobile)</div>
+            </div>
+            <div class="control-item">
+              <span class="control-key">SWIPE UP</span>
+              <div>Fire Missile While Steering (Mobile)</div>
+            </div>
+          </div>
+        </div>
+
+        <a href="/play.html" class="play-button">START PLAYING</a>
+      </div>
+
+      <!-- Right Sidebar Ad -->
+      <div class="sidebar-ad">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-slot="4444444444"
+             data-ad-format="vertical"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
       </div>
     </div>
 
-    <!-- Bottom Banner Ad - Discreet horizontal banner -->
-    <div class="ad-container ad-bottom">
-      <!-- Fake ad placeholder -->
-      <div class="fake-ad fake-ad-horizontal">
-        <span>Advertisement</span>
-      </div>
+    <!-- Bottom Banner Ad -->
+    <div class="ad-bottom-banner">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="5555555555"
+           data-ad-format="horizontal"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
-    <script type="module" src="/src/main.ts"></script>
+    <script>
+      // Leaderboard functionality
+      const SUPABASE_URL = 'https://your-project.supabase.co'; // Replace with your Supabase URL
+      const SUPABASE_KEY = 'your-anon-key'; // Replace with your Supabase anon key
+      const TABLE_NAME = 'leaderboard';
+
+      let currentTab = 'all-time';
+
+      async function fetchLeaderboard(type = 'all-time', limit = 10) {
+        try {
+          let url = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?select=*&order=score.desc&limit=${limit}`;
+
+          if (type === 'today') {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayISO = today.toISOString();
+            url += `&created_at=gte.${todayISO}`;
+          } else if (type === 'week') {
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const weekAgoISO = weekAgo.toISOString();
+            url += `&created_at=gte.${weekAgoISO}`;
+          }
+
+          const response = await fetch(url, {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          return await response.json();
+        } catch (error) {
+          console.error('Failed to fetch leaderboard:', error);
+          return null;
+        }
+      }
+
+      function getRankMedal(rank) {
+        if (rank === 1) return '🥇';
+        if (rank === 2) return '🥈';
+        if (rank === 3) return '🥉';
+        return `#${rank}`;
+      }
+
+      function displayLeaderboard(entries) {
+        const content = document.getElementById('leaderboard-content');
+
+        if (!entries || entries.length === 0) {
+          content.innerHTML = '<div class="leaderboard-error">No scores yet. Be the first to play!</div>';
+          return;
+        }
+
+        const table = `
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Score</th>
+                <th>Wave</th>
+                <th>Rank</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${entries.map((entry, index) => {
+                const rank = index + 1;
+                const rankClass = rank <= 3 ? `rank-${rank}` : '';
+                return `
+                  <tr class="${rankClass}">
+                    <td><span class="rank-medal">${getRankMedal(rank)}</span></td>
+                    <td>${entry.player_name}</td>
+                    <td>${entry.score.toLocaleString()}</td>
+                    <td>${entry.wave}</td>
+                    <td>${entry.rank}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+
+        content.innerHTML = table;
+      }
+
+      async function loadLeaderboard(type) {
+        const content = document.getElementById('leaderboard-content');
+        content.innerHTML = '<div class="leaderboard-loading">Loading leaderboard...</div>';
+
+        const entries = await fetchLeaderboard(type);
+        displayLeaderboard(entries);
+      }
+
+      // Tab switching
+      document.querySelectorAll('.leaderboard-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          // Update active tab
+          document.querySelectorAll('.leaderboard-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          // Load leaderboard for selected tab
+          const tabType = tab.getAttribute('data-tab');
+          currentTab = tabType;
+          loadLeaderboard(tabType);
+        });
+      });
+
+      // Load initial leaderboard
+      loadLeaderboard('all-time');
+
+      // Refresh leaderboard every 30 seconds
+      setInterval(() => {
+        loadLeaderboard(currentTab);
+      }, 30000);
+    </script>
   </body>
 </html>
