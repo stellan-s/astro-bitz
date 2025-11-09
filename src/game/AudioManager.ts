@@ -1102,7 +1102,7 @@ export class AudioManager {
   }
 
   // Start boss music with Shepard tone (infinitely rising tension)
-  public startBossMusic(): void {
+  public startBossMusic(bossType?: string): void {
     if (this.bossMusic) return;
 
     // Stop regular music first
@@ -1111,9 +1111,30 @@ export class AudioManager {
 
     // Shepard tone: multiple octaves of the same pitch class cycling
     // Creates illusion of infinitely rising pitch (subtle background tension)
-    // Start on a somewhat random note within a low range
-    const randomNotes = [55, 58.27, 61.74, 65.41, 69.30, 73.42]; // A1, A#1, B1, C2, C#2, D2
-    this.shepardBaseFreq = randomNotes[Math.floor(Math.random() * randomNotes.length)];
+    // Each boss type gets a unique starting frequency for distinct feel
+    let baseFreq: number;
+    switch (bossType) {
+      case 'boss':
+        baseFreq = 55; // A1 - classic, ominous
+        break;
+      case 'bossSniper':
+        baseFreq = 73.42; // D2 - higher, tense
+        break;
+      case 'bossTank':
+        baseFreq = 58.27; // A#1 - deep, heavy
+        break;
+      case 'bossSwarm':
+        baseFreq = 69.30; // C#2 - chaotic, urgent
+        break;
+      case 'bossTriple':
+        baseFreq = 65.41; // C2 - harmonious but threatening
+        break;
+      default:
+        // Fallback to random selection for any unknown boss types
+        const randomNotes = [55, 58.27, 61.74, 65.41, 69.30, 73.42];
+        baseFreq = randomNotes[Math.floor(Math.random() * randomNotes.length)];
+    }
+    this.shepardBaseFreq = baseFreq;
     const numOctaves = 8; // More octaves for smoother overlap
 
     for (let i = 0; i < numOctaves; i++) {

@@ -851,6 +851,35 @@ export class Game {
     this.gameContainer.addChild(powerUp.sprite);
   }
 
+  private spawnBossReward(x: number, y: number, bossType: string): void {
+    // Each boss type drops a unique powerup reward
+    let type: PowerUpType;
+
+    switch (bossType) {
+      case 'boss':
+        type = 'superfire'; // Standard boss - powerful superfire
+        break;
+      case 'bossSniper':
+        type = 'missiles'; // Sniper boss - precision missiles
+        break;
+      case 'bossTank':
+        type = 'shield'; // Tank boss - defensive shield
+        break;
+      case 'bossSwarm':
+        type = 'bomb'; // Swarm boss - area-clearing bomb
+        break;
+      case 'bossTriple':
+        type = 'rapidfire'; // Triple boss - rapid fire for multiple targets
+        break;
+      default:
+        type = 'superfire'; // Fallback
+    }
+
+    const powerUp = new PowerUp(x, y, type);
+    this.powerUps.push(powerUp);
+    this.gameContainer.addChild(powerUp.sprite);
+  }
+
   private updateBullets(deltaTime: number): void {
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
@@ -1131,6 +1160,9 @@ export class Game {
       // Track boss achievement
       const bossAchievements = this.achievementsManager.trackBossDefeated();
       this.newAchievements.push(...bossAchievements);
+
+      // Spawn unique powerup reward for each boss type
+      this.spawnBossReward(enemy.sprite.x, enemy.sprite.y, enemy.type);
     }
 
     // Track wave progress
@@ -1297,7 +1329,22 @@ export class Game {
         // Use enemy size for better collision detection (especially for bosses)
         const config = getEnemyConfig(enemy.type);
         const enemyRadius = Math.max(config.size.width, config.size.height) / 2;
-        const minDistance = enemyRadius + 10; // Enemy radius + small buffer
+
+        // Calculate distance from enemy to player for dynamic hitbox sizing
+        const distToPlayer = Math.sqrt(
+          (enemy.sprite.x - this.player.sprite.x) ** 2 +
+          (enemy.sprite.y - this.player.sprite.y) ** 2
+        );
+
+        // Increase hitbox when enemy is close to player (within 150 pixels)
+        let buffer = 10; // Default buffer
+        if (distToPlayer < 150) {
+          // Scale buffer from 10 to 25 based on proximity
+          const proximityFactor = 1 - (distToPlayer / 150);
+          buffer = 10 + (proximityFactor * 15); // 10-25 pixel buffer
+        }
+
+        const minDistance = enemyRadius + buffer;
 
         if (distance < minDistance) {
           // Collision detected - remove bullet
@@ -1429,16 +1476,16 @@ export class Game {
       }
       this.enemies = [];
 
-      // Switch to boss music
-      if (this.musicEnabled) {
-        this.audio.stopBackgroundMusic();
-        this.audio.startBossMusic();
-      }
-
       // Spawn boss immediately during transition so it appears right away
       const x = this.app.screen.width / 2;
       const bossType = selectRandomBossType(this.currentWave);
       const boss = new Enemy(x, -100, bossType, this.difficultyMultiplier, this.app.screen.width);
+
+      // Switch to boss music with unique frequency for this boss type
+      if (this.musicEnabled) {
+        this.audio.stopBackgroundMusic();
+        this.audio.startBossMusic(bossType);
+      }
 
       // Set up boss shooting callback
       boss.onShoot = (bx: number, by: number, pattern: string, playerX?: number, playerY?: number) => {

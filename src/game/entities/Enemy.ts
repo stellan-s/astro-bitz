@@ -118,6 +118,12 @@ export class Enemy {
     const config = getEnemyConfig(this.type);
     const heat = config.heatEmission; // 0-1 scale
 
+    // Special handling for bossTriple - three separate exhaust points
+    if (this.type === 'bossTriple') {
+      this.createTripleBossExhaust(config, heat);
+      return;
+    }
+
     // More particles for hotter enemies
     const flameCount = Math.max(2, Math.floor(heat * 5)); // 2-5 particles based on heat
 
@@ -157,6 +163,50 @@ export class Enemy {
       this.exhaustFlames.push(flame);
       this.sprite.addChild(flame);
     }
+  }
+
+  private createTripleBossExhaust(config: any, heat: number): void {
+    // Triple boss has three ships in V formation
+    // Each ship needs its own exhaust flames
+    const w = config.size.width / 2;
+    const h = config.size.height / 2;
+    const spacing = w * 0.7;
+
+    // Ship positions (matching drawBoss positions for bossTriple)
+    const shipPositions = [
+      { x: -spacing, y: h * 0.3 },      // Left ship
+      { x: 0, y: -h * 0.2 },             // Center ship (lead, slightly forward)
+      { x: spacing, y: h * 0.3 }         // Right ship
+    ];
+
+    // Create exhaust for each of the three ships
+    shipPositions.forEach((pos) => {
+      // Each ship gets 2-3 flame particles
+      const flameCount = 2;
+      for (let i = 0; i < flameCount; i++) {
+        const flame = new Graphics();
+
+        // Flame size for boss
+        const baseSize = 3 + heat * 4;
+        flame.circle(0, 0, baseSize + Math.random() * 2);
+
+        // Boss flames are more intense
+        const colors = [0xffd700, 0xff6600, 0xff0000]; // Gold to red for boss
+        const colorIndex = Math.min(i, colors.length - 1);
+        flame.fill(colors[colorIndex]);
+
+        // Boss flames are very visible
+        flame.alpha = 0.7 + Math.random() * 0.2;
+
+        // Position at rear of each small ship
+        flame.x = pos.x + (Math.random() - 0.5) * 6;
+        // Ships point downward, flames at bottom (positive Y from ship center)
+        flame.y = pos.y + h * 0.4 + 8 + i * 8;
+
+        this.exhaustFlames.push(flame);
+        this.sprite.addChild(flame);
+      }
+    });
   }
 
   private drawBasic(): void {
