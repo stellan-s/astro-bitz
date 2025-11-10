@@ -1296,8 +1296,8 @@ export class Game {
       const kamikazeConfig = getEnemyConfig('kamikaze');
       const normalBlastRadius = kamikazeConfig.deathExplosionRadius ?? 90;
 
-      // 100% chance for MEGA EXPLOSION that destroys entire screen (testing)
-      const isMegaExplosion = true; // Math.random() < 0.25;
+      // 25% chance for MEGA EXPLOSION that destroys entire screen
+      const isMegaExplosion = Math.random() < 0.25;
       const blastRadius = isMegaExplosion ? 999999 : normalBlastRadius * 1.5; // 50% bigger normal blast
 
       console.log(`Kamikaze blast: ${isMegaExplosion ? 'MEGA' : 'Normal'}, enemies: ${this.enemies.length}`);
