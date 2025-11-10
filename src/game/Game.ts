@@ -47,6 +47,10 @@ export class Game {
   private superFireActive: boolean = false;
   private superFireTimer: number = 0;
   private superFireDuration: number = 10000; // 7 seconds of 3x damage
+  private pointMultiplierActive: boolean = false;
+  private pointMultiplierTimer: number = 0;
+  private pointMultiplierDuration: number = 5000; // 5 seconds
+  private pointMultiplierValue: number = 2; // 2x points
   private shieldCount: number = 0; // Number of shields (can stack)
   private fireRate: number = 300; // milliseconds between shots
   private lastShotTime: number = 0;
@@ -57,6 +61,7 @@ export class Game {
   // Missile system
   private missileAmmo: number = 3; // Start with 3 missiles
   private missileText: Text | null = null;
+  private pointMultiplierText: Text | null = null;
   private lastMissileTime: number = 0;
   private missileFireRate: number = 500; // milliseconds between missile shots
 
@@ -743,7 +748,7 @@ export class Game {
         enemy.destroy();
 
         // Award points for shield kill
-        this.score += config.points;
+        this.addScore(config.points);
         this.enemiesKilledThisWave++;
 
         // Remove ALL shields on collision
@@ -834,14 +839,17 @@ export class Game {
     const x = edgePadding + Math.random() * (this.app.screen.width - edgePadding * 2);
 
     // Random power-up type with weighted probabilities
+    // Point multiplier is very rare (3% chance)
     // Superfire is rare (5% chance)
     const rand = Math.random();
     let type: PowerUpType;
 
-    if (rand < 0.05) {
+    if (rand < 0.03) {
+      type = 'pointmultiplier'; // 3% chance - very rare!
+    } else if (rand < 0.08) {
       type = 'superfire'; // 5% chance - rare!
     } else {
-      // 95% chance for regular power-ups
+      // 92% chance for regular power-ups
       const types: PowerUpType[] = ['rapidfire', 'shield', 'bomb', 'missiles'];
       type = types[Math.floor(Math.random() * types.length)];
     }
@@ -1072,12 +1080,20 @@ export class Game {
     }
   }
 
+  private addScore(points: number): void {
+    // Apply point multiplier if active
+    const multipliedPoints = this.pointMultiplierActive
+      ? Math.floor(points * this.pointMultiplierValue)
+      : points;
+    this.score += multipliedPoints;
+  }
+
   private collectPowerUp(type: PowerUpType, x: number, y: number): void {
     // Play powerup collection sound
     this.audio.playPowerUp();
 
     // Award points for collecting powerup
-    this.score += 5;
+    this.addScore(5);
 
     // Get color based on powerup type for particles
     let particleColor: number;
@@ -1110,7 +1126,7 @@ export class Game {
           this.enemies.splice(i, 1);
           enemy.destroy();
           // Award half points for bomb kills
-          this.score += Math.floor(config.points / 2);
+          this.addScore(Math.floor(config.points / 2));
           enemiesCleared++;
         }
         // Update score display after bomb kills
@@ -1132,6 +1148,35 @@ export class Game {
         particleCount = 50; // Extra sparkly for rare powerup
         this.superFireActive = true;
         this.superFireTimer = this.superFireDuration; // 7 seconds
+        break;
+      case 'pointmultiplier':
+        particleColor = 0xffd700; // Gold
+        particleCount = 60; // Extra sparkly for very rare powerup
+        this.pointMultiplierActive = true;
+        this.pointMultiplierTimer = this.pointMultiplierDuration; // 5 seconds
+        // Create or update point multiplier status text
+        if (!this.pointMultiplierText) {
+          this.pointMultiplierText = new Text({
+            text: `${this.pointMultiplierValue}X POINTS!`,
+            style: {
+              fontFamily: 'Orbitron',
+              fontSize: 24,
+              fontWeight: '700',
+              fill: 0xffd700,
+              stroke: { color: 0x000000, width: 4 },
+              dropShadow: {
+                color: 0xffff00,
+                blur: 6,
+                distance: 3,
+              },
+            },
+          });
+          this.pointMultiplierText.x = this.app.screen.width / 2;
+          this.pointMultiplierText.y = 80;
+          this.pointMultiplierText.anchor.set(0.5);
+          this.app.stage.addChild(this.pointMultiplierText);
+        }
+        this.pointMultiplierText.visible = true;
         break;
     }
 
@@ -1208,7 +1253,7 @@ export class Game {
     }
 
     // Award points immediately
-    this.score += config.points;
+    this.addScore(config.points);
     this.scoreText.text = `Score: ${this.score}`;
 
     // Track enemy killed
@@ -2599,6 +2644,18 @@ export class Game {
         this.superFireTimer -= deltaTime;
         if (this.superFireTimer <= 0) {
           this.superFireActive = false;
+        }
+      }
+
+      // Update point multiplier timer
+      if (this.pointMultiplierActive) {
+        this.pointMultiplierTimer -= deltaTime;
+        if (this.pointMultiplierTimer <= 0) {
+          this.pointMultiplierActive = false;
+          // Hide the multiplier text
+          if (this.pointMultiplierText) {
+            this.pointMultiplierText.visible = false;
+          }
         }
       }
 

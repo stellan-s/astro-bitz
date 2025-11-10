@@ -1,6 +1,6 @@
 import { Graphics, Container, Text } from 'pixi.js';
 
-export type PowerUpType = 'rapidfire' | 'shield' | 'bomb' | 'missiles' | 'superfire';
+export type PowerUpType = 'rapidfire' | 'shield' | 'bomb' | 'missiles' | 'superfire' | 'pointmultiplier';
 
 export class PowerUp {
   public sprite: Container;
@@ -61,11 +61,41 @@ export class PowerUp {
         graphics.star(0, 0, 6, 12, 6); // More points for super
         graphics.fill(0xff00ff);
         break;
+
+      case 'pointmultiplier':
+        // Gold V-shaped chevron with glow
+        graphics.circle(0, 0, 18);
+        graphics.fill({ color: 0xffd700, alpha: 0.3 }); // Golden glow
+        // Draw V shape (chevron pointing down)
+        graphics.moveTo(0, 15);
+        graphics.lineTo(-12, -10);
+        graphics.lineTo(-8, -10);
+        graphics.lineTo(0, 8);
+        graphics.lineTo(8, -10);
+        graphics.lineTo(12, -10);
+        graphics.lineTo(0, 15);
+        graphics.fill(0xffd700); // Gold color
+        // Add inner highlight
+        graphics.moveTo(0, 10);
+        graphics.lineTo(-6, -5);
+        graphics.lineTo(0, 3);
+        graphics.lineTo(6, -5);
+        graphics.lineTo(0, 10);
+        graphics.fill(0xffff00); // Bright yellow highlight
+        break;
     }
 
     // Add label
+    const labelText =
+      type === 'rapidfire' ? 'RF' :
+      type === 'shield' ? 'SH' :
+      type === 'bomb' ? 'BM' :
+      type === 'missiles' ? 'MS' :
+      type === 'superfire' ? 'SF' :
+      'x2'; // Point multiplier
+
     const label = new Text({
-      text: type === 'rapidfire' ? 'RF' : type === 'shield' ? 'SH' : type === 'bomb' ? 'BM' : type === 'missiles' ? 'MS' : 'SF',
+      text: labelText,
       style: {
         fontFamily: 'Arial',
         fontSize: 10,
