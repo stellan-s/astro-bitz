@@ -49,7 +49,7 @@ export class Game {
   private superFireDuration: number = 10000; // 7 seconds of 3x damage
   private pointMultiplierActive: boolean = false;
   private pointMultiplierTimer: number = 0;
-  private pointMultiplierDuration: number = 5000; // 5 seconds
+  private pointMultiplierDuration: number = 10000; // 10 seconds
   private pointMultiplierValue: number = 2; // 2x points
   private shieldCount: number = 0; // Number of shields (can stack)
   private fireRate: number = 300; // milliseconds between shots
@@ -591,7 +591,7 @@ export class Game {
   }
 
   private shoot(): void {
-    const bullet = new Bullet(this.player.sprite.x, this.player.sprite.y - 30, this.superFireActive);
+    const bullet = new Bullet(this.player.sprite.x, this.player.sprite.y - 30, this.superFireActive, this.pointMultiplierActive);
     this.bullets.push(bullet);
     this.gameContainer.addChild(bullet.sprite);
 
@@ -1160,23 +1160,25 @@ export class Game {
             text: `${this.pointMultiplierValue}X POINTS!`,
             style: {
               fontFamily: 'Orbitron',
-              fontSize: 24,
-              fontWeight: '700',
+              fontSize: 48,
+              fontWeight: '900',
               fill: 0xffd700,
-              stroke: { color: 0x000000, width: 4 },
+              stroke: { color: 0x000000, width: 6 },
               dropShadow: {
                 color: 0xffff00,
-                blur: 6,
-                distance: 3,
+                blur: 10,
+                distance: 4,
               },
             },
           });
           this.pointMultiplierText.x = this.app.screen.width / 2;
-          this.pointMultiplierText.y = 80;
+          this.pointMultiplierText.y = 120;
           this.pointMultiplierText.anchor.set(0.5);
           this.app.stage.addChild(this.pointMultiplierText);
         }
         this.pointMultiplierText.visible = true;
+        // Play special powerup sound effect (use superfire sound as it's already rare/special)
+        this.audio.playSuperFireShoot();
         break;
     }
 

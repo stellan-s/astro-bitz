@@ -7,7 +7,7 @@ export class Bullet {
   public canCollide: boolean = false; // Bullets need to travel a bit before they can hit
   public damage: number = 1; // Damage dealt to enemies
 
-  constructor(x: number, y: number, isSuperFire: boolean = false) {
+  constructor(x: number, y: number, isSuperFire: boolean = false, isGoldenTracer: boolean = false) {
     this.sprite = new Container();
     this.sprite.x = x;
     this.sprite.y = y;
@@ -23,6 +23,14 @@ export class Bullet {
       // Add glow effect
       graphics.circle(0, 0, 8);
       graphics.fill({ color: 0xff00ff, alpha: 0.3 }); // Purple glow
+    } else if (isGoldenTracer) {
+      // Golden tracer bullet for point multiplier
+      this.damage = 1;
+      graphics.circle(0, 0, 5); // Slightly larger than normal
+      graphics.fill(0xffd700); // Gold
+      // Add golden glow effect
+      graphics.circle(0, 0, 7);
+      graphics.fill({ color: 0xffff00, alpha: 0.4 }); // Yellow glow
     } else {
       // Normal yellow bullet
       this.damage = 1;
