@@ -213,6 +213,33 @@
         box-shadow: 0 0 50px rgba(255, 69, 0, 0.8);
       }
 
+      .youtube-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 25px auto 60px;
+        padding: 18px 50px;
+        width: 100%;
+        max-width: 420px;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #ffffff;
+        background: linear-gradient(90deg, #ff0033, #ff6600);
+        border: 3px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50px;
+        text-align: center;
+        text-decoration: none;
+        text-transform: uppercase;
+        box-shadow: 0 0 35px rgba(255, 0, 51, 0.5);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .youtube-link:hover {
+        transform: scale(1.04);
+        box-shadow: 0 0 55px rgba(255, 102, 0, 0.8);
+      }
+
       .features {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -420,6 +447,12 @@
           font-size: 22px;
         }
 
+        .youtube-link {
+          padding: 16px 30px;
+          font-size: 18px;
+          margin-bottom: 40px;
+        }
+
         .feature-card {
           padding: 20px;
         }
@@ -479,6 +512,12 @@
           padding: 12px 30px;
           font-size: 18px;
           margin-bottom: 40px;
+        }
+
+        .youtube-link {
+          padding: 12px 20px;
+          font-size: 15px;
+          border-radius: 40px;
         }
 
         .features {
@@ -586,6 +625,11 @@
         <img src="/astrobitz_cover.png" alt="Astro Bitz - Free retro space shooter game with epic boss battles and leaderboard" class="cover-image">
 
         <a href="/play.html" class="play-button" aria-label="Play Astro Bitz Now">PLAY NOW</a>
+        <a href="https://youtube.com/@astro-bitz?si=OMvfBK7YusnvHQxp"
+           class="youtube-link"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="Watch the Astro Bitz YouTube Channel">Watch the Astro Bitz YouTube Channel</a>
 
         <section class="features" aria-label="Game Features">
           <article class="feature-card">
