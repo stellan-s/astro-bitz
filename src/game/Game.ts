@@ -1892,6 +1892,8 @@ export class Game {
     const isNewHighScore = HighScoreManager.saveHighScore(this.score);
     if (isNewHighScore) {
       this.analytics.trackHighScore(this.score, this.highScore);
+      this.highScore = this.score;
+      this.highScoreText.text = `Best: ${this.highScore}`;
     }
 
     // Get pilot rank and stats
@@ -1976,6 +1978,20 @@ export class Game {
           <div style="background: rgba(150, 100, 0, 0.3); padding: 15px; border-radius: 8px; border: 1px solid #ffaa00;">
             <div style="font-size: 14px; color: #ffaa00; margin-bottom: 5px;">WAVE REACHED</div>
             <div style="font-size: 32px; font-weight: bold; color: #ffffff;">${this.currentWave}</div>
+          </div>
+        </div>
+
+        <!-- Share CTA -->
+        <div style="margin: 10px 0 30px;">
+          <button id="share-score-btn" style="padding: 14px 28px; border-radius: 50px;
+                                              border: 2px solid #ff6347; background: linear-gradient(90deg, #ff4500, #ff6347);
+                                              color: #ffffff; font-family: 'Orbitron', sans-serif; font-size: 16px;
+                                              cursor: pointer; transition: all 0.3s; font-weight: 900;
+                                              letter-spacing: 1px; box-shadow: 0 0 20px rgba(255, 69, 0, 0.5);">
+            SHARE SCORE CARD
+          </button>
+          <div style="font-size: 14px; color: #aaaaaa; margin-top: 8px;">
+            Generates an Astro Bitz cover image with your score and best score so you can share it anywhere.
           </div>
         </div>
 
@@ -2200,6 +2216,8 @@ export class Game {
 
     document.body.appendChild(container);
 
+    this.setupShareButton();
+
     // Add dismiss button handler after DOM is added
     setTimeout(() => {
       const dismissBtn = document.getElementById('dismiss-btn');
@@ -2324,6 +2342,20 @@ export class Game {
     this.loadLeaderboard('alltime');
   }
 
+  private setupShareButton(): void {
+    setTimeout(() => {
+      const shareBtn = document.getElementById('share-score-btn') as HTMLButtonElement | null;
+      if (!shareBtn) {
+        return;
+      }
+
+      shareBtn.addEventListener('click', async (event) => {
+        event.preventDefault();
+        await this.handleShareButton(shareBtn);
+      });
+    }, 0);
+  }
+
   private async loadLeaderboard(tab: string): Promise<void> {
     const contentDiv = document.getElementById('leaderboard-content');
     if (!contentDiv || !this.leaderboardManager) return;
@@ -2381,6 +2413,159 @@ export class Game {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  private async handleShareButton(button: HTMLButtonElement): Promise<void> {
+    if (button.dataset.loading === 'true') {
+      return;
+    }
+
+    const defaultText = button.textContent ?? 'SHARE SCORE CARD';
+    button.dataset.loading = 'true';
+    button.disabled = true;
+    button.textContent = 'PREPARING...';
+
+    try {
+      const scoreFile = await this.generateScoreShareFile();
+      const nav = navigator as Navigator & { canShare?: (data?: ShareData) => boolean };
+      const shareData: ShareData = {
+        title: 'Astro Bitz Score',
+        text: `I scored ${this.score.toLocaleString()} pts in Astro Bitz!`,
+        files: [scoreFile],
+      };
+
+      const canShareFile = typeof nav.canShare === 'function' && nav.canShare({ files: [scoreFile] });
+      const supportsNativeShare = typeof navigator.share === 'function';
+      if (supportsNativeShare && canShareFile) {
+        await navigator.share!(shareData);
+        button.textContent = 'SHARED!';
+      } else {
+        this.downloadShareImage(scoreFile);
+        button.textContent = 'IMAGE DOWNLOADED';
+      }
+    } catch (error) {
+      const err = error as Error;
+      if (err?.name === 'AbortError') {
+        button.textContent = 'SHARE CANCELED';
+      } else {
+        console.error('Failed to share Astro Bitz score card:', error);
+        button.textContent = 'SHARE FAILED';
+      }
+    } finally {
+      setTimeout(() => {
+        button.disabled = false;
+        button.dataset.loading = 'false';
+        button.textContent = defaultText;
+      }, 2000);
+    }
+  }
+
+  private async generateScoreShareFile(): Promise<File> {
+    const baseImage = await this.loadImageElement('/astrobitz_cover.png');
+    const canvas = document.createElement('canvas');
+    canvas.width = baseImage.width;
+    canvas.height = baseImage.height;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Unable to create canvas context for share image');
+    }
+
+    ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+
+    // Darken the background slightly for text readability
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
+    gradient.addColorStop(0.6, 'rgba(0, 0, 0, 0.55)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.75)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const centerX = canvas.width / 2;
+    const bestScore = Math.max(this.score, this.highScore, HighScoreManager.getHighScore());
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    // Title
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0, 255, 255, 0.6)';
+    ctx.shadowBlur = canvas.width * 0.02;
+    ctx.font = `900 ${Math.floor(canvas.width * 0.12)}px Orbitron, Arial, sans-serif`;
+    ctx.fillText('ASTRO BITZ', centerX, canvas.height * 0.08);
+
+    ctx.shadowBlur = 0;
+
+    // Score label
+    ctx.fillStyle = '#bbbbbb';
+    ctx.font = `700 ${Math.floor(canvas.width * 0.05)}px Orbitron, Arial, sans-serif`;
+    ctx.fillText('FINAL SCORE', centerX, canvas.height * 0.28);
+
+    // Score value
+    ctx.fillStyle = '#00ffff';
+    ctx.font = `900 ${Math.floor(canvas.width * 0.12)}px Orbitron, Arial, sans-serif`;
+    ctx.fillText(this.score.toLocaleString(), centerX, canvas.height * 0.34);
+
+    // High score label
+    ctx.fillStyle = '#bbbbbb';
+    ctx.font = `700 ${Math.floor(canvas.width * 0.045)}px Orbitron, Arial, sans-serif`;
+    ctx.fillText('BEST SCORE', centerX, canvas.height * 0.54);
+
+    // High score value
+    ctx.fillStyle = '#ffd700';
+    ctx.font = `900 ${Math.floor(canvas.width * 0.09)}px Orbitron, Arial, sans-serif`;
+    ctx.fillText(bestScore.toLocaleString(), centerX, canvas.height * 0.6);
+
+    // Wave info for extra bragging rights
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `600 ${Math.floor(canvas.width * 0.04)}px Orbitron, Arial, sans-serif`;
+    ctx.fillText(`Wave ${this.currentWave}`, centerX, canvas.height * 0.72);
+
+    // Footer
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = `500 ${Math.floor(canvas.width * 0.035)}px Orbitron, Arial, sans-serif`;
+    ctx.fillText('astrobitz.com', centerX, canvas.height * 0.84);
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(canvas.width * 0.05, canvas.height * 0.04, canvas.width * 0.9, canvas.height * 0.92);
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((result) => {
+        if (result) {
+          resolve(result);
+        } else {
+          reject(new Error('Failed to export share image'));
+        }
+      }, 'image/png');
+    });
+
+    return new File([blob], 'astro-bitz-score.png', { type: 'image/png' });
+  }
+
+  private loadImageElement(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+      img.src = src;
+    });
+  }
+
+  private downloadShareImage(file: File): void {
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = file.name || 'astro-bitz-score.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   private togglePause(): void {
