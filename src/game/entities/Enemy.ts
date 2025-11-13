@@ -602,11 +602,15 @@ export class Enemy {
         offset + w * 0.15, h * 0.9,
         offset, h * 0.6
       ]);
-      graphics.fill({ color: config.tertiaryColor, alpha: 0.4 });
+      graphics.fill({ color: config.tertiaryColor, alpha: 0.6 });
     }
 
-    // Add semi-transparency to whole sprite for ghostly effect
-    graphics.alpha = 0.85;
+    // Add outer glow for better visibility
+    graphics.circle(0, 0, w * 0.9);
+    graphics.fill({ color: config.tertiaryColor, alpha: 0.15 });
+
+    // Note: Keep graphics at full opacity - ghostly effect achieved through sprite alpha below
+    // Don't set graphics.alpha here as it would compound with sprite alpha
 
     this.sprite.addChild(graphics);
   }
@@ -953,8 +957,8 @@ export class Enemy {
     if (this.type === 'phantom') {
       // Slow ethereal pulse
       const pulseSpeed = 2;
-      const alphaVariation = 0.1;
-      const baseAlpha = 0.2;
+      const alphaVariation = 0.15;
+      const baseAlpha = 0.7; // Increased from 0.2 to 0.7 for better visibility
       this.sprite.alpha = baseAlpha + Math.sin(this.movePattern * pulseSpeed) * alphaVariation;
       }
 
