@@ -49,10 +49,15 @@ export class Game {
   private superFireDuration: number = 10000; // 7 seconds of 3x damage
   private pointMultiplierActive: boolean = false;
   private pointMultiplierTimer: number = 0;
-  private pointMultiplierDuration: number = 10000; // 10 seconds
-  private pointMultiplierValue: number = 2; // 2x points
+  private pointMultiplierDuration: number = 20000; // 20 seconds
+  private pointMultiplierValue: number = 2; // 2x-5x points (randomly chosen)
+  private tripleShotActive: boolean = false;
+  private tripleShotTimer: number = 0;
+  private tripleShotDuration: number = 15000; // 15 seconds of 3-shot spread
   private shieldCount: number = 0; // Number of shields (can stack)
-  private fireRate: number = 300; // milliseconds between shots
+  private baseFireRate: number = 300; // Base milliseconds between shots
+  private minFireRate: number = 180; // Minimum fire rate limit (fastest shooting)
+  private fireRate: number = 300; // Current fire rate (calculated dynamically)
   private lastShotTime: number = 0;
   private isInvincible: boolean = false;
   private invincibilityTimer: number = 0;
@@ -145,9 +150,12 @@ export class Game {
     this.particleSystem = new ParticleSystem(this.gameContainer, this.isMobileDevice());
 
     // Create player
+    // Desktop: position further down (closer to bottom) for better visibility
+    // Mobile: keep higher up for thumb accessibility
+    const playerYOffset = this.isMobileDevice() ? 200 : 120;
     this.player = new Player(
       this.app.screen.width / 2,
-      this.app.screen.height - 200 // Moved up from -150 to -200
+      this.app.screen.height - playerYOffset
     );
     this.gameContainer.addChild(this.player.sprite);
 
@@ -590,10 +598,44 @@ export class Game {
     });
   }
 
+  private updateFireRate(): void {
+    // Calculate fire rate based on difficulty multiplier
+    // As game gets faster, player shoots faster too (up to a limit)
+    // Fire rate decreases (shoots faster) as difficulty increases
+    const fireRateReduction = (this.difficultyMultiplier - 1.0) * 30; // 30ms reduction per 1.0 difficulty increase
+    this.fireRate = Math.max(this.minFireRate, this.baseFireRate - fireRateReduction);
+  }
+
   private shoot(): void {
-    const bullet = new Bullet(this.player.sprite.x, this.player.sprite.y - 30, this.superFireActive, this.pointMultiplierActive);
-    this.bullets.push(bullet);
-    this.gameContainer.addChild(bullet.sprite);
+    if (this.tripleShotActive) {
+      // Fire 3 bullets in a spread pattern
+      const spreadAngle = 15; // degrees
+      const bulletSpacing = 20; // horizontal spacing
+
+      // Center bullet
+      const centerBullet = new Bullet(this.player.sprite.x, this.player.sprite.y - 30, this.superFireActive, this.pointMultiplierActive);
+      this.bullets.push(centerBullet);
+      this.gameContainer.addChild(centerBullet.sprite);
+
+      // Left bullet (angled left)
+      const leftBullet = new Bullet(this.player.sprite.x - bulletSpacing, this.player.sprite.y - 25, this.superFireActive, this.pointMultiplierActive);
+      // Set velocity to angle left
+      leftBullet.setAngle(-spreadAngle);
+      this.bullets.push(leftBullet);
+      this.gameContainer.addChild(leftBullet.sprite);
+
+      // Right bullet (angled right)
+      const rightBullet = new Bullet(this.player.sprite.x + bulletSpacing, this.player.sprite.y - 25, this.superFireActive, this.pointMultiplierActive);
+      // Set velocity to angle right
+      rightBullet.setAngle(spreadAngle);
+      this.bullets.push(rightBullet);
+      this.gameContainer.addChild(rightBullet.sprite);
+    } else {
+      // Normal single shot
+      const bullet = new Bullet(this.player.sprite.x, this.player.sprite.y - 30, this.superFireActive, this.pointMultiplierActive);
+      this.bullets.push(bullet);
+      this.gameContainer.addChild(bullet.sprite);
+    }
 
     // Play different sound based on superfire status
     if (this.superFireActive) {
@@ -841,6 +883,7 @@ export class Game {
     // Random power-up type with weighted probabilities
     // Point multiplier is very rare (3% chance)
     // Superfire is rare (5% chance)
+    // Tripleshot is uncommon (10% chance)
     const rand = Math.random();
     let type: PowerUpType;
 
@@ -848,8 +891,10 @@ export class Game {
       type = 'pointmultiplier'; // 3% chance - very rare!
     } else if (rand < 0.08) {
       type = 'superfire'; // 5% chance - rare!
+    } else if (rand < 0.18) {
+      type = 'tripleshot'; // 10% chance - uncommon!
     } else {
-      // 92% chance for regular power-ups
+      // 82% chance for regular power-ups
       const types: PowerUpType[] = ['rapidfire', 'shield', 'bomb', 'missiles'];
       type = types[Math.floor(Math.random() * types.length)];
     }
@@ -884,6 +929,14 @@ export class Game {
       case 'bossTriple':
         type = 'rapidfire';
         rewardName = 'RAPID FIRE!';
+        break;
+      case 'bossBarrage':
+        type = 'tripleshot';
+        rewardName = 'TRIPLE SHOT!';
+        break;
+      case 'bossPhantom':
+        type = 'pointmultiplier';
+        rewardName = 'POINT MULTIPLIER!';
         break;
       default:
         type = 'superfire';
@@ -1153,7 +1206,9 @@ export class Game {
         particleColor = 0xffd700; // Gold
         particleCount = 60; // Extra sparkly for very rare powerup
         this.pointMultiplierActive = true;
-        this.pointMultiplierTimer = this.pointMultiplierDuration; // 5 seconds
+        this.pointMultiplierTimer = this.pointMultiplierDuration; // 20 seconds
+        // Randomly choose multiplier value between 2x and 5x
+        this.pointMultiplierValue = Math.floor(Math.random() * 4) + 2; // 2, 3, 4, or 5
         // Create or update point multiplier status text
         if (!this.pointMultiplierText) {
           this.pointMultiplierText = new Text({
@@ -1179,6 +1234,12 @@ export class Game {
         this.pointMultiplierText.visible = true;
         // Play special powerup sound effect (use superfire sound as it's already rare/special)
         this.audio.playSuperFireShoot();
+        break;
+      case 'tripleshot':
+        particleColor = 0x00ffff; // Cyan
+        particleCount = 40;
+        this.tripleShotActive = true;
+        this.tripleShotTimer = this.tripleShotDuration; // 15 seconds
         break;
     }
 
@@ -1694,6 +1755,9 @@ export class Game {
       // Increase enemy speed multiplier (enemies get faster)
       this.difficultyMultiplier += 0.08; // 8% speed increase per wave
 
+      // Update player fire rate based on new difficulty
+      this.updateFireRate();
+
       // Reduce power-up frequency as game gets harder
       this.powerUpInterval = Math.min(15000, this.powerUpInterval + 500);
     }
@@ -2192,8 +2256,9 @@ export class Game {
       this.particleSystem.particles = [];
 
       // Reset player position and make visible
+      const playerYOffset = this.isMobileDevice() ? 200 : 120;
       this.player.sprite.x = this.app.screen.width / 2;
-      this.player.sprite.y = this.app.screen.height - 200;
+      this.player.sprite.y = this.app.screen.height - playerYOffset;
       this.player.sprite.visible = true;
       this.player.sprite.alpha = 1.0;
 
@@ -2426,11 +2491,12 @@ export class Game {
     button.textContent = 'PREPARING...';
 
     try {
-      const scoreFile = await this.generateScoreShareFile();
+      const rankInfo = this.getPilotRank(this.score);
+      const scoreFile = await this.generateScoreShareFile(rankInfo);
       const nav = navigator as Navigator & { canShare?: (data?: ShareData) => boolean };
       const shareData: ShareData = {
         title: 'Astro Bitz Score',
-        text: `I scored ${this.score.toLocaleString()} pts in Astro Bitz!`,
+        text: `I scored ${this.score.toLocaleString()} pts in Astro Bitz (${rankInfo.rank})!`,
         files: [scoreFile],
       };
 
@@ -2460,7 +2526,7 @@ export class Game {
     }
   }
 
-  private async generateScoreShareFile(): Promise<File> {
+  private async generateScoreShareFile(rankInfo: { rank: string; color: string; nextRank: string; nextThreshold: number }): Promise<File> {
     const baseImage = await this.loadImageElement('/astrobitz_cover.png');
     const canvas = document.createElement('canvas');
     canvas.width = baseImage.width;
@@ -2519,10 +2585,20 @@ export class Game {
     ctx.font = `900 ${Math.floor(canvas.width * 0.09)}px Orbitron, Arial, sans-serif`;
     ctx.fillText(bestScore.toLocaleString(), centerX, canvas.height * 0.6);
 
+    // Rank label
+    ctx.fillStyle = '#bbbbbb';
+    ctx.font = `700 ${Math.floor(canvas.width * 0.045)}px Orbitron, Arial, sans-serif`;
+    ctx.fillText('PILOT RANK', centerX, canvas.height * 0.68);
+
+    // Rank value
+    ctx.fillStyle = rankInfo.color || '#ffffff';
+    ctx.font = `900 ${Math.floor(canvas.width * 0.085)}px Orbitron, Arial, sans-serif`;
+    ctx.fillText(rankInfo.rank.toUpperCase(), centerX, canvas.height * 0.73);
+
     // Wave info for extra bragging rights
     ctx.fillStyle = '#ffffff';
     ctx.font = `600 ${Math.floor(canvas.width * 0.04)}px Orbitron, Arial, sans-serif`;
-    ctx.fillText(`Wave ${this.currentWave}`, centerX, canvas.height * 0.72);
+    ctx.fillText(`Wave ${this.currentWave}`, centerX, canvas.height * 0.82);
 
     // Footer
     ctx.fillStyle = '#aaaaaa';
@@ -2843,6 +2919,14 @@ export class Game {
           if (this.pointMultiplierText) {
             this.pointMultiplierText.visible = false;
           }
+        }
+      }
+
+      // Update tripleshot timer
+      if (this.tripleShotActive) {
+        this.tripleShotTimer -= deltaTime;
+        if (this.tripleShotTimer <= 0) {
+          this.tripleShotActive = false;
         }
       }
 

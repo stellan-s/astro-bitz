@@ -1,6 +1,6 @@
 import { Graphics, Container, Text } from 'pixi.js';
 
-export type PowerUpType = 'rapidfire' | 'shield' | 'bomb' | 'missiles' | 'superfire' | 'pointmultiplier';
+export type PowerUpType = 'rapidfire' | 'shield' | 'bomb' | 'missiles' | 'superfire' | 'pointmultiplier' | 'tripleshot';
 
 export class PowerUp {
   public sprite: Container;
@@ -83,6 +83,40 @@ export class PowerUp {
         graphics.lineTo(0, 10);
         graphics.fill(0xffff00); // Bright yellow highlight
         break;
+
+      case 'tripleshot':
+        // Cyan/teal triple arrow design
+        graphics.circle(0, 0, 18);
+        graphics.fill({ color: 0x00ffff, alpha: 0.3 }); // Cyan glow
+
+        // Three arrows in spread formation
+        // Left arrow
+        graphics.moveTo(-12, 10);
+        graphics.lineTo(-12, -5);
+        graphics.lineTo(-15, -2);
+        graphics.lineTo(-12, -5);
+        graphics.lineTo(-9, -2);
+        graphics.lineTo(-12, -5);
+        graphics.fill(0x00ced1); // Dark cyan
+
+        // Center arrow
+        graphics.moveTo(0, 10);
+        graphics.lineTo(0, -8);
+        graphics.lineTo(-4, -4);
+        graphics.lineTo(0, -8);
+        graphics.lineTo(4, -4);
+        graphics.lineTo(0, -8);
+        graphics.fill(0x00ffff); // Bright cyan
+
+        // Right arrow
+        graphics.moveTo(12, 10);
+        graphics.lineTo(12, -5);
+        graphics.lineTo(9, -2);
+        graphics.lineTo(12, -5);
+        graphics.lineTo(15, -2);
+        graphics.lineTo(12, -5);
+        graphics.fill(0x00ced1); // Dark cyan
+        break;
     }
 
     // Add label
@@ -92,6 +126,7 @@ export class PowerUp {
       type === 'bomb' ? 'BM' :
       type === 'missiles' ? 'MS' :
       type === 'superfire' ? 'SF' :
+      type === 'tripleshot' ? 'x3' :
       'x2'; // Point multiplier
 
     const label = new Text({

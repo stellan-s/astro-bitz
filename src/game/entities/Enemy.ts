@@ -1,7 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import { getEnemyConfig, type MovePattern } from '../config/EnemyConfig';
 
-export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'stealth' | 'kamikaze' | 'phantom' | 'boss' | 'bossSniper' | 'bossTank' | 'bossSwarm' | 'bossTriple';
+export type EnemyType = 'basic' | 'fast' | 'tank' | 'weaver' | 'spinner' | 'dasher' | 'stealth' | 'kamikaze' | 'phantom' | 'boss' | 'bossSniper' | 'bossTank' | 'bossSwarm' | 'bossTriple' | 'bossBarrage' | 'bossPhantom';
 
 export class Enemy {
   public sprite: Container;
@@ -124,6 +124,18 @@ export class Enemy {
       return;
     }
 
+    // Special handling for bossBarrage - dual side exhausts from fortress
+    if (this.type === 'bossBarrage') {
+      this.createBarrageBossExhaust(config, heat);
+      return;
+    }
+
+    // Special handling for bossPhantom - ethereal phase exhausts
+    if (this.type === 'bossPhantom') {
+      this.createPhantomBossExhaust(config, heat);
+      return;
+    }
+
     // More particles for hotter enemies
     const flameCount = Math.max(2, Math.floor(heat * 5)); // 2-5 particles based on heat
 
@@ -181,8 +193,8 @@ export class Enemy {
 
     // Create exhaust for each of the three ships
     shipPositions.forEach((pos) => {
-      // Each ship gets 2-3 flame particles
-      const flameCount = 2;
+      // Each ship gets 3 flame particles
+      const flameCount = 3;
       for (let i = 0; i < flameCount; i++) {
         const flame = new Graphics();
 
@@ -207,6 +219,75 @@ export class Enemy {
         this.sprite.addChild(flame);
       }
     });
+  }
+
+  private createBarrageBossExhaust(config: any, heat: number): void {
+    // Barrage boss has dual side vents that emit powerful exhaust
+    const w = config.size.width / 2;
+    const h = config.size.height / 2;
+
+    // Left and right vent positions
+    const ventPositions = [
+      { x: -w * 0.85, y: 0 },  // Left vent
+      { x: w * 0.85, y: 0 }    // Right vent
+    ];
+
+    ventPositions.forEach((pos) => {
+      // Each vent gets 4 powerful flame particles
+      const flameCount = 4;
+      for (let i = 0; i < flameCount; i++) {
+        const flame = new Graphics();
+
+        // Large, powerful flames for fortress
+        const baseSize = 4 + heat * 5;
+        flame.circle(0, 0, baseSize + Math.random() * 3);
+
+        // Hot orange-red flames
+        const colors = [0xff6600, 0xff4500, 0xff0000, 0x8b0000];
+        const colorIndex = Math.min(i, colors.length - 1);
+        flame.fill(colors[colorIndex]);
+
+        // Very visible fortress exhausts
+        flame.alpha = 0.8 + Math.random() * 0.15;
+
+        // Position at side vents with vertical spread
+        flame.x = pos.x + (Math.random() - 0.5) * 8;
+        flame.y = pos.y - h * 0.3 - i * 10;
+
+        this.exhaustFlames.push(flame);
+        this.sprite.addChild(flame);
+      }
+    });
+  }
+
+  private createPhantomBossExhaust(config: any, heat: number): void {
+    // Phantom boss has ethereal phase-shifted exhausts
+    const h = config.size.height / 2;
+
+    // Central rear exhaust with phase crystals
+    const flameCount = 5; // More particles for ethereal effect
+    for (let i = 0; i < flameCount; i++) {
+      const flame = new Graphics();
+
+      // Medium-sized ethereal flames
+      const baseSize = 3 + heat * 4;
+      flame.circle(0, 0, baseSize + Math.random() * 2);
+
+      // Purple/violet phase flames
+      const colors = [0xee82ee, 0xda70d6, 0x9400d3, 0x8a2be2, 0x9370db];
+      const colorIndex = Math.min(i, colors.length - 1);
+      flame.fill(colors[colorIndex]);
+
+      // Slightly transparent for ethereal effect
+      flame.alpha = 0.6 + Math.random() * 0.25;
+
+      // Central rear position with horizontal spread
+      flame.x = (Math.random() - 0.5) * 15;
+      flame.y = h * 0.5 + 5 + i * 8;
+
+      this.exhaustFlames.push(flame);
+      this.sprite.addChild(flame);
+    }
   }
 
   private drawBasic(): void {
@@ -699,15 +780,123 @@ export class Enemy {
         const shipH = h * 0.4;
         const spacing = w * 0.7;
 
-        // Draw three ships in a V formation
-        // Left ship
-        this.drawSmallShip(graphics, -spacing, h * 0.3, shipW, shipH, config.color, config.secondaryColor);
+        // Add independent movement to each ship for realistic formation flying
+        // Each ship bobs slightly at different phases
+        const bobAmount = 3; // Small vertical bob
+        const weaveAmount = 4; // Small horizontal weave
 
-        // Center ship (lead ship, slightly forward)
-        this.drawSmallShip(graphics, 0, -h * 0.2, shipW * 1.2, shipH * 1.2, config.color, config.tertiaryColor);
+        // Left ship - offset phase by 0
+        const leftBobY = Math.sin(this.movePattern * 1.5) * bobAmount;
+        const leftWeaveX = Math.sin(this.movePattern * 1.2) * weaveAmount;
+        this.drawSmallShip(graphics, -spacing + leftWeaveX, h * 0.3 + leftBobY, shipW, shipH, config.color, config.secondaryColor);
 
-        // Right ship
-        this.drawSmallShip(graphics, spacing, h * 0.3, shipW, shipH, config.color, config.secondaryColor);
+        // Center ship (lead ship, slightly forward) - offset phase by 2
+        const centerBobY = Math.sin(this.movePattern * 1.5 + 2) * bobAmount;
+        const centerWeaveX = Math.sin(this.movePattern * 1.2 + 2) * weaveAmount;
+        this.drawSmallShip(graphics, 0 + centerWeaveX, -h * 0.2 + centerBobY, shipW * 1.2, shipH * 1.2, config.color, config.tertiaryColor);
+
+        // Right ship - offset phase by 4
+        const rightBobY = Math.sin(this.movePattern * 1.5 + 4) * bobAmount;
+        const rightWeaveX = Math.sin(this.movePattern * 1.2 + 4) * weaveAmount;
+        this.drawSmallShip(graphics, spacing + rightWeaveX, h * 0.3 + rightBobY, shipW, shipH, config.color, config.secondaryColor);
+        break;
+
+      case 'bossBarrage':
+        // Barrage Boss - Dual-cannon fortress
+        // Main fortress hull - wide rectangular body
+        graphics.rect(-w * 0.8, -h * 0.5, w * 1.6, h);
+        graphics.fill(config.color); // Dark slate gray
+
+        // Left cannon turret
+        graphics.rect(-w * 0.7, -h * 0.3, w * 0.3, h * 0.6);
+        graphics.fill(config.secondaryColor); // Orange-red
+        graphics.rect(-w * 0.65, -h * 0.2, w * 0.2, h * 0.4);
+        graphics.fill(0x8b0000); // Dark red barrel interior
+
+        // Right cannon turret
+        graphics.rect(w * 0.4, -h * 0.3, w * 0.3, h * 0.6);
+        graphics.fill(config.secondaryColor); // Orange-red
+        graphics.rect(w * 0.45, -h * 0.2, w * 0.2, h * 0.4);
+        graphics.fill(0x8b0000); // Dark red barrel interior
+
+        // Central core with energy shield
+        graphics.circle(0, 0, h * 0.35);
+        graphics.fill(config.tertiaryColor); // Gold
+        graphics.circle(0, 0, h * 0.25);
+        graphics.fill(config.color);
+        graphics.circle(0, 0, h * 0.15);
+        graphics.fill(config.tertiaryColor);
+
+        // Armor plating details
+        for (let i = 0; i < 3; i++) {
+          const plateY = -h * 0.4 + i * h * 0.4;
+          graphics.rect(-w * 0.75, plateY, w * 0.15, h * 0.3);
+          graphics.fill(0x000000);
+          graphics.rect(w * 0.6, plateY, w * 0.15, h * 0.3);
+          graphics.fill(0x000000);
+        }
+
+        // Vents/exhausts on sides
+        graphics.rect(-w * 0.9, -h * 0.1, w * 0.1, h * 0.2);
+        graphics.fill(0xff6600);
+        graphics.rect(w * 0.8, -h * 0.1, w * 0.1, h * 0.2);
+        graphics.fill(0xff6600);
+        break;
+
+      case 'bossPhantom':
+        // Phantom Boss - Phase-shifting ethereal design
+        // Main body - elongated diamond/crystal shape
+        graphics.moveTo(0, -h);
+        graphics.lineTo(w * 0.6, -h * 0.3);
+        graphics.lineTo(w * 0.7, h * 0.3);
+        graphics.lineTo(0, h * 0.8);
+        graphics.lineTo(-w * 0.7, h * 0.3);
+        graphics.lineTo(-w * 0.6, -h * 0.3);
+        graphics.lineTo(0, -h);
+        graphics.fill(config.color); // Dark violet
+
+        // Phase-shift energy wings with gradient effect
+        const wingGradientColors = [config.secondaryColor, config.tertiaryColor, config.color];
+        for (let i = 0; i < 3; i++) {
+          const offset = i * 8;
+          const alpha = 0.6 - i * 0.15;
+
+          // Left wing
+          graphics.moveTo(-w * 0.5, -h * 0.2);
+          graphics.lineTo(-w * 0.9 - offset, -h * 0.4);
+          graphics.lineTo(-w * 0.9 - offset, h * 0.2);
+          graphics.lineTo(-w * 0.5, h * 0.1);
+          graphics.fill({ color: wingGradientColors[i] || config.secondaryColor, alpha });
+
+          // Right wing
+          graphics.moveTo(w * 0.5, -h * 0.2);
+          graphics.lineTo(w * 0.9 + offset, -h * 0.4);
+          graphics.lineTo(w * 0.9 + offset, h * 0.2);
+          graphics.lineTo(w * 0.5, h * 0.1);
+          graphics.fill({ color: wingGradientColors[i] || config.secondaryColor, alpha });
+        }
+
+        // Central energy core with pulsing effect
+        const pulseScale = 1 + Math.sin(this.movePattern * 3) * 0.2;
+        graphics.circle(0, 0, h * 0.25 * pulseScale);
+        graphics.fill(config.tertiaryColor); // Violet glow
+        graphics.circle(0, 0, h * 0.15 * pulseScale);
+        graphics.fill(0xffffff); // Bright white center
+
+        // Phase crystals on body
+        for (let i = 0; i < 4; i++) {
+          const crystalY = -h * 0.5 + i * h * 0.35;
+          graphics.circle(-w * 0.3, crystalY, 6);
+          graphics.fill(config.tertiaryColor);
+          graphics.circle(w * 0.3, crystalY, 6);
+          graphics.fill(config.tertiaryColor);
+        }
+
+        // Afterimage trails (optional visual effect)
+        if (this.movePattern % 2 < 0.1) {
+          graphics.circle(0, h * 0.5, h * 0.4);
+          graphics.fill({ color: config.color, alpha: 0.3 });
+        }
         break;
     }
 
@@ -858,23 +1047,122 @@ export class Enemy {
     const config = getEnemyConfig(this.type);
     const heat = config.heatEmission;
 
-    // Make flames flicker and pulse
-    for (let i = 0; i < this.exhaustFlames.length; i++) {
-      const flame = this.exhaustFlames[i];
+    // Special handling for bossTriple - update exhaust positions to match ship movements
+    if (this.type === 'bossTriple') {
+      const w = config.size.width / 2;
+      const h = config.size.height / 2;
+      const spacing = w * 0.7;
+      const bobAmount = 3;
+      const weaveAmount = 4;
 
-      // Flicker alpha - more intense flicker for hotter enemies
-      const baseAlpha = 0.5 + heat * 0.3;
-      flame.alpha = baseAlpha + Math.random() * (0.3 + heat * 0.2);
+      // Calculate current positions for each ship (matching drawBoss logic)
+      const shipDynamicPositions = [
+        { // Left ship
+          x: -spacing + Math.sin(this.movePattern * 1.2) * weaveAmount,
+          y: h * 0.3 + Math.sin(this.movePattern * 1.5) * bobAmount
+        },
+        { // Center ship
+          x: 0 + Math.sin(this.movePattern * 1.2 + 2) * weaveAmount,
+          y: -h * 0.2 + Math.sin(this.movePattern * 1.5 + 2) * bobAmount
+        },
+        { // Right ship
+          x: spacing + Math.sin(this.movePattern * 1.2 + 4) * weaveAmount,
+          y: h * 0.3 + Math.sin(this.movePattern * 1.5 + 4) * bobAmount
+        }
+      ];
 
-      // Slight position variation for flame movement effect
-      // Hotter enemies have more turbulent flames
-      const spread = 8 + heat * 6;
-      flame.x = (Math.random() - 0.5) * spread;
+      // Update each flame (3 flames per ship, 9 total)
+      for (let i = 0; i < this.exhaustFlames.length; i++) {
+        const flame = this.exhaustFlames[i];
+        const shipIndex = Math.floor(i / 3); // Which ship this flame belongs to
+        const flameIndex = i % 3; // Which flame on this ship (0, 1, or 2)
+        const shipPos = shipDynamicPositions[shipIndex];
 
-      // Scale variation to simulate flickering - bigger variation for hotter engines
-      const scaleVariation = 0.3 + heat * 0.3;
-      const scale = (1 - scaleVariation / 2) + Math.random() * scaleVariation;
-      flame.scale.set(scale);
+        // Flicker alpha
+        const baseAlpha = 0.5 + heat * 0.3;
+        flame.alpha = baseAlpha + Math.random() * (0.3 + heat * 0.2);
+
+        // Position flame at the rear of its ship with dynamic offset
+        flame.x = shipPos.x + (Math.random() - 0.5) * 6;
+        flame.y = shipPos.y - h * 0.4 - 8 - flameIndex * 8;
+
+        // Scale variation
+        const scaleVariation = 0.3 + heat * 0.3;
+        const scale = (1 - scaleVariation / 2) + Math.random() * scaleVariation;
+        flame.scale.set(scale);
+      }
+    } else if (this.type === 'bossBarrage') {
+      // Special handling for bossBarrage - dual side vent exhausts
+      const w = config.size.width / 2;
+      const h = config.size.height / 2;
+
+      // Vent positions (matching creation logic)
+      const ventPositions = [
+        { x: -w * 0.85, y: 0 },  // Left vent
+        { x: w * 0.85, y: 0 }    // Right vent
+      ];
+
+      // Update each flame (4 flames per vent, 8 total)
+      for (let i = 0; i < this.exhaustFlames.length; i++) {
+        const flame = this.exhaustFlames[i];
+        const ventIndex = Math.floor(i / 4); // Which vent (0 or 1)
+        const flameIndex = i % 4; // Which flame on this vent (0-3)
+        const ventPos = ventPositions[ventIndex];
+
+        // Intense flicker for powerful fortress exhausts
+        const baseAlpha = 0.8;
+        flame.alpha = baseAlpha + Math.random() * 0.15;
+
+        // Position at vent with turbulent movement
+        flame.x = ventPos.x + (Math.random() - 0.5) * 8;
+        flame.y = ventPos.y - h * 0.3 - flameIndex * 10;
+
+        // Larger scale variation for powerful exhausts
+        const scaleVariation = 0.4;
+        const scale = (1 - scaleVariation / 2) + Math.random() * scaleVariation;
+        flame.scale.set(scale);
+      }
+    } else if (this.type === 'bossPhantom') {
+      // Special handling for bossPhantom - ethereal phase exhausts with pulsing
+      const h = config.size.height / 2;
+      const pulseFactor = 1 + Math.sin(this.movePattern * 3) * 0.15;
+
+      // Update each flame with ethereal effects
+      for (let i = 0; i < this.exhaustFlames.length; i++) {
+        const flame = this.exhaustFlames[i];
+
+        // Ethereal pulsing alpha
+        const baseAlpha = 0.6;
+        flame.alpha = (baseAlpha + Math.random() * 0.25) * pulseFactor;
+
+        // Phase-shifted position with wider spread
+        flame.x = (Math.random() - 0.5) * 15;
+        flame.y = h * 0.5 + 5 + i * 8;
+
+        // Pulsing scale for phase effect
+        const scaleVariation = 0.35;
+        const scale = ((1 - scaleVariation / 2) + Math.random() * scaleVariation) * pulseFactor;
+        flame.scale.set(scale);
+      }
+    } else {
+      // Standard exhaust update for other enemy types
+      for (let i = 0; i < this.exhaustFlames.length; i++) {
+        const flame = this.exhaustFlames[i];
+
+        // Flicker alpha - more intense flicker for hotter enemies
+        const baseAlpha = 0.5 + heat * 0.3;
+        flame.alpha = baseAlpha + Math.random() * (0.3 + heat * 0.2);
+
+        // Slight position variation for flame movement effect
+        // Hotter enemies have more turbulent flames
+        const spread = 8 + heat * 6;
+        flame.x = (Math.random() - 0.5) * spread;
+
+        // Scale variation to simulate flickering - bigger variation for hotter engines
+        const scaleVariation = 0.3 + heat * 0.3;
+        const scale = (1 - scaleVariation / 2) + Math.random() * scaleVariation;
+        flame.scale.set(scale);
+      }
     }
   }
 

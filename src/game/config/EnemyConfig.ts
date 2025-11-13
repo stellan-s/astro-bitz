@@ -273,6 +273,46 @@ export const ENEMY_CONFIG: EnemyConfig = {
     shootPattern: 'triple', // Each ship fires
     maxY: 260,
   },
+  bossBarrage: {
+    speed: 0.6, // Very slow, fortress-like
+    speedVariation: 0.0,
+    health: 130, // Heavy armor
+    points: 1400,
+    color: 0x2f4f4f, // Dark slate gray (main hull)
+    secondaryColor: 0xff4500, // Orange-red (cannons)
+    tertiaryColor: 0xffd700, // Gold (core)
+    size: {
+      width: 150, // Wide fortress
+      height: 110,
+    },
+    spawnWeight: 0,
+    movePattern: 'circular', // Slowly rotates while moving
+    heatEmission: 1.0,
+    isBoss: true,
+    shootInterval: 600, // Rapid fire - alternating cannons
+    shootPattern: 'spread', // Wide spread from dual cannons
+    maxY: 220,
+  },
+  bossPhantom: {
+    speed: 1.8, // Fast and elusive
+    speedVariation: 0.0,
+    health: 70, // Lower health, but hard to hit
+    points: 1600, // High points for difficult boss
+    color: 0x9400d3, // Dark violet
+    secondaryColor: 0xda70d6, // Orchid
+    tertiaryColor: 0xee82ee, // Violet
+    size: {
+      width: 95,
+      height: 85,
+    },
+    spawnWeight: 0,
+    movePattern: 'zigzag', // Erratic teleporting movement
+    heatEmission: 0.4, // Low heat - phase tech keeps signature low
+    isBoss: true,
+    shootInterval: 1400, // Shoots between teleports
+    shootPattern: 'aimed', // Precise aimed shots
+    maxY: 240,
+  },
 };
 
 // Helper function to select a random enemy type based on spawn weights
@@ -338,7 +378,7 @@ export function getEnemyConfig(type: EnemyType): EnemyTypeConfig {
 
 // Helper function to select a random boss type
 export function selectRandomBossType(wave: number = 1): EnemyType {
-  const bossTypes: EnemyType[] = ['boss', 'bossSniper', 'bossTank', 'bossSwarm', 'bossTriple'];
+  const bossTypes: EnemyType[] = ['boss', 'bossSniper', 'bossTank', 'bossSwarm', 'bossTriple', 'bossBarrage', 'bossPhantom'];
 
   // For first boss wave, always use standard boss
   if (wave <= 3) {
