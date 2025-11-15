@@ -97,6 +97,8 @@ export class Enemy {
       case 'bossTank':
       case 'bossSwarm':
       case 'bossTriple':
+      case 'bossBarrage':
+      case 'bossPhantom':
         this.drawBoss();
         break;
     }
@@ -778,31 +780,52 @@ export class Enemy {
         break;
 
       case 'bossTriple':
-        // Triple Boss - Three small ships in formation
+        // Triple Boss - Three small ships in formation with independent movement
         // Ship size (each ship is smaller than the main boss)
         const shipW = w * 0.25;
         const shipH = h * 0.4;
-        const spacing = w * 0.7;
+        const baseSpacing = w * 0.7;
 
-        // Add independent movement to each ship for realistic formation flying
-        // Each ship bobs slightly at different phases
-        const bobAmount = 3; // Small vertical bob
-        const weaveAmount = 4; // Small horizontal weave
+        // Enhanced independent movement - each ship has unique motion characteristics
 
-        // Left ship - offset phase by 0
-        const leftBobY = Math.sin(this.movePattern * 1.5) * bobAmount;
-        const leftWeaveX = Math.sin(this.movePattern * 1.2) * weaveAmount;
-        this.drawSmallShip(graphics, -spacing + leftWeaveX, h * 0.3 + leftBobY, shipW, shipH, config.color, config.secondaryColor);
+        // Left ship - circular pattern with bob
+        const leftBobY = Math.sin(this.movePattern * 1.8) * 8;
+        const leftWeaveX = Math.sin(this.movePattern * 1.3) * 12;
+        const leftOrbitX = Math.cos(this.movePattern * 0.7) * 6;
+        const leftOrbitY = Math.sin(this.movePattern * 0.7) * 6;
+        const leftRotation = Math.sin(this.movePattern * 0.8) * 0.15;
 
-        // Center ship (lead ship, slightly forward) - offset phase by 2
-        const centerBobY = Math.sin(this.movePattern * 1.5 + 2) * bobAmount;
-        const centerWeaveX = Math.sin(this.movePattern * 1.2 + 2) * weaveAmount;
-        this.drawSmallShip(graphics, 0 + centerWeaveX, -h * 0.2 + centerBobY, shipW * 1.2, shipH * 1.2, config.color, config.tertiaryColor);
+        graphics.save();
+        graphics.translate(-baseSpacing + leftWeaveX + leftOrbitX, h * 0.3 + leftBobY + leftOrbitY);
+        graphics.rotate(leftRotation);
+        this.drawSmallShip(graphics, 0, 0, shipW, shipH, config.color, config.secondaryColor);
+        graphics.restore();
 
-        // Right ship - offset phase by 4
-        const rightBobY = Math.sin(this.movePattern * 1.5 + 4) * bobAmount;
-        const rightWeaveX = Math.sin(this.movePattern * 1.2 + 4) * weaveAmount;
-        this.drawSmallShip(graphics, spacing + rightWeaveX, h * 0.3 + rightBobY, shipW, shipH, config.color, config.secondaryColor);
+        // Center ship (lead ship) - figure-8 pattern
+        const centerBobY = Math.sin(this.movePattern * 2.2 + 2) * 6;
+        const centerWeaveX = Math.sin(this.movePattern * 1.6 + 2) * 8;
+        const centerFigure8X = Math.sin(this.movePattern * 0.9) * 5;
+        const centerFigure8Y = Math.sin(this.movePattern * 1.8) * 4;
+        const centerRotation = Math.sin(this.movePattern * 1.2 + 2) * 0.1;
+
+        graphics.save();
+        graphics.translate(0 + centerWeaveX + centerFigure8X, -h * 0.2 + centerBobY + centerFigure8Y);
+        graphics.rotate(centerRotation);
+        this.drawSmallShip(graphics, 0, 0, shipW * 1.2, shipH * 1.2, config.color, config.tertiaryColor);
+        graphics.restore();
+
+        // Right ship - opposite circular pattern with weave
+        const rightBobY = Math.sin(this.movePattern * 1.6 + 4) * 9;
+        const rightWeaveX = Math.sin(this.movePattern * 1.4 + 4) * 11;
+        const rightOrbitX = Math.cos(this.movePattern * 0.7 + Math.PI) * 7; // Opposite orbit from left
+        const rightOrbitY = Math.sin(this.movePattern * 0.7 + Math.PI) * 7;
+        const rightRotation = Math.sin(this.movePattern * 0.9 + 4) * 0.18;
+
+        graphics.save();
+        graphics.translate(baseSpacing + rightWeaveX + rightOrbitX, h * 0.3 + rightBobY + rightOrbitY);
+        graphics.rotate(rightRotation);
+        this.drawSmallShip(graphics, 0, 0, shipW, shipH, config.color, config.secondaryColor);
+        graphics.restore();
         break;
 
       case 'bossBarrage':
@@ -1055,23 +1078,21 @@ export class Enemy {
     if (this.type === 'bossTriple') {
       const w = config.size.width / 2;
       const h = config.size.height / 2;
-      const spacing = w * 0.7;
-      const bobAmount = 3;
-      const weaveAmount = 4;
+      const baseSpacing = w * 0.7;
 
-      // Calculate current positions for each ship (matching drawBoss logic)
+      // Calculate current positions for each ship (matching drawBoss logic with enhanced movement)
       const shipDynamicPositions = [
-        { // Left ship
-          x: -spacing + Math.sin(this.movePattern * 1.2) * weaveAmount,
-          y: h * 0.3 + Math.sin(this.movePattern * 1.5) * bobAmount
+        { // Left ship - circular pattern with bob
+          x: -baseSpacing + Math.sin(this.movePattern * 1.3) * 12 + Math.cos(this.movePattern * 0.7) * 6,
+          y: h * 0.3 + Math.sin(this.movePattern * 1.8) * 8 + Math.sin(this.movePattern * 0.7) * 6
         },
-        { // Center ship
-          x: 0 + Math.sin(this.movePattern * 1.2 + 2) * weaveAmount,
-          y: -h * 0.2 + Math.sin(this.movePattern * 1.5 + 2) * bobAmount
+        { // Center ship - figure-8 pattern
+          x: 0 + Math.sin(this.movePattern * 1.6 + 2) * 8 + Math.sin(this.movePattern * 0.9) * 5,
+          y: -h * 0.2 + Math.sin(this.movePattern * 2.2 + 2) * 6 + Math.sin(this.movePattern * 1.8) * 4
         },
-        { // Right ship
-          x: spacing + Math.sin(this.movePattern * 1.2 + 4) * weaveAmount,
-          y: h * 0.3 + Math.sin(this.movePattern * 1.5 + 4) * bobAmount
+        { // Right ship - opposite circular pattern with weave
+          x: baseSpacing + Math.sin(this.movePattern * 1.4 + 4) * 11 + Math.cos(this.movePattern * 0.7 + Math.PI) * 7,
+          y: h * 0.3 + Math.sin(this.movePattern * 1.6 + 4) * 9 + Math.sin(this.movePattern * 0.7 + Math.PI) * 7
         }
       ];
 
