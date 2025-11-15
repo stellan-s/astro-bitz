@@ -793,39 +793,21 @@ export class Enemy {
         const leftWeaveX = Math.sin(this.movePattern * 1.3) * 12;
         const leftOrbitX = Math.cos(this.movePattern * 0.7) * 6;
         const leftOrbitY = Math.sin(this.movePattern * 0.7) * 6;
-        const leftRotation = Math.sin(this.movePattern * 0.8) * 0.15;
-
-        graphics.save();
-        graphics.translate(-baseSpacing + leftWeaveX + leftOrbitX, h * 0.3 + leftBobY + leftOrbitY);
-        graphics.rotate(leftRotation);
-        this.drawSmallShip(graphics, 0, 0, shipW, shipH, config.color, config.secondaryColor);
-        graphics.restore();
+        this.drawSmallShip(graphics, -baseSpacing + leftWeaveX + leftOrbitX, h * 0.3 + leftBobY + leftOrbitY, shipW, shipH, config.color, config.secondaryColor);
 
         // Center ship (lead ship) - figure-8 pattern
         const centerBobY = Math.sin(this.movePattern * 2.2 + 2) * 6;
         const centerWeaveX = Math.sin(this.movePattern * 1.6 + 2) * 8;
         const centerFigure8X = Math.sin(this.movePattern * 0.9) * 5;
         const centerFigure8Y = Math.sin(this.movePattern * 1.8) * 4;
-        const centerRotation = Math.sin(this.movePattern * 1.2 + 2) * 0.1;
-
-        graphics.save();
-        graphics.translate(0 + centerWeaveX + centerFigure8X, -h * 0.2 + centerBobY + centerFigure8Y);
-        graphics.rotate(centerRotation);
-        this.drawSmallShip(graphics, 0, 0, shipW * 1.2, shipH * 1.2, config.color, config.tertiaryColor);
-        graphics.restore();
+        this.drawSmallShip(graphics, 0 + centerWeaveX + centerFigure8X, -h * 0.2 + centerBobY + centerFigure8Y, shipW * 1.2, shipH * 1.2, config.color, config.tertiaryColor);
 
         // Right ship - opposite circular pattern with weave
         const rightBobY = Math.sin(this.movePattern * 1.6 + 4) * 9;
         const rightWeaveX = Math.sin(this.movePattern * 1.4 + 4) * 11;
         const rightOrbitX = Math.cos(this.movePattern * 0.7 + Math.PI) * 7; // Opposite orbit from left
         const rightOrbitY = Math.sin(this.movePattern * 0.7 + Math.PI) * 7;
-        const rightRotation = Math.sin(this.movePattern * 0.9 + 4) * 0.18;
-
-        graphics.save();
-        graphics.translate(baseSpacing + rightWeaveX + rightOrbitX, h * 0.3 + rightBobY + rightOrbitY);
-        graphics.rotate(rightRotation);
-        this.drawSmallShip(graphics, 0, 0, shipW, shipH, config.color, config.secondaryColor);
-        graphics.restore();
+        this.drawSmallShip(graphics, baseSpacing + rightWeaveX + rightOrbitX, h * 0.3 + rightBobY + rightOrbitY, shipW, shipH, config.color, config.secondaryColor);
         break;
 
       case 'bossBarrage':
