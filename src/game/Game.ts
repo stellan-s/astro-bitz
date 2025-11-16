@@ -81,6 +81,8 @@ export class Game {
   private isTransitioningToBoss: boolean = false; // Track if current transition is for boss wave
   private isBossWave: boolean = false;
   private bossSpawned: boolean = false;
+  private personalBestWave: number = 0; // Track player's best wave reached
+  private beatPersonalBest: boolean = false; // Flag if player beat their best this run
 
   // Difficulty scaling
   private minSpawnInterval: number = 300; // Much more aggressive minimum
@@ -161,6 +163,10 @@ export class Game {
 
     // Load high score
     this.highScore = HighScoreManager.getHighScore();
+
+    // Load personal best wave
+    const savedBestWave = localStorage.getItem('personalBestWave');
+    this.personalBestWave = savedBestWave ? parseInt(savedBestWave, 10) : 0;
 
     // Create score text
     this.scoreText = new Text({
@@ -1999,6 +2005,16 @@ export class Game {
       this.highScoreText.text = `Best: ${this.highScore}`;
     }
 
+    // Check for new personal best wave
+    const isNewBestWave = this.currentWave > this.personalBestWave;
+    if (isNewBestWave) {
+      this.personalBestWave = this.currentWave;
+      localStorage.setItem('personalBestWave', this.currentWave.toString());
+      this.beatPersonalBest = true;
+    } else {
+      this.beatPersonalBest = false;
+    }
+
     // Get pilot rank and stats
     const rankInfo = this.getPilotRank(this.score);
 
@@ -2051,6 +2067,20 @@ export class Game {
             ★ NEW HIGH SCORE! ★
           </p>
         ` : ''}
+        ${isNewBestWave ? `
+          <p style="font-size: 28px; color: #00ff88; margin-bottom: 25px;
+                    text-shadow: 0 0 12px rgba(0, 255, 136, 0.8);
+                    animation: glow 1.5s infinite alternate;">
+            🎯 NEW BEST: WAVE ${this.currentWave}! 🎯
+          </p>
+          <p style="font-size: 16px; color: #00ffaa; margin-bottom: 25px;">
+            Bonus reward on next run: +5 Missiles & Shield!
+          </p>
+        ` : this.personalBestWave > 0 ? `
+          <p style="font-size: 16px; color: #888; margin-bottom: 20px;">
+            Personal Best: Wave ${this.personalBestWave}
+          </p>
+        ` : ''}
 
         <!-- Pilot Rank Section -->
         <div style="background: rgba(0, 0, 0, 0.5); padding: 20px; border-radius: 10px;
@@ -2081,6 +2111,21 @@ export class Game {
           <div style="background: rgba(150, 100, 0, 0.3); padding: 15px; border-radius: 8px; border: 1px solid #ffaa00;">
             <div style="font-size: 14px; color: #ffaa00; margin-bottom: 5px;">WAVE REACHED</div>
             <div style="font-size: 32px; font-weight: bold; color: #ffffff;">${this.currentWave}</div>
+          </div>
+        </div>
+
+        <!-- Instant Restart Button -->
+        <div style="margin: 25px 0;">
+          <button id="instant-restart-btn" style="padding: 18px 48px; border-radius: 8px;
+                                                  border: 3px solid #00ff00; background: linear-gradient(135deg, #00aa00, #00ff00);
+                                                  color: #ffffff; font-family: 'Orbitron', sans-serif; font-size: 22px;
+                                                  cursor: pointer; transition: all 0.3s; font-weight: 900;
+                                                  letter-spacing: 2px; box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
+                                                  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);">
+            ▶ INSTANT RESTART
+          </button>
+          <div style="font-size: 13px; color: #00ff00; margin-top: 10px; font-weight: bold;">
+            Press R key or tap to play again immediately!
           </div>
         </div>
 
@@ -2310,10 +2355,93 @@ export class Game {
       this.showStartScreen();
     };
 
-    // Keyboard handler - Escape to dismiss
+    // Instant restart function
+    const instantRestart = () => {
+      if (dismissCalled) return;
+      dismissCalled = true;
+
+      // Remove the container
+      if (document.body.contains(container)) {
+        document.body.removeChild(container);
+      }
+      window.removeEventListener('keydown', keyHandler);
+
+      // Remove game over ad
+      const adContainer = document.getElementById('game-over-ad');
+      if (adContainer && document.body.contains(adContainer)) {
+        document.body.removeChild(adContainer);
+      }
+
+      // Reset all game state (inline from startGame)
+      this.score = 0;
+      this.currentWave = 1;
+      this.enemiesKilledThisWave = 0;
+      this.enemiesPerWave = 15;
+      this.spawnTimer = 0;
+      this.spawnInterval = 1500;
+      this.powerUpTimer = 0;
+      this.difficultyMultiplier = 1.0;
+      this.shieldCount = 0;
+      this.rapidFireActive = false;
+      this.rapidFireTimer = 0;
+      this.rapidFireSpawnBoost = false;
+      this.rapidFireSpawnTimer = 0;
+      this.superFireActive = false;
+      this.superFireTimer = 0;
+      this.missileAmmo = 3;
+      this.isInvincible = false;
+      this.invincibilityTimer = 0;
+      this.isBossWave = false;
+      this.bossSpawned = false;
+      this.hasUsedPause = false;
+
+      // Apply bonus if player beat their personal best
+      if (this.beatPersonalBest) {
+        this.missileAmmo += 5; // Bonus missiles (now 8 total)
+        this.shieldCount = 1; // Start with shield
+      }
+
+      // Update UI
+      this.scoreText.text = `Score: ${this.score}`;
+      this.waveText.text = `Wave: ${this.currentWave}`;
+      if (this.missileText) {
+        this.missileText.text = `Missiles: ${this.missileAmmo}`;
+      }
+
+      // Show or hide shield based on count
+      if (this.shieldCount > 0) {
+        this.player.showShield();
+      } else {
+        this.player.hideShield();
+      }
+
+      // Clear any paused state
+      if (this.pauseCounterText) {
+        this.pauseCounterText.textContent = '1x';
+      }
+
+      // Clear all game entities
+      this.enemies = [];
+      this.bullets = [];
+      this.missiles = [];
+      this.enemyBullets = [];
+      this.powerUps = [];
+
+      // Show bonus notification if earned
+      if (this.beatPersonalBest) {
+        this.showBonusNotification();
+      }
+
+      this.gameState = 'playing';
+      this.audio.startBackgroundMusic(this.currentWave);
+    };
+
+    // Keyboard handler - Escape to dismiss, R to restart
     const keyHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         dismissScreen();
+      } else if (e.key === 'r' || e.key === 'R') {
+        instantRestart();
       }
     };
     window.addEventListener('keydown', keyHandler);
@@ -2322,8 +2450,27 @@ export class Game {
 
     this.setupShareButton();
 
-    // Add dismiss button handler after DOM is added
+    // Add button handlers after DOM is added
     setTimeout(() => {
+      // Instant restart button
+      const restartBtn = document.getElementById('instant-restart-btn');
+      if (restartBtn) {
+        if ('ontouchstart' in window) {
+          restartBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            instantRestart();
+          });
+        } else {
+          restartBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            instantRestart();
+          });
+        }
+      }
+
+      // Dismiss button
       const dismissBtn = document.getElementById('dismiss-btn');
       if (dismissBtn) {
         // Use touchstart OR click, not both
@@ -2352,6 +2499,61 @@ export class Game {
 
     // Create game-over ad container below the game over message
     setTimeout(() => this.createGameOverAd(), 100);
+  }
+
+  private showBonusNotification(): void {
+    // Show notification for beating personal best
+    const bonusText = new Text({
+      text: '🎁 NEW RECORD BONUS!\n+5 Missiles & Shield!',
+      style: {
+        fontFamily: 'Orbitron',
+        fontSize: 28,
+        fontWeight: 'bold',
+        fill: 0x00ff88, // Green color
+        stroke: { color: 0x000000, width: 5 },
+        align: 'center',
+      }
+    });
+
+    bonusText.x = this.app.screen.width / 2;
+    bonusText.y = this.app.screen.height / 3;
+    bonusText.anchor.set(0.5);
+    bonusText.alpha = 0;
+
+    this.gameContainer.addChild(bonusText);
+
+    // Animate the text: fade in, float up, then fade out
+    const startTime = Date.now();
+    const duration = 3000; // 3 seconds
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = elapsed / duration;
+
+      if (progress < 1) {
+        // Fade in quickly, then fade out
+        if (progress < 0.2) {
+          bonusText.alpha = progress / 0.2; // Fade in over first 20%
+        } else if (progress > 0.7) {
+          bonusText.alpha = (1 - progress) / 0.3; // Fade out over last 30%
+        } else {
+          bonusText.alpha = 1; // Full opacity in middle
+        }
+
+        // Float upward
+        bonusText.y = (this.app.screen.height / 3) - (progress * 50);
+
+        requestAnimationFrame(animate);
+      } else {
+        // Remove text when animation is done
+        if (this.gameContainer.children.includes(bonusText)) {
+          this.gameContainer.removeChild(bonusText);
+        }
+        bonusText.destroy();
+      }
+    };
+
+    requestAnimationFrame(animate);
   }
 
   private setupLeaderboard(container: HTMLDivElement, rank: string): void {
