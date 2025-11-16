@@ -2420,12 +2420,56 @@ export class Game {
         this.pauseCounterText.textContent = '1x';
       }
 
-      // Clear all game entities
+      // Clear all game entities properly (remove sprites and destroy)
+      for (let i = this.enemies.length - 1; i >= 0; i--) {
+        const enemy = this.enemies[i];
+        this.gameContainer.removeChild(enemy.sprite);
+        enemy.destroy();
+      }
       this.enemies = [];
+
+      for (let i = this.bullets.length - 1; i >= 0; i--) {
+        const bullet = this.bullets[i];
+        this.gameContainer.removeChild(bullet.sprite);
+        bullet.destroy();
+      }
       this.bullets = [];
+
+      for (let i = this.missiles.length - 1; i >= 0; i--) {
+        const missile = this.missiles[i];
+        this.gameContainer.removeChild(missile.sprite);
+        missile.destroy();
+      }
       this.missiles = [];
+
+      for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+        const bullet = this.enemyBullets[i];
+        this.gameContainer.removeChild(bullet.sprite);
+        bullet.destroy();
+      }
       this.enemyBullets = [];
+
+      for (let i = this.powerUps.length - 1; i >= 0; i--) {
+        const powerUp = this.powerUps[i];
+        this.gameContainer.removeChild(powerUp.sprite);
+        powerUp.destroy();
+      }
       this.powerUps = [];
+
+      // Clear particles
+      for (let i = this.particleSystem.particles.length - 1; i >= 0; i--) {
+        const particle = this.particleSystem.particles[i];
+        this.gameContainer.removeChild(particle.sprite);
+        particle.destroy();
+      }
+      this.particleSystem.particles = [];
+
+      // Reset player position and make visible
+      const playerYOffset = this.isMobileDevice() ? 200 : 120;
+      this.player.sprite.x = this.app.screen.width / 2;
+      this.player.sprite.y = this.app.screen.height - playerYOffset;
+      this.player.sprite.visible = true;
+      this.player.sprite.alpha = 1.0;
 
       // Show bonus notification if earned
       if (this.beatPersonalBest) {
