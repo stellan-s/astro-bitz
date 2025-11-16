@@ -31,6 +31,9 @@ export class Enemy {
   private hitRevealTime: number = 0; // Time when hit, reveals briefly
   private hitRevealDuration: number = 300; // 0.3 seconds reveal on hit
 
+  // BossTriple-specific properties - individual ship graphics for independent movement
+  private tripleShips: Graphics[] = [];
+
 
   constructor(x: number, y: number, type: EnemyType = 'basic', speedMultiplier: number = 1.0, screenWidth: number = 800) {
     this.sprite = new Container();
@@ -781,33 +784,27 @@ export class Enemy {
 
       case 'bossTriple':
         // Triple Boss - Three small ships in formation with independent movement
-        // Ship size (each ship is smaller than the main boss)
+        // Create separate Graphics for each ship so they can move independently
         const shipW = w * 0.25;
         const shipH = h * 0.4;
-        const baseSpacing = w * 0.7;
 
-        // Enhanced independent movement - each ship has unique motion characteristics
+        // Create three ship graphics objects
+        const leftShip = new Graphics();
+        const centerShip = new Graphics();
+        const rightShip = new Graphics();
 
-        // Left ship - circular pattern with bob
-        const leftBobY = Math.sin(this.movePattern * 1.8) * 8;
-        const leftWeaveX = Math.sin(this.movePattern * 1.3) * 12;
-        const leftOrbitX = Math.cos(this.movePattern * 0.7) * 6;
-        const leftOrbitY = Math.sin(this.movePattern * 0.7) * 6;
-        this.drawSmallShip(graphics, -baseSpacing + leftWeaveX + leftOrbitX, h * 0.3 + leftBobY + leftOrbitY, shipW, shipH, config.color, config.secondaryColor);
+        // Draw each ship (at 0,0 - will be positioned in update())
+        this.drawSmallShip(leftShip, 0, 0, shipW, shipH, config.color, config.secondaryColor);
+        this.drawSmallShip(centerShip, 0, 0, shipW * 1.2, shipH * 1.2, config.color, config.tertiaryColor);
+        this.drawSmallShip(rightShip, 0, 0, shipW, shipH, config.color, config.secondaryColor);
 
-        // Center ship (lead ship) - figure-8 pattern
-        const centerBobY = Math.sin(this.movePattern * 2.2 + 2) * 6;
-        const centerWeaveX = Math.sin(this.movePattern * 1.6 + 2) * 8;
-        const centerFigure8X = Math.sin(this.movePattern * 0.9) * 5;
-        const centerFigure8Y = Math.sin(this.movePattern * 1.8) * 4;
-        this.drawSmallShip(graphics, 0 + centerWeaveX + centerFigure8X, -h * 0.2 + centerBobY + centerFigure8Y, shipW * 1.2, shipH * 1.2, config.color, config.tertiaryColor);
+        // Add to sprite container
+        this.sprite.addChild(leftShip);
+        this.sprite.addChild(centerShip);
+        this.sprite.addChild(rightShip);
 
-        // Right ship - opposite circular pattern with weave
-        const rightBobY = Math.sin(this.movePattern * 1.6 + 4) * 9;
-        const rightWeaveX = Math.sin(this.movePattern * 1.4 + 4) * 11;
-        const rightOrbitX = Math.cos(this.movePattern * 0.7 + Math.PI) * 7; // Opposite orbit from left
-        const rightOrbitY = Math.sin(this.movePattern * 0.7 + Math.PI) * 7;
-        this.drawSmallShip(graphics, baseSpacing + rightWeaveX + rightOrbitX, h * 0.3 + rightBobY + rightOrbitY, shipW, shipH, config.color, config.secondaryColor);
+        // Store references for update loop
+        this.tripleShips = [leftShip, centerShip, rightShip];
         break;
 
       case 'bossBarrage':
@@ -966,6 +963,38 @@ export class Enemy {
       const baseAlpha = 0.7; // Increased from 0.2 to 0.7 for better visibility
       this.sprite.alpha = baseAlpha + Math.sin(this.movePattern * pulseSpeed) * alphaVariation;
       }
+
+    // BossTriple specific behavior - update individual ship positions
+    if (this.type === 'bossTriple' && this.tripleShips.length === 3) {
+      const config = getEnemyConfig(this.type);
+      const w = config.size.width / 2;
+      const h = config.size.height / 2;
+      const baseSpacing = w * 0.7;
+
+      // Left ship - circular pattern with bob
+      const leftBobY = Math.sin(this.movePattern * 1.8) * 8;
+      const leftWeaveX = Math.sin(this.movePattern * 1.3) * 12;
+      const leftOrbitX = Math.cos(this.movePattern * 0.7) * 6;
+      const leftOrbitY = Math.sin(this.movePattern * 0.7) * 6;
+      this.tripleShips[0].x = -baseSpacing + leftWeaveX + leftOrbitX;
+      this.tripleShips[0].y = h * 0.3 + leftBobY + leftOrbitY;
+
+      // Center ship (lead ship) - figure-8 pattern
+      const centerBobY = Math.sin(this.movePattern * 2.2 + 2) * 6;
+      const centerWeaveX = Math.sin(this.movePattern * 1.6 + 2) * 8;
+      const centerFigure8X = Math.sin(this.movePattern * 0.9) * 5;
+      const centerFigure8Y = Math.sin(this.movePattern * 1.8) * 4;
+      this.tripleShips[1].x = 0 + centerWeaveX + centerFigure8X;
+      this.tripleShips[1].y = -h * 0.2 + centerBobY + centerFigure8Y;
+
+      // Right ship - opposite circular pattern with weave
+      const rightBobY = Math.sin(this.movePattern * 1.6 + 4) * 9;
+      const rightWeaveX = Math.sin(this.movePattern * 1.4 + 4) * 11;
+      const rightOrbitX = Math.cos(this.movePattern * 0.7 + Math.PI) * 7;
+      const rightOrbitY = Math.sin(this.movePattern * 0.7 + Math.PI) * 7;
+      this.tripleShips[2].x = baseSpacing + rightWeaveX + rightOrbitX;
+      this.tripleShips[2].y = h * 0.3 + rightBobY + rightOrbitY;
+    }
 
     // Shooting logic for bosses and stealth enemies
     if (currentTime !== undefined && this.onShoot) {
