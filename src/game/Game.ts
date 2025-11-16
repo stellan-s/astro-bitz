@@ -658,7 +658,7 @@ export class Game {
       this.missileText.text = `Missiles: ${this.missileAmmo}`;
     }
 
-    const missile = new Missile(this.player.sprite.x, this.player.sprite.y - 30);
+    const missile = new Missile(this.player.sprite.x, this.player.sprite.y - 30, this.currentWave);
     this.missiles.push(missile);
     this.gameContainer.addChild(missile.sprite);
     this.audio.playMissileLaunch();
@@ -1640,22 +1640,61 @@ export class Game {
         const minDistance = enemyRadius + 15; // Enemy radius + larger buffer for missiles
 
         if (distance < minDistance) {
-          // Collision detected - remove missile
+          // Collision detected - apply damage and splash
+          const missileDamage = missile.getDamage();
+          const splashRadius = missile.getSplashRadius();
+          const splashDamage = missile.getSplashDamage();
+
+          // Remove missile
           this.gameContainer.removeChild(missile.sprite);
           this.missiles.splice(i, 1);
           missile.destroy();
 
-          // Missiles do 3 damage (or kill instantly for weak enemies)
-          const isDead = enemy.takeDamage() || enemy.takeDamage() || enemy.takeDamage();
+          // Apply direct damage to hit enemy
+          let isDead = false;
+          for (let d = 0; d < missileDamage; d++) {
+            isDead = enemy.takeDamage() || isDead;
+          }
+
           if (isDead) {
             // Get enemy config for color and points
             const config = getEnemyConfig(enemy.type);
 
             // Play death animation (with larger explosion for missiles)
-            this.playEnemyDeathAnimation(enemy, j, config, 20, true); // true = was missile
+            this.playEnemyDeathAnimation(enemy, j, config, splashRadius > 0 ? splashRadius : 20, true); // true = was missile
           }
 
           this.audio.playHit(enemy.type);
+
+          // Apply splash damage to nearby enemies (if missile has splash)
+          if (splashRadius > 0 && splashDamage > 0) {
+            const explosionX = enemy.sprite.x;
+            const explosionY = enemy.sprite.y;
+
+            for (let k = this.enemies.length - 1; k >= 0; k--) {
+              if (k === j) continue; // Skip the directly hit enemy
+
+              const nearbyEnemy = this.enemies[k];
+              const dx2 = nearbyEnemy.sprite.x - explosionX;
+              const dy2 = nearbyEnemy.sprite.y - explosionY;
+              const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+
+              if (dist2 <= splashRadius) {
+                // Enemy is in splash radius - apply splash damage
+                let splashKill = false;
+                for (let sd = 0; sd < splashDamage; sd++) {
+                  splashKill = nearbyEnemy.takeDamage() || splashKill;
+                }
+
+                if (splashKill) {
+                  const splashConfig = getEnemyConfig(nearbyEnemy.type);
+                  this.playEnemyDeathAnimation(nearbyEnemy, k, splashConfig, 15, false);
+                  this.audio.playHit(nearbyEnemy.type);
+                }
+              }
+            }
+          }
+
           break;
         }
       }

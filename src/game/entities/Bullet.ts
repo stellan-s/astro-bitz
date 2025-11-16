@@ -19,7 +19,7 @@ export class Bullet {
 
     if (isSuperFire) {
       // Purple superfire bullet - larger and more powerful looking
-      this.damage = 3; // 3x damage
+      this.damage = 5; // 5x damage - devastating!
       graphics.circle(0, 0, 6); // Slightly larger
       graphics.fill(0x8b00ff); // Purple
       // Add glow effect
