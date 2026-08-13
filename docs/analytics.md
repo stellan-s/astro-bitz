@@ -7,10 +7,10 @@ This game uses a privacy-first anonymous analytics system to track gameplay even
 Analytics are configured via environment variables in `.env.local`:
 
 ```env
-VITE_SUPABASE_URL=https://jqpaorlkzjoubggzwpqx.supabase.co
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
-VITE_ANALYTICS_ENDPOINT=https://jqpaorlkzjoubggzwpqx.supabase.co/functions/v1/analytics
-VITE_APP_NAME=astro-blitz
+VITE_ANALYTICS_ENDPOINT=https://<project-ref>.supabase.co/functions/v1/analytics
+VITE_APP_NAME=astro-bitz
 VITE_ANALYTICS_DEBUG=true
 ```
 
@@ -66,7 +66,7 @@ To use analytics, you need:
 2. **Application Registration**: Register the app in the database:
    ```sql
    INSERT INTO applications (name, description, domain)
-   VALUES ('astro-blitz', 'Astro Blitz Space Shooter Game', 'yourapp.com');
+   VALUES ('astro-bitz', 'Astro Bitz Space Shooter Game', 'yourapp.com');
    ```
 
 ## Viewing Analytics Data
@@ -79,7 +79,7 @@ SELECT
   DATE(created_at) as date,
   COUNT(DISTINCT anonymous_id) as users
 FROM analytics_events
-WHERE application_id = (SELECT id FROM applications WHERE name = 'astro-blitz')
+WHERE application_id = (SELECT id FROM applications WHERE name = 'astro-bitz')
   AND created_at >= NOW() - INTERVAL '30 days'
 GROUP BY DATE(created_at)
 ORDER BY date;
@@ -138,7 +138,7 @@ To test analytics integration:
 4. Check the Supabase database for received events:
    ```sql
    SELECT * FROM analytics_events
-   WHERE application_id = (SELECT id FROM applications WHERE name = 'astro-blitz')
+   WHERE application_id = (SELECT id FROM applications WHERE name = 'astro-bitz')
    ORDER BY created_at DESC
    LIMIT 10;
    ```

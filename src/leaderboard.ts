@@ -43,6 +43,20 @@ function getRankMedal(rank: number): string {
   return `#${rank}`;
 }
 
+function escapeHtml(value: unknown): string {
+  return String(value).replace(/[&<>'"]/g, (character) => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;',
+    };
+
+    return entities[character];
+  });
+}
+
 function displayLeaderboard(entries: any[]) {
   const content = document.getElementById('leaderboard-content');
   if (!content) return;
@@ -70,10 +84,10 @@ function displayLeaderboard(entries: any[]) {
           return `
             <tr class="${rankClass}">
               <td><span class="rank-medal">${getRankMedal(rank)}</span></td>
-              <td>${entry.player_name}</td>
-              <td>${entry.score.toLocaleString()}</td>
-              <td>${entry.wave}</td>
-              <td>${entry.rank}</td>
+              <td>${escapeHtml(entry.player_name)}</td>
+              <td>${Number(entry.score).toLocaleString()}</td>
+              <td>${Number(entry.wave)}</td>
+              <td>${escapeHtml(entry.rank)}</td>
             </tr>
           `;
         }).join('')}
