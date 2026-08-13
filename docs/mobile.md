@@ -74,6 +74,8 @@ Then build and run from Xcode.
 Edit `cordova-app/config.xml` to customize:
 - App ID: `com.astroblitz.game`
 - App name: `Astro Bitz`
+
+The legacy `com.astroblitz.game` identifier is intentionally retained so existing mobile builds continue to share the same application identity.
 - Version: `1.0.0`
 - Author information
 - Platform-specific settings

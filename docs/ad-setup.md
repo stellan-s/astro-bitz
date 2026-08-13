@@ -1,7 +1,7 @@
-# Astro Blitz - Ad Monetization Setup
+# Astro Bitz - Ad Monetization Setup
 
 ## Overview
-Astro Blitz now has tasteful, non-intrusive ad placements that match the game's aesthetic. All ads are styled with neon cyan glows and semi-transparent backgrounds to blend with the space shooter theme.
+Astro Bitz now has tasteful, non-intrusive ad placements that match the game's aesthetic. All ads are styled with neon cyan glows and semi-transparent backgrounds to blend with the space shooter theme.
 
 ## Ad Placements
 
