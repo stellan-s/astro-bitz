@@ -271,8 +271,45 @@ export class Game {
     // Enable auto-fire for all devices
     this.autoFireEnabled = true;
 
+    // Expose concise runtime state for automated gameplay checks.
+    this.exposeTestState();
+
     // Show start screen instead of starting immediately
     this.showStartScreen();
+  }
+
+  private exposeTestState(): void {
+    const testWindow = window as Window & {
+      render_game_to_text?: () => string;
+    };
+
+    testWindow.render_game_to_text = () => JSON.stringify({
+      coordinateSystem: 'Origin is top-left; x increases right; y increases down; logical canvas is 800px wide.',
+      mode: this.gameState,
+      paused: this.isPaused,
+      score: this.score,
+      wave: this.currentWave,
+      player: {
+        x: Math.round(this.player.sprite.x),
+        y: Math.round(this.player.sprite.y),
+        visible: this.player.sprite.visible,
+        shields: this.shieldCount,
+        missiles: this.missileAmmo,
+      },
+      enemies: this.enemies.slice(0, 20).map((enemy) => ({
+        x: Math.round(enemy.sprite.x),
+        y: Math.round(enemy.sprite.y),
+      })),
+      projectiles: {
+        player: this.bullets.length,
+        missiles: this.missiles.length,
+        enemy: this.enemyBullets.length,
+      },
+      powerUps: this.powerUps.map((powerUp) => ({
+        x: Math.round(powerUp.sprite.x),
+        y: Math.round(powerUp.sprite.y),
+      })),
+    });
   }
 
   private showStartScreen(): void {
@@ -2026,252 +2063,607 @@ export class Game {
 
     // Create HTML overlay for game over screen
     const container = document.createElement('div');
+    container.className = 'game-over-overlay';
+    container.setAttribute('role', 'dialog');
+    container.setAttribute('aria-modal', 'true');
+    container.setAttribute('aria-labelledby', 'game-over-title');
     container.style.cssText = `
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.9);
+      background: #050607;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
       align-items: center;
       z-index: 10000;
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Space Grotesk', sans-serif;
       text-align: center;
-      padding: 20px;
+      padding: 0;
       box-sizing: border-box;
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
     `;
 
-    const titleColor = isNewHighScore ? '#ffd700' : '#ff0000';
-    const glowColor = isNewHighScore ? 'rgba(255, 215, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
-
-    const progressToNext = rankInfo.rank === 'Astro Bitz' ? 100 :
-      Math.min(100, Math.round((this.score / rankInfo.nextThreshold) * 100));
-
     container.innerHTML = `
-      <div style="max-width: 700px; width: 100%; margin: auto; position: relative; padding-top: 20px; padding-bottom: 100px;">
-        <h1 style="font-size: 56px; margin-bottom: 20px; color: ${titleColor};
-                   text-shadow: 0 0 20px ${glowColor}, 0 0 40px ${glowColor};
-                   font-weight: 900;">
-          GAME OVER
-        </h1>
-        ${isNewHighScore ? `
-          <p style="font-size: 32px; color: #ffd700; margin-bottom: 30px;
-                    text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
-                    animation: glow 1.5s infinite alternate;">
-            ★ NEW HIGH SCORE! ★
-          </p>
-        ` : ''}
+      <main class="debrief-shell" aria-labelledby="game-over-title">
+        <div class="debrief-masthead debrief-enter">
+          <div class="debrief-brand">
+            <img class="debrief-ship" src="/space_ship_6872-v5.png" alt="" aria-hidden="true">
+            <span>ASTRO BITZ</span>
+          </div>
+          <span class="debrief-status"><i aria-hidden="true"></i> RUN TERMINATED</span>
+        </div>
+
+        <section class="debrief-hero debrief-enter">
+          <div class="debrief-copy">
+            <p class="debrief-kicker">FLIGHT LOG CLOSED</p>
+            <h1 id="game-over-title">GAME <span>OVER</span></h1>
+            <div class="debrief-flags" aria-label="Run achievements">
+              ${isNewHighScore ? '<span>NEW HIGH SCORE</span>' : ''}
+              ${isNewBestWave ? `<span>NEW WAVE RECORD · ${this.currentWave}</span>` : ''}
+            </div>
+          </div>
+          <div class="debrief-score-block">
+            <span class="debrief-label">FINAL SCORE</span>
+            <strong>${this.score.toLocaleString()}</strong>
+            <span class="debrief-best">PERSONAL BEST / ${this.highScore.toLocaleString()}</span>
+          </div>
+        </section>
+
+        <section class="debrief-metrics debrief-enter" aria-label="Run summary">
+          <div><span>WAVE REACHED</span><strong>${String(this.currentWave).padStart(2, '0')}</strong></div>
+          <div><span>PILOT RANK</span><strong>${rankInfo.rank}</strong></div>
+          <div><span>BEST SCORE</span><strong>${this.highScore.toLocaleString()}</strong></div>
+        </section>
+
         ${isNewBestWave ? `
-          <p style="font-size: 28px; color: #00ff88; margin-bottom: 25px;
-                    text-shadow: 0 0 12px rgba(0, 255, 136, 0.8);
-                    animation: glow 1.5s infinite alternate;">
-            🎯 NEW BEST: WAVE ${this.currentWave}! 🎯
-          </p>
-          <p style="font-size: 16px; color: #00ffaa; margin-bottom: 25px;">
-            Bonus reward on next run: +5 Missiles & Shield!
-          </p>
-        ` : this.personalBestWave > 0 ? `
-          <p style="font-size: 16px; color: #888; margin-bottom: 20px;">
-            Personal Best: Wave ${this.personalBestWave}
-          </p>
+          <aside class="debrief-reward debrief-enter">
+            <span>RECORD BONUS ARMED FOR NEXT RUN</span>
+            <strong>+5 MISSILES / +1 SHIELD</strong>
+          </aside>
         ` : ''}
 
-        <!-- Pilot Rank Section -->
-        <div style="background: rgba(0, 0, 0, 0.5); padding: 20px; border-radius: 10px;
-                    border: 2px solid ${rankInfo.color}; margin-bottom: 30px;
-                    box-shadow: 0 0 20px ${rankInfo.color}40;">
-          <div style="font-size: 18px; color: #aaa; margin-bottom: 10px;">PILOT RANK</div>
-          <div style="font-size: 36px; font-weight: bold; color: ${rankInfo.color};
-                      text-shadow: 0 0 15px ${rankInfo.color}; margin-bottom: 15px;">
-            ${rankInfo.rank}
-          </div>
-          ${rankInfo.rank !== 'Astro Bitz' ? `
-            <div style="font-size: 14px; color: #888; margin-bottom: 8px;">
-              Next: ${rankInfo.nextRank} (${rankInfo.nextThreshold} pts)
-            </div>
-            <div style="background: #333; height: 8px; border-radius: 4px; overflow: hidden;">
-              <div style="background: linear-gradient(90deg, ${rankInfo.color}, ${rankInfo.color}cc);
-                          height: 100%; width: ${progressToNext}%; transition: width 0.5s;"></div>
-            </div>
-          ` : '<div style="font-size: 16px; color: #ffd700;">★ MAXIMUM RANK ACHIEVED ★</div>'}
-        </div>
-
-        <!-- Score Section -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
-          <div style="background: rgba(0, 100, 150, 0.3); padding: 15px; border-radius: 8px; border: 1px solid #00ffff;">
-            <div style="font-size: 14px; color: #00ffff; margin-bottom: 5px;">FINAL SCORE</div>
-            <div style="font-size: 32px; font-weight: bold; color: #ffffff;">${this.score}</div>
-          </div>
-          <div style="background: rgba(150, 100, 0, 0.3); padding: 15px; border-radius: 8px; border: 1px solid #ffaa00;">
-            <div style="font-size: 14px; color: #ffaa00; margin-bottom: 5px;">WAVE REACHED</div>
-            <div style="font-size: 32px; font-weight: bold; color: #ffffff;">${this.currentWave}</div>
-          </div>
-        </div>
-
-        <!-- Instant Restart Button -->
-        <div style="margin: 25px 0;">
-          <button id="instant-restart-btn" style="padding: 18px 48px; border-radius: 8px;
-                                                  border: 3px solid #00ff00; background: linear-gradient(135deg, #00aa00, #00ff00);
-                                                  color: #ffffff; font-family: 'Orbitron', sans-serif; font-size: 22px;
-                                                  cursor: pointer; transition: all 0.3s; font-weight: 900;
-                                                  letter-spacing: 2px; box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
-                                                  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);">
-            ▶ INSTANT RESTART
+        <section class="debrief-actions debrief-enter" aria-label="Next actions">
+          <button id="instant-restart-btn" class="debrief-primary" type="button">
+            <span>FLY AGAIN</span><b aria-hidden="true">↗</b>
           </button>
-          <div style="font-size: 13px; color: #00ff00; margin-top: 10px; font-weight: bold;">
-            Press R key or tap to play again immediately!
-          </div>
-        </div>
-
-        <!-- Share CTA -->
-        <div style="margin: 10px 0 30px;">
-          <button id="share-score-btn" style="padding: 14px 28px; border-radius: 50px;
-                                              border: 2px solid #ff6347; background: linear-gradient(90deg, #ff4500, #ff6347);
-                                              color: #ffffff; font-family: 'Orbitron', sans-serif; font-size: 16px;
-                                              cursor: pointer; transition: all 0.3s; font-weight: 900;
-                                              letter-spacing: 1px; box-shadow: 0 0 20px rgba(255, 69, 0, 0.5);">
-            SHARE SCORE CARD
+          <button id="share-score-btn" class="debrief-secondary" type="button">
+            SHARE SCORE CARD <span aria-hidden="true">→</span>
           </button>
-          <div style="font-size: 14px; color: #aaaaaa; margin-top: 8px;">
-            Generates an Astro Bitz cover image with your score and best score so you can share it anywhere.
+          <small>PRESS R FOR IMMEDIATE RESTART</small>
+        </section>
+
+        <section class="debrief-section debrief-enter" aria-labelledby="mission-statistics-heading">
+          <div class="debrief-section-head">
+            <p class="debrief-kicker">AFTER-ACTION REPORT</p>
+            <h2 id="mission-statistics-heading">MISSION STATISTICS</h2>
           </div>
-        </div>
+          <dl class="debrief-stat-list">
+            <div><dt>Enemies destroyed</dt><dd>${stats.enemiesKilled}</dd></div>
+            <div><dt>Shots fired</dt><dd>${stats.bulletsShot}</dd></div>
+            <div><dt>Target accuracy</dt><dd>${accuracy}%</dd></div>
+            <div><dt>Missiles fired</dt><dd>${stats.missilesUsed}</dd></div>
+            <div><dt>Power-ups collected</dt><dd>${stats.powerupsCollected}</dd></div>
+          </dl>
+        </section>
 
-        <!-- Detailed Stats -->
-        <div style="background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 10px;
-                    border: 1px solid #444; margin-bottom: 25px;">
-          <div style="font-size: 16px; color: #aaa; margin-bottom: 15px; text-align: left;">MISSION STATISTICS</div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: left; font-size: 14px;">
-            <div style="color: #888;">Enemies Destroyed:</div>
-            <div style="color: #fff; text-align: right; font-weight: bold;">${stats.enemiesKilled}</div>
-
-            <div style="color: #888;">Shots Fired:</div>
-            <div style="color: #fff; text-align: right; font-weight: bold;">${stats.bulletsShot}</div>
-
-            <div style="color: #888;">Accuracy:</div>
-            <div style="color: ${accuracy >= 25 ? '#32cd32' : accuracy >= 15 ? '#ffaa00' : '#ff4500'};
-                        text-align: right; font-weight: bold;">${accuracy}%</div>
-
-            <div style="color: #888;">Missiles Fired:</div>
-            <div style="color: #fff; text-align: right; font-weight: bold;">${stats.missilesUsed}</div>
-
-            <div style="color: #888;">Power-Ups Collected:</div>
-            <div style="color: #fff; text-align: right; font-weight: bold;">${stats.powerupsCollected}</div>
-
-            <div style="color: #888;">High Score:</div>
-            <div style="color: #ffd700; text-align: right; font-weight: bold;">${this.highScore}</div>
-          </div>
-        </div>
-
-        <!-- Leaderboard Submission -->
         ${this.leaderboardManager ? `
-        <div id="leaderboard-section" style="background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 10px;
-                    border: 1px solid #444; margin-bottom: 25px; margin-top: 25px;">
-          <div style="font-size: 18px; color: #00ffff; margin-bottom: 15px;">SUBMIT TO LEADERBOARD</div>
-          <div style="display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap;">
-            <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="20"
-                   style="padding: 10px; border-radius: 5px; border: 2px solid #00ffff;
-                          background: rgba(0, 0, 0, 0.5); color: #fff; font-family: 'Orbitron', sans-serif;
-                          font-size: 16px; flex: 1; min-width: 200px; max-width: 300px;">
-            <button id="submit-score-btn" style="padding: 10px 20px; border-radius: 5px;
-                                                   border: 2px solid #00ffff; background: rgba(0, 255, 255, 0.2);
-                                                   color: #00ffff; font-family: 'Orbitron', sans-serif;
-                                                   font-size: 16px; cursor: pointer; transition: all 0.3s;
-                                                   font-weight: bold;">
-              SUBMIT SCORE
-            </button>
+        <section id="leaderboard-section" class="debrief-section debrief-enter" aria-labelledby="leaderboard-submit-heading">
+          <div class="debrief-section-head">
+            <p class="debrief-kicker">GLOBAL TRANSMISSION</p>
+            <h2 id="leaderboard-submit-heading">LOG YOUR RUN</h2>
           </div>
-          <div id="submit-status" style="margin-top: 10px; font-size: 14px; min-height: 20px;"></div>
-        </div>
-
-        <!-- Leaderboard Display -->
-        <div style="background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 10px;
-                    border: 1px solid #444; margin-bottom: 25px;">
-          <div style="font-size: 18px; color: #ffd700; margin-bottom: 15px;">🏆 LEADERBOARD</div>
-
-          <!-- Tabs -->
-          <div style="display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap;">
-            <button class="leaderboard-tab" data-tab="alltime" style="padding: 8px 16px; border-radius: 5px;
-                                                                       border: 2px solid #ffd700; background: rgba(255, 215, 0, 0.3);
-                                                                       color: #ffd700; font-family: 'Orbitron', sans-serif;
-                                                                       font-size: 14px; cursor: pointer; transition: all 0.3s;
-                                                                       font-weight: bold;">
-              ALL-TIME
-            </button>
-            <button class="leaderboard-tab" data-tab="weekly" style="padding: 8px 16px; border-radius: 5px;
-                                                                      border: 2px solid #888; background: rgba(136, 136, 136, 0.2);
-                                                                      color: #888; font-family: 'Orbitron', sans-serif;
-                                                                      font-size: 14px; cursor: pointer; transition: all 0.3s;">
-              WEEKLY
-            </button>
-            <button class="leaderboard-tab" data-tab="daily" style="padding: 8px 16px; border-radius: 5px;
-                                                                     border: 2px solid #888; background: rgba(136, 136, 136, 0.2);
-                                                                     color: #888; font-family: 'Orbitron', sans-serif;
-                                                                     font-size: 14px; cursor: pointer; transition: all 0.3s;">
-              DAILY
-            </button>
+          <div class="debrief-submit-row">
+            <label class="debrief-input-wrap">
+              <span>CALLSIGN</span>
+              <input type="text" id="player-name-input" placeholder="ENTER YOUR NAME" maxlength="20" autocomplete="nickname">
+            </label>
+            <button id="submit-score-btn" type="button">SUBMIT SCORE <span aria-hidden="true">→</span></button>
           </div>
+          <div id="submit-status" aria-live="polite"></div>
+        </section>
 
-          <!-- Leaderboard Content -->
-          <div id="leaderboard-content" style="font-size: 14px; color: #fff; text-align: left;">
-            <div style="text-align: center; color: #888;">Loading...</div>
+        <section class="debrief-section debrief-leaderboard debrief-enter" aria-labelledby="leaderboard-heading">
+          <div class="debrief-leaderboard-head">
+            <div>
+              <p class="debrief-kicker">TOP PILOTS</p>
+              <h2 id="leaderboard-heading">LEADERBOARD</h2>
+            </div>
+            <div class="debrief-tabs" role="tablist" aria-label="Leaderboard period">
+              <button class="leaderboard-tab is-active" data-tab="alltime" type="button">ALL-TIME</button>
+              <button class="leaderboard-tab" data-tab="weekly" type="button">WEEKLY</button>
+              <button class="leaderboard-tab" data-tab="daily" type="button">DAILY</button>
+            </div>
           </div>
-        </div>
+          <div id="leaderboard-content" aria-live="polite">
+            <div class="debrief-loading">RECEIVING TRANSMISSION…</div>
+          </div>
+        </section>
         ` : ''}
 
-        <div style="font-size: 18px; color: #888; margin-top: 20px; margin-bottom: 30px;">
-          Click "CLOSE STATS" to return to menu
-        </div>
-
-        <!-- Dismiss Button at Bottom -->
-        <button id="dismiss-btn" style="background: rgba(255, 0, 0, 0.2); border: 2px solid #ff0000;
-                                        color: #ff0000; padding: 12px 24px; border-radius: 5px;
-                                        font-family: 'Orbitron', sans-serif; font-size: 16px;
-                                        cursor: pointer; transition: all 0.3s;
-                                        font-weight: bold; margin-top: 20px;">
-          ✕ CLOSE STATS
-        </button>
-      </div>
+        <footer class="debrief-footer debrief-enter">
+          <span>END OF FLIGHT LOG</span>
+          <button id="dismiss-btn" type="button">RETURN TO HANGAR <span aria-hidden="true">→</span></button>
+        </footer>
+      </main>
       <style>
-        @keyframes glow {
-          0%, 100% { text-shadow: 0 0 15px rgba(255, 215, 0, 0.7); }
-          50% { text-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 0 50px rgba(255, 215, 0, 0.5); }
+        .game-over-overlay {
+          --go-ink: #050607;
+          --go-white: #f6fbff;
+          --go-muted: #b4c0cc;
+          --go-cyan: #00f0ff;
+          --go-magenta: #ff3be4;
+          --go-orange: #ff5b1f;
+          --go-gold: #ffb000;
+          --go-line: rgba(0, 240, 255, 0.22);
+          color: var(--go-white);
+          font-family: "Space Grotesk", sans-serif;
+          font-size: 16px;
+          text-rendering: optimizeLegibility;
+          scrollbar-color: #3c3e3f var(--go-ink);
+          scrollbar-width: thin;
         }
-        #dismiss-btn:hover {
-          background: rgba(255, 0, 0, 0.4);
-          transform: scale(1.05);
-          box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        .game-over-overlay::before {
+          position: fixed;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(0, 240, 255, 0.025) 1px, transparent 1px),
+            radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.62) 0 1px, transparent 1.4px),
+            radial-gradient(circle at 82% 31%, rgba(0, 240, 255, 0.72) 0 1px, transparent 1.5px),
+            radial-gradient(circle at 66% 77%, rgba(255, 59, 228, 0.58) 0 1px, transparent 1.4px);
+          background-size: 100% 4px, 310px 270px, 470px 390px, 590px 430px;
+          content: "";
+          opacity: 0.46;
+          pointer-events: none;
         }
-        #dismiss-btn:active {
-          transform: scale(0.95);
+        .debrief-shell {
+          position: relative;
+          width: min(920px, 100%);
+          margin: auto;
+          padding: clamp(22px, 4vw, 48px) clamp(20px, 5vw, 64px) 56px;
+          text-align: left;
         }
-        #submit-score-btn:hover {
-          background: rgba(0, 255, 255, 0.4);
-          transform: scale(1.05);
+        .debrief-masthead,
+        .debrief-brand,
+        .debrief-status,
+        .debrief-progress-copy,
+        .debrief-actions,
+        .debrief-leaderboard-head,
+        .debrief-tabs,
+        .debrief-footer {
+          display: flex;
+          align-items: center;
         }
-        #submit-score-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
+        .debrief-masthead {
+          justify-content: space-between;
+          padding-bottom: 24px;
+          border-bottom: 1px solid var(--go-line);
         }
-        .leaderboard-tab:hover {
-          transform: scale(1.05);
+        .debrief-brand {
+          gap: 12px;
+          font-family: "Orbitron", sans-serif;
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: 0.14em;
         }
-        /* Mobile optimizations */
-        @media (max-width: 768px) {
-          h1 { font-size: 40px !important; }
-          #dismiss-btn { font-size: 14px; padding: 10px 20px; }
-          #player-name-input { min-width: 150px; font-size: 14px; }
-          #submit-score-btn { font-size: 14px; padding: 8px 16px; }
+        .debrief-brand > span {
+          background: linear-gradient(90deg, var(--go-cyan), var(--go-magenta));
+          background-clip: text;
+          -webkit-background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
         }
-        @media (max-height: 700px) {
-          /* Ensure content is accessible on short screens */
-          body { overflow-y: auto; }
+        .debrief-ship {
+          width: 44px;
+          height: 44px;
+          object-fit: contain;
+          filter: drop-shadow(0 0 7px rgba(0, 240, 255, 0.42));
+        }
+        .debrief-status {
+          gap: 9px;
+          color: var(--go-muted);
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+        }
+        .debrief-status i {
+          width: 7px;
+          height: 7px;
+          background: var(--go-magenta);
+          box-shadow: 0 0 9px rgba(255, 59, 228, 0.75);
+          border-radius: 50%;
+          animation: debrief-pulse 1.8s ease-in-out infinite;
+        }
+        .debrief-hero {
+          display: block;
+          padding: clamp(58px, 8vw, 88px) 0 52px;
+          border-bottom: 1px solid var(--go-line);
+          text-align: center;
+        }
+        .debrief-kicker,
+        .debrief-label {
+          margin: 0;
+          color: var(--go-gold);
+          font-family: "Space Grotesk", sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.14em;
+          line-height: 1.5;
+        }
+        .debrief-copy h1 {
+          margin: 14px 0 20px;
+          background: linear-gradient(90deg, var(--go-cyan) 0%, #72c9ff 42%, var(--go-magenta) 100%);
+          background-clip: text;
+          -webkit-background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+          filter: drop-shadow(0 0 18px rgba(0, 240, 255, 0.18));
+          font-family: "Orbitron", sans-serif;
+          font-size: clamp(64px, 9vw, 108px);
+          font-weight: 900;
+          letter-spacing: -0.075em;
+          line-height: 0.9;
+          white-space: nowrap;
+        }
+        .debrief-copy h1 span { color: inherit; }
+        .debrief-flags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          min-height: 24px;
+          justify-content: center;
+        }
+        .debrief-flags span,
+        .debrief-personal-best {
+          margin: 0;
+          padding: 7px 9px;
+          border: 1px solid rgba(255, 176, 0, 0.58);
+          color: var(--go-white);
+          font-family: "Space Grotesk", sans-serif;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.09em;
+        }
+        .debrief-score-block {
+          padding: 34px 0 0;
+        }
+        .debrief-score-block > span { display: block; }
+        .debrief-score-block strong {
+          display: block;
+          margin: 12px 0 8px;
+          color: var(--go-cyan);
+          text-shadow: 0 0 22px rgba(0, 240, 255, 0.28);
+          font-family: "Orbitron", sans-serif;
+          font-size: clamp(54px, 8vw, 82px);
+          font-weight: 800;
+          letter-spacing: -0.07em;
+          line-height: 1;
+          overflow-wrap: anywhere;
+        }
+        .debrief-best {
+          color: var(--go-muted);
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.09em;
+        }
+        .debrief-metrics {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          border-bottom: 1px solid var(--go-line);
+        }
+        .debrief-metrics div {
+          padding: 28px 0;
+          border-right: 1px solid var(--go-line);
+        }
+        .debrief-metrics div + div { padding-left: clamp(18px, 4vw, 48px); }
+        .debrief-metrics div:last-child { border-right: 0; }
+        .debrief-metrics span,
+        .debrief-progress-copy,
+        .debrief-personal-best,
+        .debrief-reward span,
+        .debrief-actions small,
+        .debrief-input-wrap > span,
+        .debrief-footer > span {
+          color: var(--go-muted);
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.09em;
+        }
+        .debrief-metrics strong {
+          display: block;
+          margin-top: 7px;
+          font-family: "Orbitron", sans-serif;
+          font-size: clamp(22px, 3vw, 34px);
+          letter-spacing: -0.04em;
+          overflow-wrap: anywhere;
+        }
+        .debrief-metrics div:nth-child(1) strong { color: var(--go-cyan); }
+        .debrief-metrics div:nth-child(2) strong { color: var(--go-magenta); }
+        .debrief-metrics div:nth-child(3) strong { color: var(--go-gold); }
+        .debrief-rank {
+          display: grid;
+          grid-template-columns: minmax(220px, 0.7fr) 1.3fr;
+          align-items: end;
+          gap: 48px;
+          padding: 46px 0;
+          border-bottom: 1px solid var(--go-line);
+        }
+        .debrief-rank h2,
+        .debrief-section h2 {
+          margin: 8px 0 0;
+          font-family: "Orbitron", sans-serif;
+          font-size: clamp(24px, 4vw, 44px);
+          font-weight: 800;
+          letter-spacing: -0.045em;
+          text-transform: uppercase;
+        }
+        .debrief-progress-copy {
+          justify-content: space-between;
+          margin-bottom: 12px;
+          font-size: 12px;
+        }
+        .debrief-progress {
+          height: 3px;
+          overflow: hidden;
+          background: rgba(247, 245, 239, 0.14);
+        }
+        .debrief-progress span {
+          display: block;
+          height: 100%;
+          background: var(--go-orange);
+          transform-origin: left;
+          animation: debrief-progress 1s 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        }
+        .debrief-max-rank {
+          margin: 0;
+          color: var(--go-orange);
+          font-family: "Orbitron", sans-serif;
+          font-size: 13px;
+          letter-spacing: 0.08em;
+          text-align: right;
+        }
+        .debrief-reward {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+          padding: 18px 22px;
+          background: linear-gradient(90deg, var(--go-cyan), #6caaff);
+          color: var(--go-ink);
+        }
+        .debrief-reward span { color: var(--go-ink); }
+        .debrief-reward strong {
+          font-family: "Orbitron", sans-serif;
+          font-size: 13px;
+          letter-spacing: 0.08em;
+        }
+        .debrief-personal-best {
+          padding: 18px 0;
+          border-width: 0 0 1px;
+          border-color: var(--go-line);
+        }
+        .debrief-actions {
+          flex-wrap: wrap;
+          gap: 14px;
+          justify-content: center;
+          padding: 40px 0 64px;
+        }
+        .debrief-actions button,
+        #submit-score-btn,
+        .leaderboard-tab,
+        #dismiss-btn {
+          border-radius: 0;
+          font-family: "Orbitron", sans-serif;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          cursor: pointer;
+          transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+        }
+        .debrief-primary {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: min(100%, 340px);
+          min-height: 72px;
+          padding: 0 24px;
+          border: 1px solid var(--go-orange);
+          background: var(--go-orange);
+          color: var(--go-ink);
+          font-size: 16px;
+        }
+        .debrief-primary b { font-size: 24px; }
+        .debrief-secondary {
+          min-height: 72px;
+          padding: 0 24px;
+          border: 1px solid rgba(0, 240, 255, 0.55);
+          background: transparent;
+          color: var(--go-cyan);
+          font-size: 13px;
+        }
+        .debrief-secondary span,
+        #submit-score-btn span,
+        #dismiss-btn span { margin-left: 18px; }
+        .debrief-actions small {
+          flex-basis: 100%;
+          padding-top: 2px;
+          text-align: center;
+        }
+        .debrief-primary:hover,
+        .debrief-primary:focus-visible { background: var(--go-gold); border-color: var(--go-gold); }
+        .debrief-secondary:hover,
+        .debrief-secondary:focus-visible,
+        #submit-score-btn:hover,
+        #submit-score-btn:focus-visible,
+        #dismiss-btn:hover,
+        #dismiss-btn:focus-visible { border-color: var(--go-cyan); color: var(--go-cyan); }
+        .debrief-primary:hover b,
+        .debrief-primary:focus-visible b,
+        .debrief-secondary:hover span,
+        .debrief-secondary:focus-visible span,
+        #submit-score-btn:hover span,
+        #submit-score-btn:focus-visible span,
+        #dismiss-btn:hover span,
+        #dismiss-btn:focus-visible span { transform: translate(3px, -3px); }
+        .debrief-primary b,
+        .debrief-secondary span,
+        #submit-score-btn span,
+        #dismiss-btn span { display: inline-block; transition: transform 180ms ease; }
+        .debrief-section {
+          padding: 52px 0;
+          border-top: 1px solid var(--go-line);
+        }
+        .debrief-section-head {
+          margin-bottom: 28px;
+        }
+        .debrief-section-head h2 { margin-top: 8px; font-size: clamp(26px, 4vw, 38px); }
+        .debrief-stat-list {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 0 48px;
+          margin: 0;
+        }
+        .debrief-stat-list div {
+          display: flex;
+          justify-content: space-between;
+          padding: 15px 0;
+          border-bottom: 1px solid var(--go-line);
+        }
+        .debrief-stat-list dt { color: var(--go-muted); }
+        .debrief-stat-list dd {
+          margin: 0;
+          font-family: "Orbitron", sans-serif;
+          font-weight: 700;
+        }
+        .debrief-submit-row {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          align-items: end;
+          gap: 12px;
+        }
+        .debrief-input-wrap span { display: block; margin-bottom: 10px; }
+        #player-name-input {
+          width: 100%;
+          min-height: 52px;
+          padding: 0 16px;
+          border: 1px solid var(--go-line);
+          border-radius: 0;
+          outline: 0;
+          background: transparent;
+          color: var(--go-white);
+          font-family: "Space Grotesk", sans-serif;
+          font-size: 16px;
+        }
+        #player-name-input:focus { border-color: var(--go-orange); }
+        #player-name-input::placeholder { color: #666a6d; }
+        #submit-score-btn {
+          min-height: 52px;
+          padding: 0 20px;
+          border: 1px solid var(--go-cyan);
+          background: transparent;
+          color: var(--go-cyan);
+          font-size: 12px;
+        }
+        #submit-score-btn:disabled { cursor: not-allowed; opacity: 0.45; }
+        #submit-status { min-height: 20px; margin-top: 12px; font-size: 14px; }
+        .debrief-leaderboard-head { justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+        .debrief-tabs { gap: 4px; }
+        .leaderboard-tab {
+          padding: 9px 11px;
+          border: 1px solid transparent;
+          background: transparent;
+          color: var(--go-muted);
+          font-size: 11px;
+        }
+        .leaderboard-tab:hover,
+        .leaderboard-tab:focus-visible { color: var(--go-white); }
+        .leaderboard-tab.is-active {
+          border-color: var(--go-cyan);
+          color: var(--go-cyan);
+        }
+        #leaderboard-content { color: var(--go-white); font-size: 14px; text-align: left; }
+        .debrief-loading { padding: 26px 0; color: var(--go-muted); text-align: center; }
+        .debrief-score-table { width: 100%; border-collapse: collapse; }
+        .debrief-score-table tr { border-bottom: 1px solid var(--go-line); }
+        .debrief-score-table tr:first-child { border-top: 1px solid var(--go-line); }
+        .debrief-score-table td { padding: 13px 8px; }
+        .debrief-score-table .place { width: 46px; color: var(--go-cyan); font-family: "Orbitron", sans-serif; font-weight: 700; }
+        .debrief-score-table .pilot { color: var(--go-white); }
+        .debrief-score-table .rank { color: var(--go-muted); font-size: 12px; text-align: center; }
+        .debrief-score-table .score { color: var(--go-white); font-family: "Orbitron", sans-serif; font-weight: 700; text-align: right; }
+        .debrief-score-table .wave { width: 60px; color: var(--go-muted); font-size: 12px; text-align: right; }
+        .debrief-footer {
+          justify-content: space-between;
+          padding-top: 32px;
+          border-top: 1px solid var(--go-line);
+        }
+        #dismiss-btn {
+          padding: 12px 0 12px 20px;
+          border: 0;
+          border-bottom: 1px solid var(--go-white);
+          background: transparent;
+          color: var(--go-white);
+          font-size: 12px;
+        }
+        .debrief-enter { animation: debrief-rise 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+        .debrief-hero { animation-delay: 70ms; }
+        .debrief-metrics { animation-delay: 120ms; }
+        .debrief-rank { animation-delay: 170ms; }
+        .debrief-actions { animation-delay: 220ms; }
+        @keyframes debrief-rise { from { opacity: 0; transform: translateY(18px); } }
+        @keyframes debrief-progress { from { transform: scaleX(0); } }
+        @keyframes debrief-pulse { 50% { opacity: 0.3; } }
+        @media (max-width: 720px) {
+          .debrief-shell { padding-bottom: 40px; }
+          .debrief-hero { padding: 54px 0 38px; }
+          .debrief-copy h1 { font-size: clamp(48px, 14vw, 72px); white-space: normal; }
+          .debrief-score-block { padding: 30px 0 0; }
+          .debrief-score-block strong { font-size: clamp(48px, 18vw, 76px); }
+          .debrief-metrics { grid-template-columns: 1fr; }
+          .debrief-metrics div,
+          .debrief-metrics div + div {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 0;
+            border-right: 0;
+            border-bottom: 1px solid var(--go-line);
+          }
+          .debrief-metrics div:last-child { border-bottom: 0; }
+          .debrief-metrics strong { margin-top: 0; text-align: right; }
+          .debrief-stat-list { grid-template-columns: 1fr; }
+          .debrief-actions { align-items: stretch; }
+          .debrief-primary,
+          .debrief-secondary { width: 100%; }
+          .debrief-submit-row { grid-template-columns: 1fr; }
+          .debrief-leaderboard-head { align-items: flex-start; flex-direction: column; }
+          .debrief-tabs { width: 100%; justify-content: space-between; }
+          .debrief-score-table .rank { display: none; }
+        }
+        @media (max-width: 460px) {
+          .debrief-masthead { align-items: flex-start; gap: 18px; }
+          .debrief-status { text-align: right; }
+          .debrief-metrics div { padding: 20px 8px 20px 0; }
+          .debrief-metrics div + div { padding-left: 12px; }
+          .debrief-metrics span { font-size: 9px; letter-spacing: 0.04em; }
+          .debrief-metrics strong { font-size: 24px; }
+          .debrief-progress-copy { align-items: flex-start; flex-direction: column; gap: 6px; }
+          .debrief-reward { align-items: flex-start; flex-direction: column; }
+          .debrief-footer { align-items: flex-start; flex-direction: column; gap: 24px; }
+          #dismiss-btn { padding-left: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .debrief-enter,
+          .debrief-progress span,
+          .debrief-status i { animation: none; }
+          .debrief-primary,
+          .debrief-secondary,
+          #submit-score-btn,
+          #dismiss-btn,
+          .leaderboard-tab { transition: none; }
         }
       </style>
     `;
@@ -2616,13 +3008,13 @@ export class Game {
       submitBtn.addEventListener('click', async () => {
         const playerName = nameInput.value.trim();
         if (!playerName) {
-          statusDiv.style.color = '#ff4500';
+          statusDiv.style.color = '#ff5b1f';
           statusDiv.textContent = 'Please enter your name';
           return;
         }
 
         if (playerName.length < 2) {
-          statusDiv.style.color = '#ff4500';
+          statusDiv.style.color = '#ff5b1f';
           statusDiv.textContent = 'Name must be at least 2 characters';
           return;
         }
@@ -2633,7 +3025,7 @@ export class Game {
         // Disable button during submission
         submitBtn.textContent = 'SUBMITTING...';
         (submitBtn as HTMLButtonElement).disabled = true;
-        statusDiv.style.color = '#888';
+        statusDiv.style.color = '#a3a29e';
         statusDiv.textContent = 'Submitting...';
 
         try {
@@ -2645,7 +3037,7 @@ export class Game {
           });
 
           if (success) {
-            statusDiv.style.color = '#32cd32';
+            statusDiv.style.color = '#f7f5ef';
             statusDiv.textContent = '✓ Score submitted successfully!';
             submitBtn.textContent = '✓ SUBMITTED';
             // Refresh leaderboard
@@ -2654,7 +3046,7 @@ export class Game {
             throw new Error('Submission failed');
           }
         } catch (error) {
-          statusDiv.style.color = '#ff4500';
+          statusDiv.style.color = '#ff5b1f';
           statusDiv.textContent = '✗ Failed to submit score';
           submitBtn.textContent = 'SUBMIT SCORE';
           (submitBtn as HTMLButtonElement).disabled = false;
@@ -2668,19 +3060,9 @@ export class Game {
       tab.addEventListener('click', async () => {
         const tabName = (tab as HTMLElement).dataset.tab!;
 
-        // Update tab styles
+        // Update the active period while keeping the landing-page visual system.
         tabs.forEach(t => {
-          if (t === tab) {
-            (t as HTMLElement).style.border = '2px solid #ffd700';
-            (t as HTMLElement).style.background = 'rgba(255, 215, 0, 0.3)';
-            (t as HTMLElement).style.color = '#ffd700';
-            (t as HTMLElement).style.fontWeight = 'bold';
-          } else {
-            (t as HTMLElement).style.border = '2px solid #888';
-            (t as HTMLElement).style.background = 'rgba(136, 136, 136, 0.2)';
-            (t as HTMLElement).style.color = '#888';
-            (t as HTMLElement).style.fontWeight = 'normal';
-          }
+          t.classList.toggle('is-active', t === tab);
         });
 
         // Load leaderboard data
@@ -2710,7 +3092,7 @@ export class Game {
     const contentDiv = document.getElementById('leaderboard-content');
     if (!contentDiv || !this.leaderboardManager) return;
 
-    contentDiv.innerHTML = '<div style="text-align: center; color: #888;">Loading...</div>';
+    contentDiv.innerHTML = '<div class="debrief-loading">RECEIVING TRANSMISSION…</div>';
 
     try {
       let scores;
@@ -2726,27 +3108,23 @@ export class Game {
       }
 
       if (scores.length === 0) {
-        contentDiv.innerHTML = '<div style="text-align: center; color: #888;">No scores yet. Be the first!</div>';
+        contentDiv.innerHTML = '<div class="debrief-loading">NO LOGGED RUNS / BE THE FIRST</div>';
         return;
       }
 
       // Build leaderboard HTML
-      let html = '<table style="width: 100%; border-collapse: collapse;">';
+      let html = '<table class="debrief-score-table">';
       scores.forEach((entry, index) => {
         const position = index + 1;
-        const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : `${position}.`;
-        const rowColor = position <= 3 ? 'rgba(255, 215, 0, 0.1)' : 'transparent';
-
-        // Get rank info for color
-        const rankInfo = this.getPilotRank(entry.score);
+        const place = String(position).padStart(2, '0');
 
         html += `
-          <tr style="background: ${rowColor}; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-            <td style="padding: 8px; text-align: left; color: #ffd700; font-weight: bold; width: 40px;">${medal}</td>
-            <td style="padding: 8px; text-align: left; color: #fff;">${this.escapeHtml(entry.player_name)}</td>
-            <td style="padding: 8px; text-align: center; color: ${rankInfo.color}; font-size: 11px; font-weight: bold;">${this.escapeHtml(entry.rank)}</td>
-            <td style="padding: 8px; text-align: right; color: #00ffff; font-weight: bold;">${Number(entry.score)}</td>
-            <td style="padding: 8px; text-align: right; color: #888; font-size: 12px; width: 70px;">W${Number(entry.wave)}</td>
+          <tr>
+            <td class="place">${place}</td>
+            <td class="pilot">${this.escapeHtml(entry.player_name)}</td>
+            <td class="rank">${this.escapeHtml(entry.rank)}</td>
+            <td class="score">${Number(entry.score).toLocaleString()}</td>
+            <td class="wave">W${String(Number(entry.wave)).padStart(2, '0')}</td>
           </tr>
         `;
       });
@@ -2755,7 +3133,7 @@ export class Game {
       contentDiv.innerHTML = html;
     } catch (error) {
       console.error('Failed to load leaderboard:', error);
-      contentDiv.innerHTML = '<div style="text-align: center; color: #ff4500;">Failed to load leaderboard</div>';
+      contentDiv.innerHTML = '<div class="debrief-loading" style="color: #ff5b1f;">TRANSMISSION FAILED</div>';
     }
   }
 

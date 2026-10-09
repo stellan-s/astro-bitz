@@ -27,11 +27,13 @@ export class Player {
   private async loadShipSprite(): Promise<void> {
     try {
       // Load the texture using Pixi.js v8 Assets API
-      const shipTexture = await Assets.load('/space_ship_6872.png');
+      const shipTexture = await Assets.load('/space_ship_6872-v5.png');
       const shipSprite = new Sprite(shipTexture);
 
       shipSprite.anchor.set(0.5, 0.5);
-      shipSprite.scale.set(0.8, 0.8);
+      // Render slightly larger so the Lunar Patrol Craft's signature parts stay legible.
+      shipSprite.width = 64;
+      shipSprite.height = 64;
 
       // Add to container
       this.sprite.addChild(shipSprite);
