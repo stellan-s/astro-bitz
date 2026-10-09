@@ -2134,7 +2134,6 @@ export class Game {
           <button id="share-score-btn" class="debrief-secondary" type="button">
             SHARE SCORE CARD <span aria-hidden="true">→</span>
           </button>
-          <small>PRESS R FOR IMMEDIATE RESTART</small>
         </section>
 
         <section class="debrief-section debrief-enter" aria-labelledby="mission-statistics-heading">
@@ -2365,7 +2364,6 @@ export class Game {
         .debrief-progress-copy,
         .debrief-personal-best,
         .debrief-reward span,
-        .debrief-actions small,
         .debrief-input-wrap > span,
         .debrief-footer > span {
           color: var(--go-muted);
@@ -2487,11 +2485,6 @@ export class Game {
         .debrief-secondary span,
         #submit-score-btn span,
         #dismiss-btn span { margin-left: 18px; }
-        .debrief-actions small {
-          flex-basis: 100%;
-          padding-top: 2px;
-          text-align: center;
-        }
         .debrief-primary:hover,
         .debrief-primary:focus-visible { background: var(--go-gold); border-color: var(--go-gold); }
         .debrief-secondary:hover,
@@ -2872,12 +2865,10 @@ export class Game {
       this.audio.startBackgroundMusic(this.currentWave);
     };
 
-    // Keyboard handler - Escape to dismiss, R to restart
+    // Keyboard handler - Escape to dismiss
     const keyHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         dismissScreen();
-      } else if (e.key === 'r' || e.key === 'R') {
-        instantRestart();
       }
     };
     window.addEventListener('keydown', keyHandler);
