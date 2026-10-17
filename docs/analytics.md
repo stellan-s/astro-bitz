@@ -1,20 +1,18 @@
 # Analytics Integration
 
-This game uses a privacy-first anonymous analytics system to track gameplay events and user engagement.
+This game uses privacy-first, session-scoped analytics to track gameplay events and user engagement.
 
 ## Configuration
 
 Analytics are configured via environment variables in `.env.local`:
 
 ```env
-VITE_SUPABASE_URL=https://<project-ref>.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
 VITE_ANALYTICS_ENDPOINT=https://<project-ref>.supabase.co/functions/v1/analytics
 VITE_APP_NAME=astro-bitz
 VITE_ANALYTICS_DEBUG=true
 ```
 
-**Important:** The `VITE_SUPABASE_ANON_KEY` is required for authentication with the Supabase Edge Function.
+**Important:** `VITE_APP_NAME` must exactly match the name registered in the shared analytics database. The analytics Edge Function accepts pseudonymous events without a Supabase API key.
 
 Set `VITE_ANALYTICS_DEBUG=false` in production to disable debug logging.
 
@@ -51,8 +49,8 @@ All game_over events include:
 ## Privacy
 
 The analytics system is designed with privacy in mind:
-- ✅ Anonymous IDs (no personal information)
-- ✅ Session tracking (temporary session IDs)
+- ✅ One temporary ID scoped to the current browser tab
+- ✅ Do Not Track and Global Privacy Control support
 - ✅ Automatic PII sanitization
 - ✅ No IP address storage
 - ✅ Only country-level location (not city/precise location)
@@ -74,10 +72,10 @@ To use analytics, you need:
 Query your analytics in Supabase:
 
 ```sql
--- Daily active users
+-- Daily measured sessions
 SELECT
   DATE(created_at) as date,
-  COUNT(DISTINCT anonymous_id) as users
+  COUNT(DISTINCT session_id) as sessions
 FROM analytics_events
 WHERE application_id = (SELECT id FROM applications WHERE name = 'astro-bitz')
   AND created_at >= NOW() - INTERVAL '30 days'

@@ -6,7 +6,6 @@
 export interface AnalyticsConfig {
   endpoint: string;
   appName: string;
-  apiKey?: string;
   debug?: boolean;
   disabled?: boolean;
 }
@@ -17,36 +16,17 @@ export interface TrackEventParams {
   properties?: Record<string, any>;
 }
 
-interface DeviceInfo {
-  screenWidth: number;
-  screenHeight: number;
-  viewportWidth: number;
-  viewportHeight: number;
-  deviceType: 'mobile' | 'tablet' | 'desktop';
-  timezone: string;
-  language: string;
-}
-
 export class Analytics {
   private config: AnalyticsConfig;
-  private anonymousId: string;
   private sessionId: string;
-  private sessionStartTime: number;
 
   constructor(config: AnalyticsConfig) {
     this.config = config;
-    this.sessionStartTime = Date.now();
-
-    // Generate or retrieve anonymous ID (persists across sessions)
-    this.anonymousId = this.getOrCreateAnonymousId();
-
-    // Generate session ID (unique per session)
-    this.sessionId = this.generateSessionId();
+    this.sessionId = this.getOrCreateSessionId();
 
     if (this.config.debug) {
       console.log('[Analytics] Initialized', {
         appName: this.config.appName,
-        anonymousId: this.anonymousId,
         sessionId: this.sessionId
       });
     }
@@ -56,19 +36,20 @@ export class Analytics {
    * Track a custom event
    */
   public async track(params: TrackEventParams): Promise<void> {
-    if (this.config.disabled) return;
+    if (this.config.disabled || this.privacySignalEnabled()) return;
 
     const event = {
       app: this.config.appName,
       eventType: params.eventType,
       eventName: params.eventName,
       properties: this.sanitizeProperties(params.properties || {}),
-      anonymousId: this.anonymousId,
+      anonymousId: this.sessionId,
       sessionId: this.sessionId,
-      sessionDuration: Math.floor((Date.now() - this.sessionStartTime) / 1000),
-      device: this.getDeviceInfo(),
+      pathname: window.location.pathname,
       referrer: this.getReferrer(),
-      userAgent: navigator.userAgent
+      screenResolution: `${screen.width}x${screen.height}`,
+      viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     };
 
     if (this.config.debug) {
@@ -76,31 +57,40 @@ export class Analytics {
     }
 
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      // Add authorization header if API key is provided
-      if (this.config.apiKey) {
-        headers['Authorization'] = `Bearer ${this.config.apiKey}`;
-      }
-
-      const response = await fetch(this.config.endpoint, {
+      const response = await fetch(this.analyticsEndpoint(), {
         method: 'POST',
-        headers,
-        body: JSON.stringify(event)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+        keepalive: true
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const responseBody = await response.text();
+        throw new Error(`HTTP ${response.status}: ${responseBody || response.statusText}`);
       }
 
       if (this.config.debug) {
         console.log('[Analytics] Event sent successfully');
       }
     } catch (error) {
-      console.error('[Analytics] Failed to send event:', error);
+      if (this.config.debug) {
+        console.warn('[Analytics] Failed to send event:', error);
+      }
     }
+  }
+
+  private analyticsEndpoint(): string {
+    const endpoint = new URL(this.config.endpoint, window.location.href);
+    endpoint.searchParams.set('forceFunctionRegion', 'eu-central-1');
+    return endpoint.toString();
+  }
+
+  private privacySignalEnabled(): boolean {
+    const privacyNavigator = navigator as Navigator & {
+      globalPrivacyControl?: boolean;
+    };
+    return navigator.doNotTrack === '1'
+      || privacyNavigator.globalPrivacyControl === true;
   }
 
   /**
@@ -165,25 +155,18 @@ export class Analytics {
   }
 
   /**
-   * Get or create anonymous ID (stored in localStorage)
+   * Get or create a session ID (stored for the lifetime of the browser tab)
    */
-  private getOrCreateAnonymousId(): string {
-    const storageKey = `analytics_anonymous_id_${this.config.appName}`;
-    let id = localStorage.getItem(storageKey);
+  private getOrCreateSessionId(): string {
+    const storageKey = `analytics_session_id_${this.config.appName}`;
+    let id = sessionStorage.getItem(storageKey);
 
     if (!id) {
       id = this.generateUUID();
-      localStorage.setItem(storageKey, id);
+      sessionStorage.setItem(storageKey, id);
     }
 
     return id;
-  }
-
-  /**
-   * Generate a session ID
-   */
-  private generateSessionId(): string {
-    return `${this.generateUUID()}_${Date.now()}`;
   }
 
   /**
@@ -198,32 +181,14 @@ export class Analytics {
   }
 
   /**
-   * Get device information
-   */
-  private getDeviceInfo(): DeviceInfo {
-    const width = window.innerWidth;
-    const deviceType = width < 768 ? 'mobile' : width < 1024 ? 'tablet' : 'desktop';
-
-    return {
-      screenWidth: screen.width,
-      screenHeight: screen.height,
-      viewportWidth: window.innerWidth,
-      viewportHeight: window.innerHeight,
-      deviceType,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      language: navigator.language
-    };
-  }
-
-  /**
-   * Get referrer (domain only, for privacy)
+   * Get referrer origin. The service reduces this to the domain before storage.
    */
   private getReferrer(): string | null {
     if (!document.referrer) return null;
 
     try {
       const url = new URL(document.referrer);
-      return url.hostname;
+      return url.origin;
     } catch {
       return null;
     }

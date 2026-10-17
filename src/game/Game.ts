@@ -137,7 +137,8 @@ export class Game {
     if (leaderboardUrl && leaderboardKey) {
       this.leaderboardManager = new LeaderboardManager({
         supabaseUrl: leaderboardUrl,
-        supabaseKey: leaderboardKey
+        supabaseKey: leaderboardKey,
+        appName: import.meta.env.VITE_APP_NAME || 'astro-bitz'
       });
     }
 

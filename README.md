@@ -89,7 +89,7 @@ docs/              Deployment, analytics, advertising, and mobile guides
 
 ## Privacy and backend safety
 
-The application does not require an account. Local achievements and high scores stay in the browser. Optional analytics use an anonymous identifier, and the leaderboard stores a player-selected display name, score, wave, rank, and anonymous identifier.
+The application does not require an account. Local achievements and high scores stay in the browser. Optional analytics use a random identifier scoped to the current browser tab. Separately, the leaderboard stores a player-selected display name, score, wave, rank, and anonymous leaderboard identifier.
 
 The included Supabase SQL is a starting point. Before operating a public leaderboard, add abuse prevention and validate the access policies for your deployment.
 

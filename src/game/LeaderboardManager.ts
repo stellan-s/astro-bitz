@@ -14,6 +14,7 @@ export interface LeaderboardConfig {
   supabaseUrl: string;
   supabaseKey: string;
   tableName?: string;
+  appName?: string;
 }
 
 export class LeaderboardManager {
@@ -221,13 +222,19 @@ export class LeaderboardManager {
    * Get anonymous ID from localStorage (same as analytics)
    */
   private getAnonymousId(): string {
-    const storageKey = 'analytics_anonymous_id_astro-blitz';
-    let id = localStorage.getItem(storageKey);
+    const appName = this.config.appName || 'astro-bitz';
+    const storageKey = `analytics_anonymous_id_${appName}`;
+    const legacyStorageKey = appName === 'astro-bitz'
+      ? 'analytics_anonymous_id_astro-blitz'
+      : null;
+    let id = localStorage.getItem(storageKey)
+      || (legacyStorageKey ? localStorage.getItem(legacyStorageKey) : null);
 
     if (!id) {
       id = this.generateUUID();
-      localStorage.setItem(storageKey, id);
     }
+
+    localStorage.setItem(storageKey, id);
 
     return id;
   }

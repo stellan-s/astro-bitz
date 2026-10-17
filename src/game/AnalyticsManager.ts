@@ -19,19 +19,17 @@ export class AnalyticsManager {
   private constructor() {
     const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
     const appName = import.meta.env.VITE_APP_NAME || 'astro-bitz';
-    const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const debug = import.meta.env.VITE_ANALYTICS_DEBUG === 'true';
 
-    if (!endpoint || !apiKey) {
-      console.warn('[Analytics] Missing required environment variables. Analytics disabled.');
+    if (!endpoint && debug) {
+      console.warn('[Analytics] Missing VITE_ANALYTICS_ENDPOINT. Analytics disabled.');
     }
 
     this.analytics = createAnalytics({
       endpoint: endpoint || '',
       appName,
-      apiKey,
       debug,
-      disabled: !endpoint || !apiKey
+      disabled: !endpoint
     });
 
     this.sessionStartTime = Date.now();
