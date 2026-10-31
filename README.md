@@ -6,6 +6,14 @@ A retro browser space shooter with escalating waves, boss battles, power-ups, ac
 
 [Play Astro Bitz](https://astrobitz.com)
 
+## Gameplay
+
+![Astro Bitz gameplay](brag-output/brag.gif)
+
+![Astro Bitz gameplay highlights](brag-output/brag-small.gif)
+
+![Astro Bitz soundtrack spectrogram](brag-output/spectrogram.gif)
+
 ## Features
 
 - Nine enemy types with distinct movement and attack patterns
