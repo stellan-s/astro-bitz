@@ -73,14 +73,14 @@ export class AchievementsManager {
       {
         id: 'sharpshooter',
         name: 'Sharpshooter',
-        description: 'Kill 10 enemies without missing a shot',
+        description: 'Destroy 10 enemies without missing a shot',
         icon: '🎖️',
         unlocked: false,
       },
       {
         id: 'survivor',
         name: 'Survivor',
-        description: 'Survive to wave 10',
+        description: 'Reach wave 10',
         icon: '🏆',
         unlocked: false,
         progress: 0,

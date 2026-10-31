@@ -1852,7 +1852,7 @@ export class Game {
     // Show wave complete text
     const waveMessage = this.isBossWave
       ? `WAVE ${this.currentWave - 1} CLEAR\n\nBOSS WAVE ${this.currentWave}\nGET READY`
-      : `WAVE ${this.currentWave - 1} CLEAR\n\nWAVE ${this.currentWave}\nTHREAT ${Math.round(this.difficultyMultiplier * 100)}%`;
+      : `WAVE ${this.currentWave - 1} CLEAR\n\nWAVE ${this.currentWave}\nENEMY SPEED ${Math.round(this.difficultyMultiplier * 100)}%`;
 
     this.waveTransitionText = new Text({
       text: waveMessage,
@@ -2100,14 +2100,14 @@ export class Game {
             <img class="debrief-ship" src="/astrobitz-player-pixel-v2.png" alt="" aria-hidden="true">
             <span>ASTRO BITZ</span>
           </div>
-          <span class="debrief-status"><i aria-hidden="true"></i> FLIGHT ENDED</span>
+          <span class="debrief-status"><i aria-hidden="true"></i> RUN ENDED</span>
         </div>
 
         <section class="debrief-hero debrief-enter">
           <div class="debrief-copy">
             <p class="debrief-pilot-line"><span>PILOT</span><strong id="debrief-pilot-name">NO CALLSIGN</strong></p>
             <p class="debrief-kicker">MISSION DEBRIEF</p>
-            <h1 id="game-over-title">RUN <span>COMPLETE</span></h1>
+            <h1 id="game-over-title">GAME <span>OVER</span></h1>
             <div class="debrief-flags" aria-label="Run achievements">
               ${isNewHighScore ? '<span>NEW BEST SCORE</span>' : ''}
               ${isNewBestWave ? `<span>NEW BEST WAVE · ${this.currentWave}</span>` : ''}
@@ -2121,9 +2121,9 @@ export class Game {
         </section>
 
         <section class="debrief-metrics debrief-enter" aria-label="Run summary">
-          <div><span>WAVE</span><strong>${String(this.currentWave).padStart(2, '0')}</strong></div>
-          <div><span>RANK</span><strong>${rankInfo.rank}</strong></div>
-          <div><span>BEST</span><strong>${this.highScore.toLocaleString()}</strong></div>
+          <div><span>WAVE REACHED</span><strong>${String(this.currentWave).padStart(2, '0')}</strong></div>
+          <div><span>PILOT RANK</span><strong>${rankInfo.rank}</strong></div>
+          <div><span>BEST SCORE</span><strong>${this.highScore.toLocaleString()}</strong></div>
         </section>
 
         ${isNewBestWave ? `
@@ -2138,7 +2138,7 @@ export class Game {
             <span>PLAY AGAIN</span>
           </button>
           <button id="share-score-btn" class="debrief-secondary" type="button">
-            SHARE RESULT <span aria-hidden="true">→</span>
+            SHARE SCORE <span aria-hidden="true">→</span>
           </button>
         </section>
 
@@ -3046,7 +3046,7 @@ export class Game {
 
         if (playerName.length < 2) {
           statusDiv.style.color = '#ff5b1f';
-          statusDiv.textContent = 'Use at least 2 characters.';
+          statusDiv.textContent = 'Callsign must be at least 2 characters.';
           return;
         }
 
@@ -3164,7 +3164,7 @@ export class Game {
       contentDiv.innerHTML = html;
     } catch (error) {
       console.error('Failed to load leaderboard:', error);
-      contentDiv.innerHTML = '<div class="debrief-loading" style="color: #ff5b1f;">COULDN’T LOAD SCORES</div>';
+      contentDiv.innerHTML = '<div class="debrief-loading" style="color: #ff5b1f;">COULDN’T LOAD SCORES · TRY AGAIN</div>';
     }
   }
 
@@ -3179,7 +3179,7 @@ export class Game {
       return;
     }
 
-    const defaultText = button.textContent ?? 'SHARE RESULT';
+    const defaultText = button.textContent ?? 'SHARE SCORE';
     button.dataset.loading = 'true';
     button.disabled = true;
     button.textContent = 'CREATING IMAGE…';
@@ -3191,7 +3191,7 @@ export class Game {
       const nav = navigator as Navigator & { canShare?: (data?: ShareData) => boolean };
       const shareData: ShareData = {
         title: `Astro Bitz score: ${this.score.toLocaleString()}`,
-        text: `${pilotName || 'I'} scored ${this.score.toLocaleString()} points in Astro Bitz and reached ${rankInfo.rank}.`,
+        text: `${pilotName || 'I'} scored ${this.score.toLocaleString()} points in Astro Bitz and earned the ${rankInfo.rank} rank.`,
         files: [scoreFile],
       };
 
@@ -3304,7 +3304,7 @@ export class Game {
     ctx.textAlign = 'left';
     ctx.fillStyle = colors.magenta;
     ctx.font = '700 22px Orbitron, Arial, sans-serif';
-    ctx.fillText('RUN COMPLETE / FINAL SCORE', 92, 236);
+    ctx.fillText('RUN ENDED / FINAL SCORE', 92, 236);
 
     ctx.fillStyle = colors.cyan;
     ctx.shadowColor = 'rgba(121, 184, 216, 0.3)';
@@ -3349,7 +3349,7 @@ export class Game {
 
     ctx.fillStyle = colors.muted;
     ctx.font = '600 18px Orbitron, Arial, sans-serif';
-    ctx.fillText('SECTOR 6872 / RUN COMPLETE', 58, 932);
+    ctx.fillText('SECTOR 6872 / RUN ENDED', 58, 932);
     ctx.textAlign = 'right';
     ctx.fillStyle = colors.white;
     ctx.font = '700 21px Orbitron, Arial, sans-serif';
