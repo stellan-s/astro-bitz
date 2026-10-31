@@ -6,13 +6,31 @@ A retro browser space shooter with escalating waves, boss battles, power-ups, ac
 
 [Play Astro Bitz](https://astrobitz.com)
 
-## Gameplay
+## See it in action
 
-![Astro Bitz gameplay](brag-output/brag.gif)
+<p align="center">
+  <a href="https://astrobitz.com">
+    <img src="brag-output/brag.gif" alt="Astro Bitz gameplay trailer" width="800">
+  </a>
+</p>
 
-![Astro Bitz gameplay highlights](brag-output/brag-small.gif)
+<p align="center">
+  <strong>Blast through enemy formations. Survive the bosses. Chase the high score.</strong><br>
+  <sub>Click the trailer to play free in your browser.</sub>
+</p>
 
-![Astro Bitz soundtrack spectrogram](brag-output/spectrogram.gif)
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="brag-output/brag-small.gif" alt="Astro Bitz gameplay highlights" width="100%"><br>
+      <sub><strong>Arcade action</strong> — escalating waves, power-ups, and boss battles</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="brag-output/spectrogram.gif" alt="Astro Bitz soundtrack spectrogram" width="100%"><br>
+      <sub><strong>Original soundtrack</strong> — retro synth energy built for deep-space combat</sub>
+    </td>
+  </tr>
+</table>
 
 ## Features
 
