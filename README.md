@@ -36,6 +36,14 @@ The game music uses a **[Shepard tone](https://en.wikipedia.org/wiki/Shepard_ton
       <img src="brag-output/waveform-game-music.gif" alt="Waveform of the Astro Bitz game music" width="100%">
     </td>
   </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="brag-output/oscilloscope-game-music.gif" alt="Oscilloscope visualization of the Astro Bitz game music" width="100%">
+    </td>
+    <td width="50%" align="center">
+      <img src="brag-output/frequency-bars-game-music.gif" alt="Frequency bars visualization of the Astro Bitz game music" width="100%">
+    </td>
+  </tr>
 </table>
 
 ## Features
