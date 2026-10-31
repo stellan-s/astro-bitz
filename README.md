@@ -1,6 +1,6 @@
 # Astro Bitz
 
-![Astro Bitz cover](public/astrobitz_cover.png)
+![Astro Bitz cover](brag-output/brag.jpg)
 
 A retro browser space shooter with escalating waves, boss battles, power-ups, achievements, and a global leaderboard.
 
@@ -19,15 +19,24 @@ A retro browser space shooter with escalating waves, boss battles, power-ups, ac
   <sub>Click the trailer to play free in your browser.</sub>
 </p>
 
+<p align="center">
+  <img src="brag-output/brag-small.gif" alt="Astro Bitz gameplay highlights" width="640"><br>
+  <sub><strong>Arcade action</strong> — escalating waves, power-ups, and boss battles</sub>
+</p>
+
+### A soundtrack that keeps climbing
+
+The game music uses a **Shepard tone**: layers separated by octaves fade in and out as they rise, creating the illusion of a pitch that climbs forever. That endless upward motion mirrors the escalating enemy waves and keeps the tension building.
+
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="brag-output/brag-small.gif" alt="Astro Bitz gameplay highlights" width="100%"><br>
-      <sub><strong>Arcade action</strong> — escalating waves, power-ups, and boss battles</sub>
+      <img src="brag-output/spectrogram-game-music.gif" alt="Spectrogram of the Astro Bitz game music" width="100%"><br>
+      <sub><strong>Spectrogram</strong> — the rising frequency layers behind the illusion</sub>
     </td>
     <td width="50%" align="center">
-      <img src="brag-output/spectrogram-game-music.gif" alt="Astro Bitz game music spectrogram" width="100%"><br>
-      <sub><strong>Original soundtrack</strong> — retro synth energy built for deep-space combat</sub>
+      <img src="brag-output/waveform-game-music.gif" alt="Waveform of the Astro Bitz game music" width="100%"><br>
+      <sub><strong>Waveform</strong> — the soundtrack's relentless pulse through time</sub>
     </td>
   </tr>
 </table>
