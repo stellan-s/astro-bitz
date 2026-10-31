@@ -26,7 +26,7 @@ A retro browser space shooter with escalating waves, boss battles, power-ups, ac
       <sub><strong>Arcade action</strong> — escalating waves, power-ups, and boss battles</sub>
     </td>
     <td width="50%" align="center">
-      <img src="brag-output/spectrogram.gif" alt="Astro Bitz soundtrack spectrogram" width="100%"><br>
+      <img src="brag-output/spectrogram-game-music.gif" alt="Astro Bitz game music spectrogram" width="100%"><br>
       <sub><strong>Original soundtrack</strong> — retro synth energy built for deep-space combat</sub>
     </td>
   </tr>
