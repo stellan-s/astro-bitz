@@ -29,7 +29,7 @@
     <meta name="twitter:description" content="One ship. Endless waves. Play free in your browser." />
     <meta name="twitter:image" content="https://astrobitz.com/astrobitz_cover.png" />
 
-    <link rel="icon" type="image/png" href="/space_ship_6872-v5.png" />
+    <link rel="icon" type="image/png" href="/astrobitz-player-pixel-v2.png" />
     <link rel="apple-touch-icon" href="/astrobitz_cover.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -361,8 +361,7 @@
       .primary-cta {
         display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 36px;
+        justify-content: center;
         min-width: 220px;
         min-height: 62px;
         padding: 0 22px 0 26px;
@@ -379,25 +378,12 @@
         transition: background 180ms ease, box-shadow 180ms ease, color 180ms ease, transform 180ms ease;
       }
 
-      .primary-cta::after {
-        content: "↗";
-        font-family: var(--body);
-        font-size: 24px;
-        line-height: 1;
-        transition: transform 180ms ease;
-      }
-
       .primary-cta:hover,
       .primary-cta:focus-visible {
         background: var(--orange-light);
         box-shadow: 0 14px 36px rgba(121, 106, 172, 0.2);
         color: var(--white);
         transform: translateY(-3px);
-      }
-
-      .primary-cta:hover::after,
-      .primary-cta:focus-visible::after {
-        transform: translate(3px, -3px);
       }
 
       .text-link {
@@ -763,6 +749,159 @@
         font-weight: 900;
       }
 
+      .soundtrack {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(86px, 11vw, 160px) clamp(24px, 7vw, 116px);
+        border-block: 1px solid var(--line-dark);
+        background:
+          radial-gradient(circle at 78% 38%, rgba(79, 111, 174, 0.17), transparent 34%),
+          var(--ink-soft);
+      }
+
+      .soundtrack::before {
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(90deg, transparent 0 89px, rgba(121, 184, 216, 0.035) 90px);
+        content: "";
+        pointer-events: none;
+      }
+
+      .soundtrack-header {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 0.42fr);
+        align-items: end;
+        gap: clamp(40px, 8vw, 120px);
+        margin-bottom: clamp(48px, 7vw, 92px);
+      }
+
+      .soundtrack h2 {
+        max-width: 820px;
+        margin: 22px 0 0;
+        font-family: var(--display);
+        font-size: clamp(42px, 6.7vw, 96px);
+        font-weight: 800;
+        letter-spacing: -0.06em;
+        line-height: 0.92;
+        text-transform: uppercase;
+      }
+
+      .soundtrack-intro {
+        margin: 0;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .signal-stage {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.55fr);
+        min-height: 520px;
+        border-top: 2px solid var(--cyan);
+        border-bottom: 1px solid var(--line-dark);
+        background: #01040a;
+      }
+
+      .signal-primary,
+      .signal-secondary {
+        position: relative;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .signal-primary {
+        border-right: 1px solid var(--line-dark);
+      }
+
+      .signal-primary video,
+      .signal-secondary video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.78) contrast(1.16) brightness(0.78);
+        transition: filter 240ms ease, transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .signal-stage:hover video {
+        filter: saturate(1) contrast(1.16) brightness(0.9);
+      }
+
+      .signal-stage:hover .signal-primary video {
+        transform: scale(1.012);
+      }
+
+      .signal-caption {
+        position: absolute;
+        right: 22px;
+        bottom: 18px;
+        left: 22px;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        color: rgba(242, 248, 255, 0.72);
+        font-family: var(--display);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        text-shadow: 0 2px 10px var(--ink);
+      }
+
+      .signal-caption span:last-child {
+        color: var(--cyan);
+      }
+
+      .signal-controls {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .signal-control {
+        min-height: 46px;
+        padding: 0 18px;
+        border: 1px solid var(--line-dark);
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font-family: var(--display);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease;
+      }
+
+      .signal-control:first-child {
+        border-color: var(--cyan);
+        color: var(--cyan);
+      }
+
+      .signal-control:hover,
+      .signal-control:focus-visible,
+      .signal-control[aria-pressed="true"] {
+        border-color: var(--cyan);
+        background: rgba(121, 184, 216, 0.1);
+        color: var(--white);
+        transform: translateY(-2px);
+      }
+
+      .signal-status {
+        margin-left: auto;
+        color: rgba(242, 248, 255, 0.4);
+        font-family: var(--display);
+        font-size: 8px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
       .controls {
         padding: clamp(86px, 10vw, 150px) clamp(24px, 7vw, 116px);
         background: var(--ink);
@@ -982,6 +1121,11 @@
           grid-template-columns: 1fr;
           gap: 28px;
         }
+
+        .soundtrack-header {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
       }
 
       @media (max-width: 680px) {
@@ -1088,6 +1232,35 @@
           display: none;
         }
 
+        .signal-stage {
+          grid-template-columns: 1fr;
+          min-height: 0;
+        }
+
+        .signal-primary,
+        .signal-secondary {
+          aspect-ratio: 16 / 8;
+        }
+
+        .signal-primary {
+          border-right: 0;
+          border-bottom: 1px solid var(--line-dark);
+        }
+
+        .signal-controls {
+          align-items: stretch;
+          flex-wrap: wrap;
+        }
+
+        .signal-control {
+          flex: 1 1 150px;
+        }
+
+        .signal-status {
+          flex: 1 0 100%;
+          margin: 4px 0 0;
+        }
+
         .control-list {
           grid-template-columns: repeat(2, 1fr);
         }
@@ -1137,12 +1310,13 @@
 
     <header class="site-header" aria-label="Primary navigation">
       <a class="wordmark" href="#top" aria-label="Astro Bitz home">
-        <img class="wordmark-ship" src="/space_ship_6872-v5.png" alt="" aria-hidden="true" />
+        <img class="wordmark-ship" src="/astrobitz-player-pixel-v2.png" alt="" aria-hidden="true" />
         <span>Astro Bitz</span>
       </a>
       <nav class="site-nav" aria-label="Site navigation">
         <a href="#mission">Mission</a>
         <a href="#rankings">Rankings</a>
+        <a href="#music">Music</a>
         <a href="#controls">Controls</a>
         <a class="nav-play" href="/play.html">Play free</a>
       </nav>
@@ -1261,10 +1435,41 @@
         </div>
       </section>
 
+      <section class="soundtrack" id="music" aria-labelledby="soundtrack-title">
+        <div class="soundtrack-header">
+          <div>
+            <p class="section-label reveal">04 / Combat frequency</p>
+            <h2 class="reveal" id="soundtrack-title">The signal behind the fight.</h2>
+          </div>
+          <p class="soundtrack-intro reveal">A live transmission of the game soundtrack: synthetic pulse, boss pressure, and the hum between waves.</p>
+        </div>
+
+        <div class="signal-stage reveal">
+          <div class="signal-primary">
+            <video data-music-video autoplay muted loop playsinline preload="metadata" aria-label="Animated waveform for the Astro Bitz soundtrack">
+              <source src="/media/astro-bitz-waveform.mp4" type="video/mp4" />
+            </video>
+            <div class="signal-caption" aria-hidden="true"><span>Channel A / Waveform</span><span>21.0 sec loop</span></div>
+          </div>
+          <div class="signal-secondary">
+            <video data-music-video autoplay muted loop playsinline preload="metadata" aria-label="Animated spectrogram for the Astro Bitz soundtrack">
+              <source src="/media/astro-bitz-spectrogram.mp4" type="video/mp4" />
+            </video>
+            <div class="signal-caption" aria-hidden="true"><span>Channel B</span><span>Spectrum</span></div>
+          </div>
+        </div>
+
+        <div class="signal-controls reveal">
+          <button class="signal-control" type="button" data-sound-toggle aria-pressed="false">Play soundtrack</button>
+          <button class="signal-control" type="button" data-visual-toggle aria-pressed="false">Pause signal</button>
+          <span class="signal-status" aria-live="polite">Visual feed live · Audio muted</span>
+        </div>
+      </section>
+
       <section class="controls" id="controls" aria-labelledby="controls-title">
         <div class="controls-header">
           <div>
-            <p class="section-label reveal">04 / Flight manual</p>
+            <p class="section-label reveal">05 / Flight manual</p>
             <h2 class="reveal" id="controls-title">Simple controls. Zero mercy.</h2>
           </div>
           <p class="controls-intro reveal">Every input does one job. Surviving long enough to master them is yours.</p>

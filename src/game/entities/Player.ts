@@ -27,13 +27,14 @@ export class Player {
   private async loadShipSprite(): Promise<void> {
     try {
       // Load the texture using Pixi.js v8 Assets API
-      const shipTexture = await Assets.load('/space_ship_6872-v5.png');
+      const shipTexture = await Assets.load('/astrobitz-player-pixel-v2.png');
+      shipTexture.source.scaleMode = 'nearest';
       const shipSprite = new Sprite(shipTexture);
 
       shipSprite.anchor.set(0.5, 0.5);
-      // Render slightly larger so the Lunar Patrol Craft's signature parts stay legible.
-      shipSprite.width = 64;
-      shipSprite.height = 64;
+      // Preserve the wide delta-wing silhouette while keeping the collision footprint familiar.
+      shipSprite.width = 72;
+      shipSprite.height = 69;
 
       // Add to container
       this.sprite.addChild(shipSprite);
@@ -147,33 +148,21 @@ export class Player {
   }
 
   private createExhaustFlames(): void {
-    // Create animated exhaust flames for both engines
-    const flameCount = 4; // Multiple particles per engine
-    const enginePositions = [-5.5, 5.5]; // Match red exhaust positions
+    // One centered plume matches the single rear engine on the landing-page craft.
+    const flameCount = 5;
+    const colors = [0xfff06a, 0xffc12d, 0xff8a24, 0xff5b1f, 0xd43b22];
 
-    for (const engineX of enginePositions) {
-      for (let i = 0; i < flameCount; i++) {
-        const flame = new Graphics();
+    for (let i = 0; i < flameCount; i++) {
+      const flame = new Graphics();
+      const baseSize = 4.8 - i * 0.45;
+      flame.circle(0, 0, baseSize);
+      flame.fill(colors[i]);
+      flame.alpha = 0.72 + Math.random() * 0.2;
+      flame.x = (Math.random() - 0.5) * 1.8;
+      flame.y = 31 + i * 5;
 
-        // Flame size varies
-        const baseSize = 3 + Math.random() * 2;
-        flame.circle(0, 0, baseSize);
-
-        // Color gradient: more orange/yellow, less red
-        const colors = [0xffaa00, 0xff8800, 0xffcc00, 0xffff00];
-        const colorIndex = Math.floor(Math.random() * colors.length);
-        flame.fill(colors[colorIndex]);
-
-        // Random opacity
-        flame.alpha = 0.6 + Math.random() * 0.3;
-
-        // Position flames BEHIND ship (positive Y = downward)
-        flame.x = engineX + (Math.random() - 0.5) * 4; // Slight spread
-        flame.y = 13 + i * 8; // Behind ship, staggered downward
-
-        this.exhaustFlames.push(flame);
-        this.sprite.addChild(flame);
-      }
+      this.exhaustFlames.push(flame);
+      this.sprite.addChild(flame);
     }
   }
 
@@ -181,19 +170,16 @@ export class Player {
     // Update exhaust flames (like enemies)
     for (let i = 0; i < this.exhaustFlames.length; i++) {
       const flame = this.exhaustFlames[i];
-      const engineIndex = i < 4 ? 0 : 1; // Which engine (left or right)
-      const engineX = engineIndex === 0 ? -5.5 : 5.5;
 
       // Flicker alpha
-      const baseAlpha = 0.6;
-      flame.alpha = baseAlpha + Math.random() * 0.4;
+      const baseAlpha = 0.68;
+      flame.alpha = baseAlpha + Math.random() * 0.28;
 
-      // Slight horizontal position variation
-      const spread = 5;
-      flame.x = engineX + (Math.random() - 0.5) * spread;
+      // Keep all particles within one narrow central plume.
+      flame.x = (Math.random() - 0.5) * 2.2;
 
       // Scale variation for flickering effect
-      const scale = 0.8 + Math.random() * 0.4;
+      const scale = 0.88 + Math.random() * 0.24;
       flame.scale.set(scale);
     }
   }

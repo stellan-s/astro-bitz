@@ -74,6 +74,12 @@ async function init() {
     }, 1000);
 
     const game = new Game(app);
+    if (import.meta.env.DEV) {
+      Object.defineProperty(window, '__astroBitzGame', {
+        value: game,
+        configurable: true
+      });
+    }
     game.start();
   } catch (error) {
     console.error('Failed to initialize game:', error);

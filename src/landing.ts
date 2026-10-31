@@ -5,6 +5,72 @@ gsap.registerPlugin(ScrollTrigger);
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const hero = document.querySelector<HTMLElement>('.hero');
+const musicVideos = Array.from(document.querySelectorAll<HTMLVideoElement>('[data-music-video]'));
+const soundtrackVideo = musicVideos[0];
+const soundToggle = document.querySelector<HTMLButtonElement>('[data-sound-toggle]');
+const visualToggle = document.querySelector<HTMLButtonElement>('[data-visual-toggle]');
+const signalStatus = document.querySelector<HTMLElement>('.signal-status');
+
+let soundtrackEnabled = false;
+let signalPaused = reduceMotion;
+
+const updateSignalControls = () => {
+  if (soundToggle) {
+    soundToggle.textContent = soundtrackEnabled ? 'Mute soundtrack' : 'Play soundtrack';
+    soundToggle.setAttribute('aria-pressed', String(soundtrackEnabled));
+  }
+
+  if (visualToggle) {
+    visualToggle.textContent = signalPaused ? 'Resume signal' : 'Pause signal';
+    visualToggle.setAttribute('aria-pressed', String(signalPaused));
+  }
+
+  if (signalStatus) {
+    const visualState = signalPaused ? 'Visual feed paused' : 'Visual feed live';
+    const audioState = signalPaused && soundtrackEnabled
+      ? 'Audio paused'
+      : soundtrackEnabled
+        ? 'Audio active'
+        : 'Audio muted';
+    signalStatus.textContent = `${visualState} · ${audioState}`;
+  }
+};
+
+musicVideos.forEach((video, index) => {
+  video.muted = true;
+  if (index > 0) video.volume = 0;
+  if (reduceMotion) video.pause();
+});
+
+soundToggle?.addEventListener('click', async () => {
+  soundtrackEnabled = !soundtrackEnabled;
+
+  if (soundtrackVideo) {
+    soundtrackVideo.muted = !soundtrackEnabled;
+    soundtrackVideo.volume = 0.68;
+  }
+
+  if (soundtrackEnabled) {
+    signalPaused = false;
+    await Promise.all(musicVideos.map((video) => video.play().catch(() => undefined)));
+  }
+
+  updateSignalControls();
+});
+
+visualToggle?.addEventListener('click', async () => {
+  signalPaused = !signalPaused;
+
+  if (signalPaused) {
+    musicVideos.forEach((video) => video.pause());
+  } else {
+    await Promise.all(musicVideos.map((video) => video.play().catch(() => undefined)));
+  }
+
+  updateSignalControls();
+});
+
+updateSignalControls();
 
 document.querySelectorAll<HTMLButtonElement>('.leaderboard-tab').forEach((tab) => {
   tab.addEventListener('click', () => {

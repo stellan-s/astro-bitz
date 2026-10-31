@@ -20,41 +20,78 @@ export interface LeaderboardConfig {
 export class LeaderboardManager {
   private config: LeaderboardConfig;
   private tableName: string;
+  private activeRunId: string | null = null;
 
   constructor(config: LeaderboardConfig) {
     this.config = config;
-    this.tableName = config.tableName || 'leaderboard';
+    this.tableName = config.tableName || 'astro_bitz_leaderboard';
   }
 
   /**
-   * Submit a score to the leaderboard
+   * Start a server-timed run. Scores can only be submitted once for this run ID.
    */
-  public async submitScore(entry: LeaderboardEntry): Promise<boolean> {
-    try {
-      // Filter profanity from player name
-      const filteredPlayerName = filterProfanity(entry.player_name);
+  public async startRun(): Promise<boolean> {
+    this.activeRunId = null;
 
+    try {
       const response = await fetch(
-        `${this.config.supabaseUrl}/rest/v1/${this.tableName}`,
+        `${this.config.supabaseUrl}/rest/v1/rpc/start_astro_bitz_run`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'apikey': this.config.supabaseKey,
-            'Authorization': `Bearer ${this.config.supabaseKey}`,
-            'Prefer': 'return=minimal'
+            'Authorization': `Bearer ${this.config.supabaseKey}`
           },
           body: JSON.stringify({
-            player_name: filteredPlayerName,
-            score: entry.score,
-            wave: entry.wave,
-            rank: entry.rank,
-            anonymous_id: entry.anonymous_id || this.getAnonymousId(),
-            created_at: new Date().toISOString()
+            p_anonymous_id: this.getAnonymousId()
           })
         }
       );
 
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      this.activeRunId = await response.json();
+      return typeof this.activeRunId === 'string' && this.activeRunId.length > 0;
+    } catch (error) {
+      console.error('Failed to start leaderboard run:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Submit a score through the server-side validation function.
+   */
+  public async submitScore(entry: LeaderboardEntry): Promise<boolean> {
+    if (!this.activeRunId) return false;
+
+    try {
+      // Filter profanity from player name
+      const filteredPlayerName = filterProfanity(entry.player_name);
+
+      const response = await fetch(
+        `${this.config.supabaseUrl}/rest/v1/rpc/submit_astro_bitz_score`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': this.config.supabaseKey,
+            'Authorization': `Bearer ${this.config.supabaseKey}`
+          },
+          body: JSON.stringify({
+            p_run_id: this.activeRunId,
+            p_anonymous_id: entry.anonymous_id || this.getAnonymousId(),
+            p_player_name: filteredPlayerName,
+            p_score: entry.score,
+            p_wave: entry.wave,
+            p_rank: entry.rank
+          })
+        }
+      );
+
+      if (response.ok) this.activeRunId = null;
       return response.ok;
     } catch (error) {
       console.error('Failed to submit score:', error);

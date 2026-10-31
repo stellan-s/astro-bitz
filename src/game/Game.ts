@@ -131,7 +131,7 @@ export class Game {
     this.analytics = AnalyticsManager.getInstance();
     this.achievementsManager = new AchievementsManager();
 
-    // Initialize leaderboard with game-specific Supabase instance
+    // Initialize leaderboard in the shared Supabase project.
     const leaderboardUrl = import.meta.env.VITE_LEADERBOARD_URL;
     const leaderboardKey = import.meta.env.VITE_LEADERBOARD_ANON_KEY;
     if (leaderboardUrl && leaderboardKey) {
@@ -298,6 +298,7 @@ export class Game {
         missiles: this.missileAmmo,
       },
       enemies: this.enemies.slice(0, 20).map((enemy) => ({
+        type: enemy.type,
         x: Math.round(enemy.sprite.x),
         y: Math.round(enemy.sprite.y),
       })),
@@ -444,6 +445,7 @@ export class Game {
       }
       // Track game start
       this.analytics.trackGameStart();
+      void this.leaderboardManager?.startRun();
       // Reset achievements session tracking
       this.achievementsManager.resetSession();
       this.newAchievements = [];
@@ -2074,7 +2076,7 @@ export class Game {
       left: 0;
       width: 100%;
       height: 100%;
-      background: #050607;
+      background: #010611;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
@@ -2093,7 +2095,7 @@ export class Game {
       <main class="debrief-shell" aria-labelledby="game-over-title">
         <div class="debrief-masthead debrief-enter">
           <div class="debrief-brand">
-            <img class="debrief-ship" src="/space_ship_6872-v5.png" alt="" aria-hidden="true">
+            <img class="debrief-ship" src="/astrobitz-player-pixel-v2.png" alt="" aria-hidden="true">
             <span>ASTRO BITZ</span>
           </div>
           <span class="debrief-status"><i aria-hidden="true"></i> RUN TERMINATED</span>
@@ -2101,6 +2103,7 @@ export class Game {
 
         <section class="debrief-hero debrief-enter">
           <div class="debrief-copy">
+            <p class="debrief-pilot-line"><span>PILOT</span><strong id="debrief-pilot-name">UNREGISTERED</strong></p>
             <p class="debrief-kicker">FLIGHT LOG CLOSED</p>
             <h1 id="game-over-title">GAME <span>OVER</span></h1>
             <div class="debrief-flags" aria-label="Run achievements">
@@ -2130,7 +2133,7 @@ export class Game {
 
         <section class="debrief-actions debrief-enter" aria-label="Next actions">
           <button id="instant-restart-btn" class="debrief-primary" type="button">
-            <span>FLY AGAIN</span><b aria-hidden="true">↗</b>
+            <span>FLY AGAIN</span>
           </button>
           <button id="share-score-btn" class="debrief-secondary" type="button">
             SHARE SCORE CARD <span aria-hidden="true">→</span>
@@ -2192,14 +2195,16 @@ export class Game {
       </main>
       <style>
         .game-over-overlay {
-          --go-ink: #050607;
-          --go-white: #f6fbff;
-          --go-muted: #b4c0cc;
-          --go-cyan: #00f0ff;
-          --go-magenta: #ff3be4;
-          --go-orange: #ff5b1f;
-          --go-gold: #ffb000;
-          --go-line: rgba(0, 240, 255, 0.22);
+          --go-ink: #010611;
+          --go-white: #f2f8ff;
+          --go-muted: #9fb4c9;
+          --go-cyan: #79b8d8;
+          --go-blue: #4f6fae;
+          --go-blue-light: #83a8d8;
+          --go-magenta: #9a6caf;
+          --go-orange: #6f98cc;
+          --go-gold: #8e7ab8;
+          --go-line: rgba(121, 184, 216, 0.2);
           color: var(--go-white);
           font-family: "Space Grotesk", sans-serif;
           font-size: 16px;
@@ -2211,10 +2216,10 @@ export class Game {
           position: fixed;
           inset: 0;
           background-image:
-            linear-gradient(rgba(0, 240, 255, 0.025) 1px, transparent 1px),
+            linear-gradient(rgba(121, 184, 216, 0.025) 1px, transparent 1px),
             radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.62) 0 1px, transparent 1.4px),
-            radial-gradient(circle at 82% 31%, rgba(0, 240, 255, 0.72) 0 1px, transparent 1.5px),
-            radial-gradient(circle at 66% 77%, rgba(255, 59, 228, 0.58) 0 1px, transparent 1.4px);
+            radial-gradient(circle at 82% 31%, rgba(121, 184, 216, 0.72) 0 1px, transparent 1.5px),
+            radial-gradient(circle at 66% 77%, rgba(154, 108, 175, 0.58) 0 1px, transparent 1.4px);
           background-size: 100% 4px, 310px 270px, 470px 390px, 590px 430px;
           content: "";
           opacity: 0.46;
@@ -2224,7 +2229,7 @@ export class Game {
           position: relative;
           width: min(920px, 100%);
           margin: auto;
-          padding: clamp(22px, 4vw, 48px) clamp(20px, 5vw, 64px) 56px;
+          padding: clamp(20px, 2.5vw, 30px) clamp(20px, 5vw, 64px) 48px;
           text-align: left;
         }
         .debrief-masthead,
@@ -2240,7 +2245,7 @@ export class Game {
         }
         .debrief-masthead {
           justify-content: space-between;
-          padding-bottom: 24px;
+          padding-bottom: 18px;
           border-bottom: 1px solid var(--go-line);
         }
         .debrief-brand {
@@ -2261,7 +2266,7 @@ export class Game {
           width: 44px;
           height: 44px;
           object-fit: contain;
-          filter: drop-shadow(0 0 7px rgba(0, 240, 255, 0.42));
+          filter: drop-shadow(0 0 7px rgba(121, 184, 216, 0.42));
         }
         .debrief-status {
           gap: 9px;
@@ -2274,13 +2279,13 @@ export class Game {
           width: 7px;
           height: 7px;
           background: var(--go-magenta);
-          box-shadow: 0 0 9px rgba(255, 59, 228, 0.75);
+          box-shadow: 0 0 9px rgba(154, 108, 175, 0.75);
           border-radius: 50%;
           animation: debrief-pulse 1.8s ease-in-out infinite;
         }
         .debrief-hero {
           display: block;
-          padding: clamp(58px, 8vw, 88px) 0 52px;
+          padding: clamp(38px, 5vw, 52px) 0 34px;
           border-bottom: 1px solid var(--go-line);
           text-align: center;
         }
@@ -2294,16 +2299,31 @@ export class Game {
           letter-spacing: 0.14em;
           line-height: 1.5;
         }
+        .debrief-pilot-line {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          margin: 0 0 18px;
+          color: var(--go-muted);
+          font-family: "Orbitron", sans-serif;
+          font-size: 11px;
+          letter-spacing: 0.12em;
+        }
+        .debrief-pilot-line strong {
+          color: var(--go-cyan);
+          font-weight: 800;
+        }
         .debrief-copy h1 {
           margin: 14px 0 20px;
-          background: linear-gradient(90deg, var(--go-cyan) 0%, #72c9ff 42%, var(--go-magenta) 100%);
+          background: linear-gradient(90deg, var(--go-cyan) 0%, var(--go-blue-light) 45%, var(--go-magenta) 100%);
           background-clip: text;
           -webkit-background-clip: text;
           color: transparent;
           -webkit-text-fill-color: transparent;
-          filter: drop-shadow(0 0 18px rgba(0, 240, 255, 0.18));
+          filter: drop-shadow(0 0 18px rgba(121, 184, 216, 0.18));
           font-family: "Orbitron", sans-serif;
-          font-size: clamp(64px, 9vw, 108px);
+          font-size: clamp(60px, 8vw, 92px);
           font-weight: 900;
           letter-spacing: -0.075em;
           line-height: 0.9;
@@ -2321,7 +2341,7 @@ export class Game {
         .debrief-personal-best {
           margin: 0;
           padding: 7px 9px;
-          border: 1px solid rgba(255, 176, 0, 0.58);
+          border: 1px solid rgba(142, 122, 184, 0.58);
           color: var(--go-white);
           font-family: "Space Grotesk", sans-serif;
           font-size: 11px;
@@ -2329,16 +2349,16 @@ export class Game {
           letter-spacing: 0.09em;
         }
         .debrief-score-block {
-          padding: 34px 0 0;
+          padding: 22px 0 0;
         }
         .debrief-score-block > span { display: block; }
         .debrief-score-block strong {
           display: block;
           margin: 12px 0 8px;
           color: var(--go-cyan);
-          text-shadow: 0 0 22px rgba(0, 240, 255, 0.28);
+          text-shadow: 0 0 22px rgba(121, 184, 216, 0.28);
           font-family: "Orbitron", sans-serif;
-          font-size: clamp(54px, 8vw, 82px);
+          font-size: clamp(52px, 7vw, 70px);
           font-weight: 800;
           letter-spacing: -0.07em;
           line-height: 1;
@@ -2356,7 +2376,7 @@ export class Game {
           border-bottom: 1px solid var(--go-line);
         }
         .debrief-metrics div {
-          padding: 28px 0;
+          padding: 20px 0;
           border-right: 1px solid var(--go-line);
         }
         .debrief-metrics div + div { padding-left: clamp(18px, 4vw, 48px); }
@@ -2382,7 +2402,7 @@ export class Game {
         }
         .debrief-metrics div:nth-child(1) strong { color: var(--go-cyan); }
         .debrief-metrics div:nth-child(2) strong { color: var(--go-magenta); }
-        .debrief-metrics div:nth-child(3) strong { color: var(--go-gold); }
+        .debrief-metrics div:nth-child(3) strong { color: var(--go-blue-light); }
         .debrief-rank {
           display: grid;
           grid-template-columns: minmax(220px, 0.7fr) 1.3fr;
@@ -2431,7 +2451,7 @@ export class Game {
           justify-content: space-between;
           gap: 20px;
           padding: 18px 22px;
-          background: linear-gradient(90deg, var(--go-cyan), #6caaff);
+          background: linear-gradient(90deg, var(--go-cyan), var(--go-blue-light));
           color: var(--go-ink);
         }
         .debrief-reward span { color: var(--go-ink); }
@@ -2449,7 +2469,7 @@ export class Game {
           flex-wrap: wrap;
           gap: 14px;
           justify-content: center;
-          padding: 40px 0 64px;
+          padding: 28px 0 52px;
         }
         .debrief-actions button,
         #submit-score-btn,
@@ -2467,18 +2487,18 @@ export class Game {
           align-items: center;
           justify-content: space-between;
           width: min(100%, 340px);
-          min-height: 72px;
+          min-height: 64px;
           padding: 0 24px;
-          border: 1px solid var(--go-orange);
-          background: var(--go-orange);
+          border: 0;
+          background: var(--go-cyan);
           color: var(--go-ink);
           font-size: 16px;
         }
         .debrief-primary b { font-size: 24px; }
         .debrief-secondary {
-          min-height: 72px;
+          min-height: 64px;
           padding: 0 24px;
-          border: 1px solid rgba(0, 240, 255, 0.55);
+          border: 1px solid rgba(121, 184, 216, 0.55);
           background: transparent;
           color: var(--go-cyan);
           font-size: 13px;
@@ -2487,7 +2507,7 @@ export class Game {
         #submit-score-btn span,
         #dismiss-btn span { margin-left: 18px; }
         .debrief-primary:hover,
-        .debrief-primary:focus-visible { background: var(--go-gold); border-color: var(--go-gold); }
+        .debrief-primary:focus-visible { background: var(--go-magenta); color: var(--go-white); }
         .debrief-secondary:hover,
         .debrief-secondary:focus-visible,
         #submit-score-btn:hover,
@@ -2661,6 +2681,10 @@ export class Game {
         }
       </style>
     `;
+
+    const savedPilotName = localStorage.getItem('player_name')?.trim();
+    const pilotName = container.querySelector<HTMLElement>('#debrief-pilot-name');
+    if (pilotName && savedPilotName) pilotName.textContent = savedPilotName;
 
     let dismissCalled = false;
 
@@ -2863,6 +2887,10 @@ export class Game {
       }
 
       this.gameState = 'playing';
+      this.waveStartTime = Date.now();
+      this.gameStartTime = Date.now();
+      this.analytics.trackGameStart();
+      void this.leaderboardManager?.startRun();
       this.audio.startBackgroundMusic(this.currentWave);
     };
 
@@ -2991,6 +3019,15 @@ export class Game {
     if (nameInput && savedName) {
       nameInput.value = savedName;
     }
+
+    nameInput?.addEventListener('input', () => {
+      const enteredName = nameInput.value.trim();
+      if (enteredName) {
+        localStorage.setItem('player_name', enteredName);
+        const pilotName = document.getElementById('debrief-pilot-name');
+        if (pilotName) pilotName.textContent = enteredName;
+      }
+    });
 
     // Submit score handler
     const submitBtn = document.getElementById('submit-score-btn');
@@ -3148,10 +3185,11 @@ export class Game {
     try {
       const rankInfo = this.getPilotRank(this.score);
       const scoreFile = await this.generateScoreShareFile(rankInfo);
+      const pilotName = localStorage.getItem('player_name')?.trim();
       const nav = navigator as Navigator & { canShare?: (data?: ShareData) => boolean };
       const shareData: ShareData = {
         title: 'Astro Bitz Score',
-        text: `I scored ${this.score.toLocaleString()} pts in Astro Bitz (${rankInfo.rank})!`,
+        text: `${pilotName || 'I'} scored ${this.score.toLocaleString()} pts in Astro Bitz (${rankInfo.rank})!`,
         files: [scoreFile],
       };
 
@@ -3182,88 +3220,138 @@ export class Game {
   }
 
   private async generateScoreShareFile(rankInfo: { rank: string; color: string; nextRank: string; nextThreshold: number }): Promise<File> {
-    const baseImage = await this.loadImageElement('/astrobitz_cover.png');
+    const [baseImage, playerShip] = await Promise.all([
+      this.loadImageElement('/astrobitz_cover.png'),
+      this.loadImageElement('/astrobitz-player-pixel-v2.png')
+    ]);
     const canvas = document.createElement('canvas');
-    canvas.width = baseImage.width;
-    canvas.height = baseImage.height;
+    canvas.width = 1024;
+    canvas.height = 1024;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       throw new Error('Unable to create canvas context for share image');
     }
 
+    const colors = {
+      ink: '#010611',
+      white: '#f2f8ff',
+      muted: '#9fb4c9',
+      cyan: '#79b8d8',
+      blue: '#4f6fae',
+      blueLight: '#83a8d8',
+      magenta: '#9a6caf',
+      line: 'rgba(121, 184, 216, 0.24)'
+    };
+
     ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
-
-    // Darken the background slightly for text readability
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
-    gradient.addColorStop(0.6, 'rgba(0, 0, 0, 0.55)');
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.75)');
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, 'rgba(1, 6, 17, 0.78)');
+    gradient.addColorStop(0.48, 'rgba(1, 6, 17, 0.91)');
+    gradient.addColorStop(1, 'rgba(4, 11, 24, 0.97)');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const centerX = canvas.width / 2;
-    const bestScore = Math.max(this.score, this.highScore, HighScoreManager.getHighScore());
+    // Quiet HUD grid keeps the card legible while carrying over the landing-page texture.
+    ctx.strokeStyle = 'rgba(121, 184, 216, 0.07)';
+    ctx.lineWidth = 1;
+    for (let x = 64; x < canvas.width; x += 96) {
+      ctx.beginPath();
+      ctx.moveTo(x, 52);
+      ctx.lineTo(x, 972);
+      ctx.stroke();
+    }
+    for (let y = 76; y < canvas.height; y += 96) {
+      ctx.beginPath();
+      ctx.moveTo(52, y);
+      ctx.lineTo(972, y);
+      ctx.stroke();
+    }
 
-    ctx.textAlign = 'center';
+    const bestScore = Math.max(this.score, this.highScore, HighScoreManager.getHighScore());
+    const pilotName = (localStorage.getItem('player_name')?.trim() || 'UNREGISTERED').slice(0, 20);
+
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
 
-    // Title
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowColor = 'rgba(0, 255, 255, 0.6)';
-    ctx.shadowBlur = canvas.width * 0.02;
-    ctx.font = `900 ${Math.floor(canvas.width * 0.12)}px Orbitron, Arial, sans-serif`;
-    ctx.fillText('ASTRO BITZ', centerX, canvas.height * 0.08);
-
+    ctx.drawImage(playerShip, 68, 55, 94, 94);
+    const brandGradient = ctx.createLinearGradient(178, 0, 500, 0);
+    brandGradient.addColorStop(0, colors.cyan);
+    brandGradient.addColorStop(1, colors.magenta);
+    ctx.fillStyle = brandGradient;
+    ctx.shadowColor = 'rgba(121, 184, 216, 0.24)';
+    ctx.shadowBlur = 18;
+    ctx.font = '900 62px Orbitron, Arial, sans-serif';
+    ctx.fillText('ASTRO BITZ', 176, 66);
     ctx.shadowBlur = 0;
 
-    // Score label
-    ctx.fillStyle = '#bbbbbb';
-    ctx.font = `700 ${Math.floor(canvas.width * 0.05)}px Orbitron, Arial, sans-serif`;
-    ctx.fillText('FINAL SCORE', centerX, canvas.height * 0.28);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = colors.muted;
+    ctx.font = '600 20px Orbitron, Arial, sans-serif';
+    ctx.fillText('PILOT /', 946, 68);
+    ctx.fillStyle = colors.white;
+    ctx.font = '800 25px Orbitron, Arial, sans-serif';
+    ctx.fillText(pilotName.toUpperCase(), 946, 100);
 
-    // Score value
-    ctx.fillStyle = '#00ffff';
-    ctx.font = `900 ${Math.floor(canvas.width * 0.12)}px Orbitron, Arial, sans-serif`;
-    ctx.fillText(this.score.toLocaleString(), centerX, canvas.height * 0.34);
+    ctx.strokeStyle = colors.line;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(58, 188, 908, 438);
+    ctx.fillStyle = 'rgba(4, 11, 24, 0.72)';
+    ctx.fillRect(59, 189, 906, 436);
 
-    // High score label
-    ctx.fillStyle = '#bbbbbb';
-    ctx.font = `700 ${Math.floor(canvas.width * 0.045)}px Orbitron, Arial, sans-serif`;
-    ctx.fillText('BEST SCORE', centerX, canvas.height * 0.54);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = colors.magenta;
+    ctx.font = '700 22px Orbitron, Arial, sans-serif';
+    ctx.fillText('FLIGHT LOG CLOSED / FINAL SCORE', 92, 236);
 
-    // High score value
-    ctx.fillStyle = '#ffd700';
-    ctx.font = `900 ${Math.floor(canvas.width * 0.09)}px Orbitron, Arial, sans-serif`;
-    ctx.fillText(bestScore.toLocaleString(), centerX, canvas.height * 0.6);
-
-    // Rank label
-    ctx.fillStyle = '#bbbbbb';
-    ctx.font = `700 ${Math.floor(canvas.width * 0.045)}px Orbitron, Arial, sans-serif`;
-    ctx.fillText('PILOT RANK', centerX, canvas.height * 0.68);
-
-    // Rank value
-    ctx.fillStyle = rankInfo.color || '#ffffff';
-    ctx.font = `900 ${Math.floor(canvas.width * 0.085)}px Orbitron, Arial, sans-serif`;
-    ctx.fillText(rankInfo.rank.toUpperCase(), centerX, canvas.height * 0.73);
-
-    // Wave info for extra bragging rights
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `600 ${Math.floor(canvas.width * 0.04)}px Orbitron, Arial, sans-serif`;
-    ctx.fillText(`Wave ${this.currentWave}`, centerX, canvas.height * 0.82);
-
-    // Footer
-    ctx.fillStyle = '#aaaaaa';
-    ctx.font = `500 ${Math.floor(canvas.width * 0.035)}px Orbitron, Arial, sans-serif`;
-    ctx.fillText('astrobitz.com', centerX, canvas.height * 0.84);
-
+    ctx.fillStyle = colors.cyan;
+    ctx.shadowColor = 'rgba(121, 184, 216, 0.3)';
+    ctx.shadowBlur = 22;
+    ctx.font = '900 142px Orbitron, Arial, sans-serif';
+    ctx.fillText(this.score.toLocaleString(), 86, 300);
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(canvas.width * 0.05, canvas.height * 0.04, canvas.width * 0.9, canvas.height * 0.92);
+
+    ctx.fillStyle = colors.muted;
+    ctx.font = '600 22px Orbitron, Arial, sans-serif';
+    ctx.fillText(`PERSONAL BEST / ${bestScore.toLocaleString()}`, 92, 526);
+
+    const metricTop = 686;
+    const metricWidth = 302;
+    const metrics = [
+      { label: 'WAVE REACHED', value: String(this.currentWave).padStart(2, '0'), color: colors.cyan },
+      { label: 'PILOT RANK', value: rankInfo.rank.toUpperCase(), color: colors.magenta },
+      { label: 'BEST SCORE', value: bestScore.toLocaleString(), color: colors.blueLight }
+    ];
+
+    metrics.forEach((metric, index) => {
+      const x = 58 + index * metricWidth;
+      if (index > 0) {
+        ctx.strokeStyle = colors.line;
+        ctx.beginPath();
+        ctx.moveTo(x, metricTop);
+        ctx.lineTo(x, 874);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = colors.muted;
+      ctx.font = '600 18px Orbitron, Arial, sans-serif';
+      ctx.fillText(metric.label, x + 28, metricTop + 20);
+      ctx.fillStyle = metric.color;
+      const valueSize = metric.value.length > 16 ? 27 : metric.value.length > 11 ? 33 : 47;
+      ctx.font = `800 ${valueSize}px Orbitron, Arial, sans-serif`;
+      ctx.fillText(metric.value, x + 28, metricTop + 70, metricWidth - 52);
+    });
+
+    ctx.strokeStyle = colors.line;
+    ctx.strokeRect(58, metricTop, 908, 188);
+
+    ctx.fillStyle = colors.muted;
+    ctx.font = '600 18px Orbitron, Arial, sans-serif';
+    ctx.fillText('SECTOR 6872 / RUN TERMINATED', 58, 932);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = colors.white;
+    ctx.font = '700 21px Orbitron, Arial, sans-serif';
+    ctx.fillText('ASTROBITZ.COM', 966, 928);
 
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob((result) => {

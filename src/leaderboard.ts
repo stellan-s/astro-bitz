@@ -1,7 +1,7 @@
 // Leaderboard functionality for landing page
 const SUPABASE_URL = import.meta.env.VITE_LEADERBOARD_URL;
 const SUPABASE_KEY = import.meta.env.VITE_LEADERBOARD_ANON_KEY;
-const TABLE_NAME = 'leaderboard';
+const TABLE_NAME = 'astro_bitz_leaderboard';
 
 let currentTab = 'all-time';
 

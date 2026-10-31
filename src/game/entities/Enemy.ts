@@ -286,9 +286,10 @@ export class Enemy {
       // Slightly transparent for ethereal effect
       flame.alpha = 0.6 + Math.random() * 0.25;
 
-      // Central rear position with horizontal spread
+      // Central rear position with horizontal spread. The boss points downward,
+      // so its exhaust must trail upward (negative Y).
       flame.x = (Math.random() - 0.5) * 15;
-      flame.y = h * 0.5 + 5 + i * 8;
+      flame.y = -h * 0.5 - 5 - i * 8;
 
       this.exhaustFlames.push(flame);
       this.sprite.addChild(flame);
@@ -1173,7 +1174,7 @@ export class Enemy {
 
         // Phase-shifted position with wider spread
         flame.x = (Math.random() - 0.5) * 15;
-        flame.y = h * 0.5 + 5 + i * 8;
+        flame.y = -h * 0.5 - 5 - i * 8;
 
         // Pulsing scale for phase effect
         const scaleVariation = 0.35;
