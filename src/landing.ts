@@ -16,22 +16,22 @@ let signalPaused = reduceMotion;
 
 const updateSignalControls = () => {
   if (soundToggle) {
-    soundToggle.textContent = soundtrackEnabled ? 'Mute soundtrack' : 'Play soundtrack';
+    soundToggle.textContent = soundtrackEnabled ? 'Mute audio' : 'Play audio';
     soundToggle.setAttribute('aria-pressed', String(soundtrackEnabled));
   }
 
   if (visualToggle) {
-    visualToggle.textContent = signalPaused ? 'Resume signal' : 'Pause signal';
+    visualToggle.textContent = signalPaused ? 'Play visuals' : 'Pause visuals';
     visualToggle.setAttribute('aria-pressed', String(signalPaused));
   }
 
   if (signalStatus) {
-    const visualState = signalPaused ? 'Visual feed paused' : 'Visual feed live';
+    const visualState = signalPaused ? 'Visuals paused' : 'Visuals playing';
     const audioState = signalPaused && soundtrackEnabled
       ? 'Audio paused'
       : soundtrackEnabled
-        ? 'Audio active'
-        : 'Audio muted';
+        ? 'Audio on'
+        : 'Audio off';
     signalStatus.textContent = `${visualState} · ${audioState}`;
   }
 };

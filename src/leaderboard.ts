@@ -57,12 +57,17 @@ function escapeHtml(value: unknown): string {
   });
 }
 
-function displayLeaderboard(entries: any[]) {
+function displayLeaderboard(entries: any[] | null) {
   const content = document.getElementById('leaderboard-content');
   if (!content) return;
 
-  if (!entries || entries.length === 0) {
-    content.innerHTML = '<div class="leaderboard-error">No scores yet. Be the first to play!</div>';
+  if (entries === null) {
+    content.innerHTML = '<div class="leaderboard-error">Couldn’t load scores. We’ll retry automatically.</div>';
+    return;
+  }
+
+  if (entries.length === 0) {
+    content.innerHTML = '<div class="leaderboard-error">No scores yet. Be the first to play.</div>';
     return;
   }
 
@@ -70,11 +75,11 @@ function displayLeaderboard(entries: any[]) {
     <table class="leaderboard-table">
       <thead>
         <tr>
-          <th>Rank</th>
-          <th>Player</th>
+          <th>Place</th>
+          <th>Pilot</th>
           <th>Score</th>
           <th>Wave</th>
-          <th>Rank</th>
+          <th>Pilot rank</th>
         </tr>
       </thead>
       <tbody>
@@ -102,7 +107,7 @@ async function loadLeaderboard(type: string) {
   const content = document.getElementById('leaderboard-content');
   if (!content) return;
 
-  content.innerHTML = '<div class="leaderboard-loading">Loading leaderboard...</div>';
+  content.innerHTML = '<div class="leaderboard-loading">Loading scores…</div>';
 
   const entries = await fetchLeaderboard(type);
   displayLeaderboard(entries);

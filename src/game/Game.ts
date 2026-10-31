@@ -231,7 +231,7 @@ export class Game {
 
     // Create music toggle text
     this.musicText = new Text({
-      text: 'Music: ON (Press M)',
+      text: 'Music: On · M',
       style: {
         fontFamily: 'Orbitron',
         fontSize: 14,
@@ -324,6 +324,8 @@ export class Game {
     }
 
     const container = document.createElement('div');
+    container.id = 'start-screen';
+    container.setAttribute('aria-label', 'Start Astro Bitz');
     container.style.cssText = `
       position: fixed;
       top: 0;
@@ -354,16 +356,16 @@ export class Game {
           ASTRO BITZ
         </h1>
         <p style="font-size: 24px; color: #ffaa00; margin-bottom: 40px;">
-          Light speed chaos awaits
+          Survive endless waves. Climb the leaderboard.
         </p>
         <div style="font-size: 18px; color: #ffffff; margin-bottom: 40px; line-height: 1.8;">
-          <p style="margin-bottom: 15px;">🖱️ Drag or Touch to Move</p>
-          <p style="margin-bottom: 15px;">X - Launch Missile</p>
-          <p style="margin-bottom: 15px; color: #00ffff;">Swipe up for missiles</p>
+          ${this.isMobileDevice()
+            ? '<p style="margin-bottom: 15px;">Drag to move</p><p style="margin-bottom: 15px; color: #00ffff;">Swipe up to launch a missile</p>'
+            : '<p style="margin-bottom: 15px;">← → or A / D — Move</p><p style="margin-bottom: 15px;">Space — Fire</p><p style="margin-bottom: 15px; color: #00ffff;">X — Launch missile</p>'}
         </div>
         <div style="font-size: 28px; color: #ff4500; font-weight: bold;
                     animation: pulse 2s infinite; cursor: pointer;">
-          ${this.isMobileDevice() ? 'TAP TO START' : 'CLICK TO START'}
+          ${this.isMobileDevice() ? 'TAP TO PLAY' : 'CLICK TO PLAY'}
         </div>
       </div>
       <style>
@@ -502,11 +504,11 @@ export class Game {
         this.musicEnabled = !this.musicEnabled;
         if (this.musicEnabled) {
           this.audio.startBackgroundMusic();
-          this.musicText.text = 'Music: ON (Press M)';
+          this.musicText.text = 'Music: On · M';
           musicStarted = true;
         } else {
           this.audio.stopBackgroundMusic();
-          this.musicText.text = 'Music: OFF (Press M)';
+          this.musicText.text = 'Music: Off · M';
         }
       }
 
@@ -958,35 +960,35 @@ export class Game {
     switch (bossType) {
       case 'boss':
         type = 'superfire';
-        rewardName = 'SUPER FIRE!';
+        rewardName = 'Super fire';
         break;
       case 'bossSniper':
         type = 'missiles';
-        rewardName = 'MISSILES!';
+        rewardName = 'Missiles';
         break;
       case 'bossTank':
         type = 'shield';
-        rewardName = 'SHIELD!';
+        rewardName = 'Shield';
         break;
       case 'bossSwarm':
         type = 'bomb';
-        rewardName = 'BOMB!';
+        rewardName = 'Bomb';
         break;
       case 'bossTriple':
         type = 'rapidfire';
-        rewardName = 'RAPID FIRE!';
+        rewardName = 'Rapid fire';
         break;
       case 'bossBarrage':
         type = 'tripleshot';
-        rewardName = 'TRIPLE SHOT!';
+        rewardName = 'Triple shot';
         break;
       case 'bossPhantom':
         type = 'pointmultiplier';
-        rewardName = 'POINT MULTIPLIER!';
+        rewardName = 'Score multiplier';
         break;
       default:
         type = 'superfire';
-        rewardName = 'SUPER FIRE!';
+        rewardName = 'Super fire';
     }
 
     const powerUp = new PowerUp(x, y, type);
@@ -999,7 +1001,7 @@ export class Game {
 
   private showBossRewardText(x: number, y: number, rewardName: string): void {
     const rewardText = new Text({
-      text: `Boss Reward: ${rewardName}`,
+      text: `Boss drop: ${rewardName}`,
       style: {
         fontFamily: 'Orbitron',
         fontSize: 24,
@@ -1258,7 +1260,7 @@ export class Game {
         // Create or update point multiplier status text
         if (!this.pointMultiplierText) {
           this.pointMultiplierText = new Text({
-            text: `${this.pointMultiplierValue}X POINTS!`,
+            text: `${this.pointMultiplierValue}× SCORE`,
             style: {
               fontFamily: 'Orbitron',
               fontSize: 48,
@@ -1849,8 +1851,8 @@ export class Game {
 
     // Show wave complete text
     const waveMessage = this.isBossWave
-      ? `WAVE ${this.currentWave - 1} COMPLETE!\n\n⚠️ BOSS WAVE ${this.currentWave} ⚠️\nPrepare for Battle!`
-      : `WAVE ${this.currentWave - 1} COMPLETE!\n\nWave ${this.currentWave} Starting...\nDifficulty: ${Math.round(this.difficultyMultiplier * 100)}%`;
+      ? `WAVE ${this.currentWave - 1} CLEAR\n\nBOSS WAVE ${this.currentWave}\nGET READY`
+      : `WAVE ${this.currentWave - 1} CLEAR\n\nWAVE ${this.currentWave}\nTHREAT ${Math.round(this.difficultyMultiplier * 100)}%`;
 
     this.waveTransitionText = new Text({
       text: waveMessage,
@@ -1874,7 +1876,7 @@ export class Game {
     this.app.stage.addChild(this.waveTransitionText);
 
     // Update wave text
-    this.waveText.text = this.isBossWave ? `BOSS WAVE: ${this.currentWave}` : `Wave: ${this.currentWave}`;
+    this.waveText.text = this.isBossWave ? `Boss wave: ${this.currentWave}` : `Wave: ${this.currentWave}`;
 
     // Track wave start
     this.analytics.trackWaveStart(this.currentWave, this.isBossWave);
@@ -2098,17 +2100,17 @@ export class Game {
             <img class="debrief-ship" src="/astrobitz-player-pixel-v2.png" alt="" aria-hidden="true">
             <span>ASTRO BITZ</span>
           </div>
-          <span class="debrief-status"><i aria-hidden="true"></i> RUN TERMINATED</span>
+          <span class="debrief-status"><i aria-hidden="true"></i> FLIGHT ENDED</span>
         </div>
 
         <section class="debrief-hero debrief-enter">
           <div class="debrief-copy">
-            <p class="debrief-pilot-line"><span>PILOT</span><strong id="debrief-pilot-name">UNREGISTERED</strong></p>
-            <p class="debrief-kicker">FLIGHT LOG CLOSED</p>
-            <h1 id="game-over-title">GAME <span>OVER</span></h1>
+            <p class="debrief-pilot-line"><span>PILOT</span><strong id="debrief-pilot-name">NO CALLSIGN</strong></p>
+            <p class="debrief-kicker">MISSION DEBRIEF</p>
+            <h1 id="game-over-title">RUN <span>COMPLETE</span></h1>
             <div class="debrief-flags" aria-label="Run achievements">
-              ${isNewHighScore ? '<span>NEW HIGH SCORE</span>' : ''}
-              ${isNewBestWave ? `<span>NEW WAVE RECORD · ${this.currentWave}</span>` : ''}
+              ${isNewHighScore ? '<span>NEW BEST SCORE</span>' : ''}
+              ${isNewBestWave ? `<span>NEW BEST WAVE · ${this.currentWave}</span>` : ''}
             </div>
           </div>
           <div class="debrief-score-block">
@@ -2119,31 +2121,31 @@ export class Game {
         </section>
 
         <section class="debrief-metrics debrief-enter" aria-label="Run summary">
-          <div><span>WAVE REACHED</span><strong>${String(this.currentWave).padStart(2, '0')}</strong></div>
-          <div><span>PILOT RANK</span><strong>${rankInfo.rank}</strong></div>
-          <div><span>BEST SCORE</span><strong>${this.highScore.toLocaleString()}</strong></div>
+          <div><span>WAVE</span><strong>${String(this.currentWave).padStart(2, '0')}</strong></div>
+          <div><span>RANK</span><strong>${rankInfo.rank}</strong></div>
+          <div><span>BEST</span><strong>${this.highScore.toLocaleString()}</strong></div>
         </section>
 
         ${isNewBestWave ? `
           <aside class="debrief-reward debrief-enter">
-            <span>RECORD BONUS ARMED FOR NEXT RUN</span>
-            <strong>+5 MISSILES / +1 SHIELD</strong>
+            <span>NEXT-RUN BONUS</span>
+            <strong>+5 MISSILES · +1 SHIELD</strong>
           </aside>
         ` : ''}
 
         <section class="debrief-actions debrief-enter" aria-label="Next actions">
           <button id="instant-restart-btn" class="debrief-primary" type="button">
-            <span>FLY AGAIN</span>
+            <span>PLAY AGAIN</span>
           </button>
           <button id="share-score-btn" class="debrief-secondary" type="button">
-            SHARE SCORE CARD <span aria-hidden="true">→</span>
+            SHARE RESULT <span aria-hidden="true">→</span>
           </button>
         </section>
 
         <section class="debrief-section debrief-enter" aria-labelledby="mission-statistics-heading">
           <div class="debrief-section-head">
-            <p class="debrief-kicker">AFTER-ACTION REPORT</p>
-            <h2 id="mission-statistics-heading">MISSION STATISTICS</h2>
+            <p class="debrief-kicker">THIS RUN</p>
+            <h2 id="mission-statistics-heading">RUN STATS</h2>
           </div>
           <dl class="debrief-stat-list">
             <div><dt>Enemies destroyed</dt><dd>${stats.enemiesKilled}</dd></div>
@@ -2157,15 +2159,15 @@ export class Game {
         ${this.leaderboardManager ? `
         <section id="leaderboard-section" class="debrief-section debrief-enter" aria-labelledby="leaderboard-submit-heading">
           <div class="debrief-section-head">
-            <p class="debrief-kicker">GLOBAL TRANSMISSION</p>
-            <h2 id="leaderboard-submit-heading">LOG YOUR RUN</h2>
+            <p class="debrief-kicker">GLOBAL LEADERBOARD</p>
+            <h2 id="leaderboard-submit-heading">SAVE YOUR SCORE</h2>
           </div>
           <div class="debrief-submit-row">
             <label class="debrief-input-wrap">
               <span>CALLSIGN</span>
-              <input type="text" id="player-name-input" placeholder="ENTER YOUR NAME" maxlength="20" autocomplete="nickname">
+              <input type="text" id="player-name-input" placeholder="ENTER CALLSIGN" maxlength="20" autocomplete="nickname">
             </label>
-            <button id="submit-score-btn" type="button">SUBMIT SCORE <span aria-hidden="true">→</span></button>
+            <button id="submit-score-btn" type="button">SAVE SCORE <span aria-hidden="true">→</span></button>
           </div>
           <div id="submit-status" aria-live="polite"></div>
         </section>
@@ -2173,24 +2175,24 @@ export class Game {
         <section class="debrief-section debrief-leaderboard debrief-enter" aria-labelledby="leaderboard-heading">
           <div class="debrief-leaderboard-head">
             <div>
-              <p class="debrief-kicker">TOP PILOTS</p>
-              <h2 id="leaderboard-heading">LEADERBOARD</h2>
+              <p class="debrief-kicker">GLOBAL LEADERBOARD</p>
+              <h2 id="leaderboard-heading">TOP PILOTS</h2>
             </div>
             <div class="debrief-tabs" role="tablist" aria-label="Leaderboard period">
-              <button class="leaderboard-tab is-active" data-tab="alltime" type="button">ALL-TIME</button>
-              <button class="leaderboard-tab" data-tab="weekly" type="button">WEEKLY</button>
-              <button class="leaderboard-tab" data-tab="daily" type="button">DAILY</button>
+              <button class="leaderboard-tab is-active" data-tab="alltime" type="button">ALL TIME</button>
+              <button class="leaderboard-tab" data-tab="weekly" type="button">THIS WEEK</button>
+              <button class="leaderboard-tab" data-tab="daily" type="button">TODAY</button>
             </div>
           </div>
           <div id="leaderboard-content" aria-live="polite">
-            <div class="debrief-loading">RECEIVING TRANSMISSION…</div>
+            <div class="debrief-loading">LOADING SCORES…</div>
           </div>
         </section>
         ` : ''}
 
         <footer class="debrief-footer debrief-enter">
-          <span>END OF FLIGHT LOG</span>
-          <button id="dismiss-btn" type="button">RETURN TO HANGAR <span aria-hidden="true">→</span></button>
+          <span>ASTROBITZ.COM</span>
+          <button id="dismiss-btn" type="button">BACK TO START <span aria-hidden="true">→</span></button>
         </footer>
       </main>
       <style>
@@ -2960,7 +2962,7 @@ export class Game {
   private showBonusNotification(): void {
     // Show notification for beating personal best
     const bonusText = new Text({
-      text: '🎁 NEW RECORD BONUS!\n+5 Missiles & Shield!',
+      text: 'NEXT-RUN BONUS ACTIVE\n+5 MISSILES · +1 SHIELD',
       style: {
         fontFamily: 'Orbitron',
         fontSize: 28,
@@ -3038,13 +3040,13 @@ export class Game {
         const playerName = nameInput.value.trim();
         if (!playerName) {
           statusDiv.style.color = '#ff5b1f';
-          statusDiv.textContent = 'Please enter your name';
+          statusDiv.textContent = 'Enter a callsign.';
           return;
         }
 
         if (playerName.length < 2) {
           statusDiv.style.color = '#ff5b1f';
-          statusDiv.textContent = 'Name must be at least 2 characters';
+          statusDiv.textContent = 'Use at least 2 characters.';
           return;
         }
 
@@ -3052,10 +3054,10 @@ export class Game {
         localStorage.setItem('player_name', playerName);
 
         // Disable button during submission
-        submitBtn.textContent = 'SUBMITTING...';
+        submitBtn.textContent = 'SAVING…';
         (submitBtn as HTMLButtonElement).disabled = true;
         statusDiv.style.color = '#a3a29e';
-        statusDiv.textContent = 'Submitting...';
+        statusDiv.textContent = 'Saving score…';
 
         try {
           const success = await this.leaderboardManager!.submitScore({
@@ -3067,8 +3069,8 @@ export class Game {
 
           if (success) {
             statusDiv.style.color = '#f7f5ef';
-            statusDiv.textContent = '✓ Score submitted successfully!';
-            submitBtn.textContent = '✓ SUBMITTED';
+            statusDiv.textContent = 'Score saved.';
+            submitBtn.textContent = 'SAVED';
             // Refresh leaderboard
             await this.loadLeaderboard('alltime');
           } else {
@@ -3076,8 +3078,8 @@ export class Game {
           }
         } catch (error) {
           statusDiv.style.color = '#ff5b1f';
-          statusDiv.textContent = '✗ Failed to submit score';
-          submitBtn.textContent = 'SUBMIT SCORE';
+          statusDiv.textContent = 'Couldn’t save score. Try again.';
+          submitBtn.textContent = 'SAVE SCORE';
           (submitBtn as HTMLButtonElement).disabled = false;
         }
       });
@@ -3121,7 +3123,7 @@ export class Game {
     const contentDiv = document.getElementById('leaderboard-content');
     if (!contentDiv || !this.leaderboardManager) return;
 
-    contentDiv.innerHTML = '<div class="debrief-loading">RECEIVING TRANSMISSION…</div>';
+    contentDiv.innerHTML = '<div class="debrief-loading">LOADING SCORES…</div>';
 
     try {
       let scores;
@@ -3137,7 +3139,7 @@ export class Game {
       }
 
       if (scores.length === 0) {
-        contentDiv.innerHTML = '<div class="debrief-loading">NO LOGGED RUNS / BE THE FIRST</div>';
+        contentDiv.innerHTML = '<div class="debrief-loading">NO SCORES YET · BE THE FIRST</div>';
         return;
       }
 
@@ -3162,7 +3164,7 @@ export class Game {
       contentDiv.innerHTML = html;
     } catch (error) {
       console.error('Failed to load leaderboard:', error);
-      contentDiv.innerHTML = '<div class="debrief-loading" style="color: #ff5b1f;">TRANSMISSION FAILED</div>';
+      contentDiv.innerHTML = '<div class="debrief-loading" style="color: #ff5b1f;">COULDN’T LOAD SCORES</div>';
     }
   }
 
@@ -3177,10 +3179,10 @@ export class Game {
       return;
     }
 
-    const defaultText = button.textContent ?? 'SHARE SCORE CARD';
+    const defaultText = button.textContent ?? 'SHARE RESULT';
     button.dataset.loading = 'true';
     button.disabled = true;
-    button.textContent = 'PREPARING...';
+    button.textContent = 'CREATING IMAGE…';
 
     try {
       const rankInfo = this.getPilotRank(this.score);
@@ -3188,8 +3190,8 @@ export class Game {
       const pilotName = localStorage.getItem('player_name')?.trim();
       const nav = navigator as Navigator & { canShare?: (data?: ShareData) => boolean };
       const shareData: ShareData = {
-        title: 'Astro Bitz Score',
-        text: `${pilotName || 'I'} scored ${this.score.toLocaleString()} pts in Astro Bitz (${rankInfo.rank})!`,
+        title: `Astro Bitz score: ${this.score.toLocaleString()}`,
+        text: `${pilotName || 'I'} scored ${this.score.toLocaleString()} points in Astro Bitz and reached ${rankInfo.rank}.`,
         files: [scoreFile],
       };
 
@@ -3197,7 +3199,7 @@ export class Game {
       const supportsNativeShare = typeof navigator.share === 'function';
       if (supportsNativeShare && canShareFile) {
         await navigator.share!(shareData);
-        button.textContent = 'SHARED!';
+        button.textContent = 'SHARED';
       } else {
         this.downloadShareImage(scoreFile);
         button.textContent = 'IMAGE DOWNLOADED';
@@ -3208,7 +3210,7 @@ export class Game {
         button.textContent = 'SHARE CANCELED';
       } else {
         console.error('Failed to share Astro Bitz score card:', error);
-        button.textContent = 'SHARE FAILED';
+        button.textContent = 'COULDN’T SHARE';
       }
     } finally {
       setTimeout(() => {
@@ -3269,7 +3271,7 @@ export class Game {
     }
 
     const bestScore = Math.max(this.score, this.highScore, HighScoreManager.getHighScore());
-    const pilotName = (localStorage.getItem('player_name')?.trim() || 'UNREGISTERED').slice(0, 20);
+    const pilotName = (localStorage.getItem('player_name')?.trim() || 'NO CALLSIGN').slice(0, 20);
 
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
@@ -3302,7 +3304,7 @@ export class Game {
     ctx.textAlign = 'left';
     ctx.fillStyle = colors.magenta;
     ctx.font = '700 22px Orbitron, Arial, sans-serif';
-    ctx.fillText('FLIGHT LOG CLOSED / FINAL SCORE', 92, 236);
+    ctx.fillText('RUN COMPLETE / FINAL SCORE', 92, 236);
 
     ctx.fillStyle = colors.cyan;
     ctx.shadowColor = 'rgba(121, 184, 216, 0.3)';
@@ -3347,7 +3349,7 @@ export class Game {
 
     ctx.fillStyle = colors.muted;
     ctx.font = '600 18px Orbitron, Arial, sans-serif';
-    ctx.fillText('SECTOR 6872 / RUN TERMINATED', 58, 932);
+    ctx.fillText('SECTOR 6872 / RUN COMPLETE', 58, 932);
     ctx.textAlign = 'right';
     ctx.fillStyle = colors.white;
     ctx.font = '700 21px Orbitron, Arial, sans-serif';
@@ -3439,7 +3441,7 @@ export class Game {
     overlay.style.fontFamily = 'Arial, sans-serif';
 
     const title = document.createElement('h1');
-    title.textContent = 'PAUSED';
+    title.textContent = 'Paused';
     title.style.color = '#00ffff';
     title.style.fontSize = '64px';
     title.style.marginBottom = '30px';
@@ -3447,8 +3449,8 @@ export class Game {
 
     const instructions = document.createElement('div');
     instructions.innerHTML = `
-      <p style="color: #ffffff; font-size: 24px; margin: 10px;">Press ESC or P to Resume</p>
-      <p style="color: #00ffff; font-size: 20px; margin: 10px;">Or tap anywhere to continue</p>
+      <p style="color: #ffffff; font-size: 24px; margin: 10px;">Press Esc or P to resume</p>
+      <p style="color: #00ffff; font-size: 20px; margin: 10px;">Tap anywhere to resume</p>
     `;
     instructions.style.textAlign = 'center';
 
