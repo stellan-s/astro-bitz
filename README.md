@@ -20,23 +20,20 @@ A retro browser space shooter with escalating waves, boss battles, power-ups, ac
 </p>
 
 <p align="center">
-  <img src="brag-output/brag-small.gif" alt="Astro Bitz gameplay highlights" width="640"><br>
-  <sub><strong>Arcade action</strong> — escalating waves, power-ups, and boss battles</sub>
+  <img src="brag-output/brag-small.gif" alt="Astro Bitz gameplay highlights" width="640">
 </p>
 
 ### A soundtrack that keeps climbing
 
-The game music uses a **Shepard tone**: layers separated by octaves fade in and out as they rise, creating the illusion of a pitch that climbs forever. That endless upward motion mirrors the escalating enemy waves and keeps the tension building.
+The game music uses a **[Shepard tone](https://en.wikipedia.org/wiki/Shepard_tone)**: layers separated by octaves fade in and out as they rise, creating the illusion of a pitch that climbs forever. That endless upward motion mirrors the escalating enemy waves and keeps the tension building.
 
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="brag-output/spectrogram-game-music.gif" alt="Spectrogram of the Astro Bitz game music" width="100%"><br>
-      <sub><strong>Spectrogram</strong> — the rising frequency layers behind the illusion</sub>
+      <img src="brag-output/spectrogram-game-music.gif" alt="Spectrogram of the Astro Bitz game music" width="100%">
     </td>
     <td width="50%" align="center">
-      <img src="brag-output/waveform-game-music.gif" alt="Waveform of the Astro Bitz game music" width="100%"><br>
-      <sub><strong>Waveform</strong> — the soundtrack's relentless pulse through time</sub>
+      <img src="brag-output/waveform-game-music.gif" alt="Waveform of the Astro Bitz game music" width="100%">
     </td>
   </tr>
 </table>
